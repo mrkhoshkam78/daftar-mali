@@ -51,10 +51,6 @@
   html[data-theme="light"] .topbar{background:rgba(255,255,255,.6);}
   .logo{display:flex; align-items:center; gap:9px;}
   .logo-mark{height:38px; width:auto; flex-shrink:0; border-radius:8px;}
-  .logo-text{font-weight:800; font-size:15px; letter-spacing:-.2px;
-    background:linear-gradient(90deg, var(--blue-light), var(--blue-deep));
-    -webkit-background-clip:text; background-clip:text; color:transparent;}
-  .logo-sub{font-size:9px; color:var(--ink-dim); font-family:'Martian Mono',monospace; letter-spacing:.5px;}
   .theme-toggle{
     width:38px; height:38px; border-radius:10px; border:1px solid var(--border);
     background:var(--card); color:var(--ink); font-size:16px; cursor:pointer;
@@ -183,6 +179,23 @@
   .noncash-total{background:var(--blue-soft); border:1px solid var(--border-strong); border-radius:12px; padding:12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;}
   .noncash-total .lbl{font-size:12px; color:var(--ink-dim);}
   .noncash-total .amt{font-family:'Martian Mono',monospace; font-weight:700; color:var(--blue-light); direction:ltr;}
+
+  .trend-tabs{display:flex; gap:6px; margin-bottom:10px;}
+  .trend-tab{
+    flex:1; text-align:center; padding:8px 4px; border-radius:9px; font-size:11.5px;
+    border:1px solid var(--border); background:var(--card-2); color:var(--ink-dim); cursor:pointer;
+    font-family:'Vazirmatn',sans-serif;
+  }
+  .trend-tab.active{background:var(--blue-soft); color:var(--blue-light); border-color:var(--border-strong); font-weight:700;}
+  .trend-badge{
+    display:inline-flex; align-items:center; gap:6px; font-family:'Martian Mono',monospace;
+    font-size:13px; font-weight:700; direction:ltr; margin-bottom:10px;
+  }
+  .trend-badge.up{color:var(--green);}
+  .trend-badge.down{color:var(--red);}
+  .trend-badge.flat{color:var(--ink-dim);}
+  .trend-chart-wrap{width:100%; height:120px; position:relative;}
+  #trendSvg{width:100%; height:100%; display:block;}
 </style>
 </head>
 <body>
@@ -217,7 +230,7 @@
 
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>آمار دارایی‌ها</div>
-      <div class="section-sub">سهم هر دارایی نقدی از کل دفتر</div>
+      <div class="section-sub">سهم هر دارایی (نقدینگی و سرمایه‌گذاری) از کل دفتر</div>
       <div class="donut-wrap">
         <div style="position:relative;">
           <div class="donut" id="donutChart"></div>
@@ -225,6 +238,23 @@
         </div>
         <div class="legend" id="legendList"></div>
       </div>
+    </div>
+
+    <div class="section reveal">
+      <div class="section-title"><span class="dot"></span>روند کلی دارایی</div>
+      <div class="section-sub">تغییر جمع کل دارایی (نقدینگی + سرمایه‌گذاری) در بازه انتخابی</div>
+      <div class="trend-tabs" id="trendTabs">
+        <button class="trend-tab" data-range="86400000">۲۴ ساعت</button>
+        <button class="trend-tab active" data-range="604800000">۱ هفته</button>
+        <button class="trend-tab" data-range="2592000000">۱ ماه</button>
+        <button class="trend-tab" data-range="31536000000">۱ سال</button>
+      </div>
+      <div class="trend-badge" id="trendBadge"></div>
+      <div class="trend-chart-wrap">
+        <svg id="trendSvg" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+        <div class="empty" id="trendEmpty" style="display:none;">داده کافی برای این بازه هنوز ثبت نشده — با هر تغییر دارایی یه نقطه جدید اضافه می‌شه</div>
+      </div>
+      <div class="note">این نمودار فقط از لحظه‌ای که این ویژگی اضافه شد نقطه ثبت می‌کنه؛ سابقه قبل از اون رو نداره.</div>
     </div>
 
     <div class="section reveal" id="sec-assets">
@@ -394,11 +424,11 @@ function showToast(msg, isErr){
 
 /* ================= DATA MODEL ================= */
 const ASSET_DEFS = [
-  {key:'snapp',  name:'اسنپ',        cat:'سرمایه‌گذاری', color:'#1d4ed8'},
-  {key:'hami',   name:'صندوق حامی',   cat:'سرمایه‌گذاری', color:'#2563eb'},
-  {key:'farabi', name:'لبخند فارابی', cat:'سرمایه‌گذاری', color:'#3b82f6'},
-  {key:'card',   name:'کارت',         cat:'نقدینگی',      color:'#60a5fa'},
-  {key:'wallet', name:'پول نقد',      cat:'نقدینگی',      color:'#93c5fd'},
+  {key:'snapp',  name:'اسنپ',        cat:'سرمایه‌گذاری', color:'#3b82f6'},
+  {key:'hami',   name:'صندوق حامی',   cat:'سرمایه‌گذاری', color:'#22d3ee'},
+  {key:'farabi', name:'لبخند فارابی', cat:'سرمایه‌گذاری', color:'#a78bfa'},
+  {key:'card',   name:'کارت',         cat:'نقدینگی',      color:'#34d399'},
+  {key:'wallet', name:'پول نقد',      cat:'نقدینگی',      color:'#fbbf24'},
 ];
 const NC_CATS = {gold:'طلا', silver:'نقره', usd:'دلار', coin:'سکه', deposit:'حساب سپرده', stock:'بورس', other:'سایر'};
 
@@ -407,6 +437,7 @@ let logs = [];
 let txs = [];
 let history = [];
 let noncash = []; // {id, category, label, manualValue}
+let netSeries = []; // {ts, total} — ثبت خودکار با هر تغییر دارایی، برای نمودار روند
 
 const STORE_KEY = 'daftar-mali-v1';
 
@@ -420,13 +451,22 @@ function loadAll(){
       if(d.txs) txs = d.txs;
       if(d.history) history = d.history;
       if(d.noncash) noncash = d.noncash;
+      if(d.netSeries) netSeries = d.netSeries;
     }
   }catch(e){ console.error(e); }
+  if(netSeries.length === 0){
+    // اولین بار: یک نقطه شروع با وضعیت فعلی ثبت می‌شه تا نمودار خالی نباشه
+    netSeries.push({ts: Date.now(), total: computeTotal()});
+  }
   render();
+}
+function pushSeriesPoint(){
+  netSeries.push({ts: Date.now(), total: computeTotal()});
+  if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function persist(){
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history, noncash}));
+    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history, noncash, netSeries}));
     return true;
   }catch(e){ showToast('خطا در ذخیره: ' + e.message, true); return false; }
 }
@@ -439,11 +479,13 @@ function computeCash(){ return sumKeys(cashKeys()); }
 function computeTotal(){ return computeInvest() + computeCash(); }
 
 /* ================= RENDER ================= */
+let currentTrendRange = 604800000; // پیش‌فرض: ۱ هفته
 function render(){
   $('sumInvest').textContent = fmt(computeInvest());
   $('sumCash').textContent = fmt(computeCash());
   $('totalNet').innerHTML = fmt(computeTotal()) + ' <small>تومان</small>';
   renderDonut();
+  renderTrendChart(currentTrendRange);
   renderAssetCards();
   renderLogs();
   renderTxs();
@@ -477,6 +519,67 @@ function renderDonut(){
   }).join('');
 }
 
+function renderTrendChart(rangeMs){
+  const svg = $('trendSvg');
+  const badge = $('trendBadge');
+  const emptyEl = $('trendEmpty');
+  const now = Date.now();
+  const points = netSeries
+    .filter(p => now - p.ts <= rangeMs)
+    .sort((a,b)=> a.ts - b.ts);
+
+  if(points.length < 2){
+    svg.innerHTML = '';
+    emptyEl.style.display = 'block';
+    badge.textContent = '';
+    badge.className = 'trend-badge';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  const w = 300, h = 100, pad = 6;
+  const windowStart = now - rangeMs;
+  const values = points.map(p=>p.total);
+  let minV = Math.min(...values), maxV = Math.max(...values);
+  if(minV === maxV){ minV -= 1; maxV += 1; } // جلوگیری از تقسیم بر صفر وقتی همه نقاط برابرن
+
+  const xOf = t => pad + ((t - windowStart) / rangeMs) * (w - pad*2);
+  const yOf = v => (h-pad) - ((v - minV) / (maxV - minV)) * (h - pad*2);
+
+  const linePts = points.map(p => `${xOf(p.ts).toFixed(1)},${yOf(p.total).toFixed(1)}`).join(' ');
+  const first = points[0].total, last = points[points.length-1].total;
+  const changePct = first !== 0 ? ((last-first)/Math.abs(first))*100 : 0;
+
+  const lastX = xOf(points[points.length-1].ts), lastY = yOf(last);
+  const areaPts = `${pad},${h-pad} ${linePts} ${lastX.toFixed(1)},${h-pad}`;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--blue-light)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--blue-light)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${areaPts}" fill="url(#trendFill)"/>
+    <polyline points="${linePts}" fill="none" stroke="var(--blue-light)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3" fill="var(--blue-light)"/>
+  `;
+
+  const arrow = changePct > 0.05 ? '▲' : (changePct < -0.05 ? '▼' : '—');
+  const cls = changePct > 0.05 ? 'up' : (changePct < -0.05 ? 'down' : 'flat');
+  badge.className = 'trend-badge ' + cls;
+  badge.textContent = `${arrow} ${changePct>=0?'+':''}${changePct.toFixed(1)}%  (${fmt(first)} ← ${fmt(last)} تومان)`;
+}
+
+document.querySelectorAll('.trend-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.trend-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTrendRange = parseInt(btn.dataset.range);
+    renderTrendChart(currentTrendRange);
+  });
+});
+
 function renderAssetCards(){
   const el = $('assetCards');
   el.innerHTML = ASSET_DEFS.map(d => `
@@ -503,6 +606,7 @@ function renderAssetCards(){
       const def = ASSET_DEFS.find(d=>d.key===key);
       assets[key] = (assets[key]||0) + dir*amount;
       txs.push({date: todayISO(), key, delta: dir*amount, note: def.name});
+      pushSeriesPoint();
       if(persist()){
         input.value = '';
         showToast(dir>0 ? `${fmt(amount)} به ${def.name} اضافه شد` : `${fmt(amount)} از ${def.name} کم شد`);
@@ -595,6 +699,7 @@ $('addLogBtn').addEventListener('click', ()=>{
   logs.push({date, profit});
   assets.snapp = (assets.snapp||0) + profit;
   txs.push({date, key:'snapp', delta: profit, note: 'سود روزانه اسنپ'});
+  pushSeriesPoint();
   if(persist()){ $('logProfit').value=''; showToast('ثبت شد'); render(); }
 });
 
@@ -606,7 +711,7 @@ $('snapshotBtn').addEventListener('click', ()=>{
 });
 
 $('exportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify({assets, logs, txs, history, noncash}, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({assets, logs, txs, history, noncash, netSeries}, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `daftar-mali-backup-${todayISO()}.json`; a.click();
@@ -626,6 +731,7 @@ $('importFile').addEventListener('change', (e)=>{
       if(d.txs) txs = d.txs;
       if(d.history) history = d.history;
       if(d.noncash) noncash = d.noncash;
+      if(d.netSeries) netSeries = d.netSeries;
       persist(); render();
       showToast('بازگردانی شد');
     }catch(err){ showToast('فایل نامعتبره', true); }
