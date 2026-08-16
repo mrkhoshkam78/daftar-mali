@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفتر مالی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #0f1613;
+    --paper-2: #141d19;
+    --ink: #e9ede9;
+    --ink-dim: #9fb0a6;
+    --line: #263029;
+    --gold: #c9a24a;
+    --gold-soft: rgba(201,162,74,.14);
+    --emerald: #4a9c7a;
+    --emerald-soft: rgba(74,156,122,.14);
+    --rose: #c2665c;
+    --rose-soft: rgba(194,102,92,.14);
+    --teal: #4a8ea0;
+    --slate: #7b7fa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 500px at 20% -10%, rgba(201,162,74,.06), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Vazirmatn',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  .ledger-head{display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:18px;}
+  .ledger-head h1{font-size:20px; font-weight:800; margin:0; letter-spacing:-.2px;}
+  .ledger-head .date{font-family:'Martian Mono',monospace; font-size:11px; color:var(--ink-dim); direction:ltr;}
+  .info-banner{
+    background:var(--emerald-soft); border:1px solid rgba(74,156,122,.3); color:var(--emerald);
+    border-radius:10px; padding:10px 12px; font-size:11.5px; margin-bottom:14px; line-height:1.9;
+  }
+  .hero{background:var(--paper-2); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; position:relative; overflow:hidden;}
+  .hero::before{content:''; position:absolute; inset:0 auto auto 0; width:3px; height:100%; background:linear-gradient(180deg,var(--gold),transparent);}
+  .hero-label{font-size:12px;color:var(--ink-dim);margin-bottom:6px;}
+  .hero-num{font-family:'Martian Mono',monospace; font-size:34px; font-weight:700; direction:ltr; text-align:right; color:var(--ink);}
+  .hero-num small{font-size:14px; color:var(--ink-dim); font-family:'Vazirmatn',sans-serif;}
+  .hero-sub{display:flex; gap:14px; margin-top:12px; flex-wrap:wrap;}
+  .hero-sub .item{font-size:12px; color:var(--ink-dim);}
+  .hero-sub .item b{color:var(--emerald); font-family:'Martian Mono',monospace; font-weight:500;}
+  .section{background:var(--paper-2); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px;}
+  .section-title{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; margin-bottom:4px;}
+  .section-title .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+  .section-sub{font-size:11px; color:var(--ink-dim); margin-bottom:12px;}
+  .asset-card{border:1px solid var(--line); border-radius:11px; padding:12px; margin-bottom:10px; background:#0c1210;}
+  .asset-card:last-child{margin-bottom:0;}
+  .asset-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .asset-name{font-size:13px; font-weight:700;}
+  .asset-cat{font-size:9.5px; color:var(--ink-dim); font-family:'Martian Mono',monospace;}
+  .asset-val{font-family:'Martian Mono',monospace; font-size:17px; font-weight:700; direction:ltr;}
+  .adjust-row{display:flex; gap:6px; align-items:center;}
+  .adjust-row input{flex:1; background:#0a0f0d; border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:8px 9px; font-family:'Martian Mono',monospace; font-size:12.5px; direction:ltr;}
+  .adj-btn{width:36px; height:36px; border-radius:8px; border:none; font-size:16px; font-weight:700; cursor:pointer; flex-shrink:0;}
+  .adj-btn.plus{background:var(--emerald-soft); color:var(--emerald);}
+  .adj-btn.minus{background:var(--rose-soft); color:var(--rose);}
+  input[type=text], input[type=date]{width:100%; background:#0c1210; border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:9px 10px; font-family:'Martian Mono',monospace; font-size:13px; direction:ltr;}
+  input::placeholder{color:#5b675e; font-family:'Vazirmatn',sans-serif;}
+  label.field{display:block; font-size:11px; color:var(--ink-dim); margin-bottom:4px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;}
+  .btn{width:100%; background:var(--gold); color:#1a1408; border:none; border-radius:9px; padding:11px; font-family:'Vazirmatn',sans-serif; font-weight:700; font-size:13px; margin-top:10px; cursor:pointer;}
+  .btn:active{opacity:.85;}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--ink-dim); font-weight:500;}
+  .log-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed var(--line); font-size:12.5px; gap:6px;}
+  .log-item:last-child{border-bottom:none;}
+  .log-item .d{color:var(--ink-dim); font-family:'Martian Mono',monospace; direction:ltr; flex-shrink:0;}
+  .log-item .p{font-family:'Martian Mono',monospace; direction:ltr; color:var(--emerald); font-weight:600;}
+  .log-item .p.neg{color:var(--rose);}
+  .log-item .n{flex:1; color:var(--ink-dim); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .proj-card{background:var(--gold-soft); border:1px solid rgba(201,162,74,.3); border-radius:10px; padding:12px; margin-top:10px;}
+  .proj-card .rate{font-size:11px; color:var(--gold); margin-bottom:8px;}
+  .proj-row{display:flex; justify-content:space-between; font-size:13px; padding:4px 0;}
+  .proj-row .val{font-family:'Martian Mono',monospace; direction:ltr; font-weight:700; color:var(--ink);}
+  .empty{font-size:12px; color:var(--ink-dim); text-align:center; padding:14px 0;}
+  .note{font-size:11px; color:var(--ink-dim); margin-top:8px; line-height:1.9;}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--emerald); color:#08130d; font-size:12px; font-weight:700; padding:9px 16px; border-radius:20px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:88%; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+  .toast.err{background:var(--rose);}
+  .del{background:none;border:none;color:var(--rose);font-size:15px;cursor:pointer;padding:0 4px;flex-shrink:0;}
+  .donut-wrap{display:flex; align-items:center; gap:18px; flex-wrap:wrap; justify-content:center;}
+  .donut{width:150px; height:150px; border-radius:50%; flex-shrink:0; position:relative;}
+  .donut-center{position:absolute; inset:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:50%; background:var(--paper-2);}
+  .donut-center .t{font-size:9px; color:var(--ink-dim);}
+  .donut-center .v{font-family:'Martian Mono',monospace; font-size:13px; font-weight:700; direction:ltr;}
+  .legend{flex:1; min-width:160px;}
+  .legend-item{display:flex; align-items:center; gap:8px; padding:5px 0; font-size:12px;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .legend-name{flex:1; color:var(--ink-dim);}
+  .legend-pct{font-family:'Martian Mono',monospace; font-weight:700; direction:ltr;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ledger-head">
+    <h1>دفتر مالی</h1>
+    <div class="date" id="todayDate"></div>
+  </div>
+
+  <div class="info-banner">📌 این نسخه برای هاست روی دامنه شخصی‌ته و اطلاعات رو توی حافظه همین مرورگر (localStorage) نگه می‌داره. یعنی اگه از یه گوشی/مرورگر دیگه بازش کنی، اطلاعات رو نمی‌بینی — فقط روی همینی که الان داری ثبت می‌کنی می‌مونه، حتی بعد از بستن سایت.</div>
+
+  <div class="hero">
+    <div class="hero-label">جمع کل دارایی (نقدی + سرمایه‌گذاری)</div>
+    <div class="hero-num" id="totalNet">—</div>
+    <div class="hero-sub">
+      <div class="item">سرمایه‌گذاری: <b id="sumInvest">—</b></div>
+      <div class="item">نقدینگی: <b id="sumCash">—</b></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>آمار دارایی‌ها</div>
+    <div class="section-sub">سهم هر دارایی از کل دفتر</div>
+    <div class="donut-wrap">
+      <div style="position:relative;">
+        <div class="donut" id="donutChart"></div>
+        <div class="donut-center">
+          <div class="t">جمع کل</div>
+          <div class="v" id="donutTotal">—</div>
+        </div>
+      </div>
+      <div class="legend" id="legendList"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>دارایی‌ها</div>
+    <div class="section-sub">هر مبلغی که به یک دارایی اضافه یا از آن کم می‌کنی رو وارد کن و + یا − بزن</div>
+    <div id="assetCards"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>ثبت سود روزانه اسنپ</div>
+    <div class="grid2">
+      <div><label class="field">تاریخ</label><input type="date" id="logDate"></div>
+      <div><label class="field">سود آن روز (تومان)</label><input type="text" inputmode="numeric" id="logProfit" placeholder="مثلاً 3,866" class="money-input"></div>
+    </div>
+    <div class="note">ثبت سود، خودکار همین مبلغ رو هم به موجودی اسنپ اضافه می‌کنه.</div>
+    <button class="btn" id="addLogBtn">ثبت سود</button>
+    <div id="logList" style="margin-top:12px;"></div>
+    <div class="proj-card" id="projCard" style="display:none;">
+      <div class="rate">نرخ روزانه محاسبه‌شده از آخرین ثبت</div>
+      <div class="proj-row"><span>نرخ روزانه</span><span class="val" id="rateVal">—</span></div>
+      <div class="proj-row"><span>سود پیش‌بینی فردا</span><span class="val" id="tomorrowVal">—</span></div>
+      <div class="proj-row"><span>سود پیش‌بینی ۳۰ روز آینده</span><span class="val" id="monthVal">—</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>تاریخچه تغییرات دارایی</div>
+    <div id="txList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>تاریخچه جمع کل دارایی</div>
+    <button class="btn ghost" id="snapshotBtn">ثبت وضعیت امروز به‌عنوان یک نقطه در تاریخچه</button>
+    <div id="historyList" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="dot"></span>پشتیبان‌گیری دستی</div>
+    <div class="section-sub">چون اطلاعات فقط روی همین مرورگر هست، بهتره گاه‌به‌گاه یه فایل پشتیبان بگیری</div>
+    <button class="btn ghost" id="exportBtn">دانلود فایل پشتیبان (JSON)</button>
+    <button class="btn ghost" id="importBtn">بازگردانی از فایل پشتیبان</button>
+    <input type="file" id="importFile" accept=".json" style="display:none;">
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const parseMoney = str => parseFloat(String(str||'').replace(/,/g,'').replace(/[^\d.]/g,''));
+
+function gregorianToJalali(gy, gm, gd){
+  const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy = (gy <= 1600) ? 0 : 979;
+  gy -= (gy <= 1600) ? 621 : 1600;
+  const gy2 = (gm > 2) ? (gy + 1) : gy;
+  let days = (365*gy) + (Math.floor((gy2+3)/4)) - (Math.floor((gy2+99)/100)) + (Math.floor((gy2+399)/400)) - 80 + gd + g_d_m[gm-1];
+  jy += 33*(Math.floor(days/12053));
+  days %= 12053;
+  jy += 4*(Math.floor(days/1461));
+  days %= 1461;
+  if(days > 365){ jy += Math.floor((days-1)/365); days = (days-1)%365; }
+  const jm = (days < 186) ? 1+Math.floor(days/31) : 7+Math.floor((days-186)/30);
+  const jd = 1 + ((days < 186) ? (days%31) : ((days-186)%30));
+  return [jy, jm, jd];
+}
+const JMONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+function toJalaliStr(isoDate){
+  if(!isoDate) return '';
+  const [gy,gm,gd] = isoDate.split('-').map(Number);
+  const [jy,jm,jd] = gregorianToJalali(gy,gm,gd);
+  return `${jd} ${JMONTHS[jm-1]} ${jy}`;
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+document.addEventListener('input', (e)=>{
+  if(!e.target.classList || !e.target.classList.contains('money-input')) return;
+  const el = e.target;
+  const raw = el.value.replace(/,/g,'').replace(/[^\d]/g,'');
+  const withCommas = raw ? Number(raw).toLocaleString('en-US') : '';
+  const cursorFromEnd = el.value.length - el.selectionStart;
+  el.value = withCommas;
+  const newPos = Math.max(0, el.value.length - cursorFromEnd);
+  el.setSelectionRange(newPos, newPos);
+});
+
+function showToast(msg, isErr){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+$('todayDate').textContent = toJalaliStr(todayISO());
+$('logDate').value = todayISO();
+
+const ASSET_DEFS = [
+  {key:'snapp',  name:'اسنپ',        cat:'سرمایه‌گذاری', color:'var(--gold)'},
+  {key:'hami',   name:'صندوق حامی',   cat:'سرمایه‌گذاری', color:'var(--emerald)'},
+  {key:'farabi', name:'لبخند فارابی', cat:'سرمایه‌گذاری', color:'var(--teal)'},
+  {key:'card',   name:'کارت',         cat:'نقدینگی',      color:'var(--slate)'},
+  {key:'wallet', name:'پول نقد',      cat:'نقدینگی',      color:'var(--rose)'},
+];
+
+let assets = { snapp: 4591690, hami: 5155000, farabi: 148690, card: 2100000, wallet: 570000 };
+let logs = [];
+let txs = [];
+let history = [];
+
+const STORE_KEY = 'daftar-mali-v1';
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d.assets) assets = {...assets, ...d.assets};
+      if(d.logs) logs = d.logs;
+      if(d.txs) txs = d.txs;
+      if(d.history) history = d.history;
+    }
+  }catch(e){ console.error(e); }
+  render();
+}
+
+function persist(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history}));
+    return true;
+  }catch(e){
+    showToast('خطا در ذخیره: ' + e.message, true);
+    return false;
+  }
+}
+
+function investKeys(){ return ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key); }
+function cashKeys(){ return ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key); }
+function sumKeys(keys){ return keys.reduce((s,k)=> s + (assets[k]||0), 0); }
+function computeInvest(){ return sumKeys(investKeys()); }
+function computeCash(){ return sumKeys(cashKeys()); }
+function computeTotal(){ return computeInvest() + computeCash(); }
+
+function render(){
+  $('sumInvest').textContent = fmt(computeInvest());
+  $('sumCash').textContent = fmt(computeCash());
+  $('totalNet').innerHTML = fmt(computeTotal()) + ' <small>تومان</small>';
+  renderDonut();
+  renderAssetCards();
+  renderLogs();
+  renderTxs();
+  renderHistory();
+}
+
+function renderDonut(){
+  const total = computeTotal();
+  $('donutTotal').textContent = total ? fmt(total) : '۰';
+  const donut = $('donutChart');
+  const legend = $('legendList');
+  if(total <= 0){
+    donut.style.background = '#1c2521';
+    legend.innerHTML = '<div class="empty">دارایی‌ای ثبت نشده</div>';
+    return;
+  }
+  let acc = 0;
+  const stops = [];
+  ASSET_DEFS.forEach(d=>{
+    const v = assets[d.key]||0;
+    if(v<=0) return;
+    const pct = v/total*100;
+    stops.push(`${d.color} ${acc}% ${acc+pct}%`);
+    acc += pct;
+  });
+  donut.style.background = `conic-gradient(${stops.join(',')})`;
+  legend.innerHTML = ASSET_DEFS.map(d=>{
+    const v = assets[d.key]||0;
+    const pct = total ? (v/total*100) : 0;
+    return `<div class="legend-item"><span class="legend-dot" style="background:${d.color}"></span><span class="legend-name">${d.name}</span><span class="legend-pct">${pct.toFixed(1)}%</span></div>`;
+  }).join('');
+}
+
+function renderAssetCards(){
+  const el = $('assetCards');
+  el.innerHTML = ASSET_DEFS.map(d => `
+    <div class="asset-card">
+      <div class="asset-top">
+        <div><div class="asset-name">${d.name}</div><div class="asset-cat">${d.cat}</div></div>
+        <div class="asset-val">${fmt(assets[d.key]||0)}</div>
+      </div>
+      <div class="adjust-row">
+        <button class="adj-btn plus" data-key="${d.key}" data-dir="1">+</button>
+        <input type="text" inputmode="numeric" placeholder="مبلغ" data-amount="${d.key}" class="money-input">
+        <button class="adj-btn minus" data-key="${d.key}" data-dir="-1">−</button>
+      </div>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.adj-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.key;
+      const dir = parseInt(btn.dataset.dir);
+      const input = el.querySelector(`input[data-amount="${key}"]`);
+      const amount = parseMoney(input.value);
+      if(isNaN(amount) || amount<=0){ showToast('یک مبلغ معتبر وارد کن', true); return; }
+      const def = ASSET_DEFS.find(d=>d.key===key);
+      assets[key] = (assets[key]||0) + dir*amount;
+      txs.push({date: todayISO(), key, delta: dir*amount, note: def.name});
+      if(persist()){
+        input.value = '';
+        showToast(dir>0 ? `${fmt(amount)} به ${def.name} اضافه شد` : `${fmt(amount)} از ${def.name} کم شد`);
+        render();
+      }
+    });
+  });
+}
+
+function renderLogs(){
+  const el = $('logList');
+  if(logs.length === 0){
+    el.innerHTML = '<div class="empty">هنوز سودی ثبت نشده</div>';
+    $('projCard').style.display = 'none';
+    return;
+  }
+  const sorted = [...logs].sort((a,b)=> a.date < b.date ? 1 : -1);
+  el.innerHTML = sorted.slice(0,8).map(l => {
+    const realIdx = logs.indexOf(l);
+    return `<div class="log-item"><span class="d">${toJalaliStr(l.date)}</span><span class="n"></span><span class="p">+${fmt(l.profit)} ت</span><button class="del" data-idx="${realIdx}">×</button></div>`;
+  }).join('');
+
+  el.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      logs.splice(parseInt(btn.dataset.idx),1);
+      if(persist()) render();
+    });
+  });
+
+  const last = sorted[0];
+  const rate = last.profit / (assets.snapp || 1);
+  $('projCard').style.display = 'block';
+  $('rateVal').textContent = (rate*100).toFixed(3) + '%';
+  $('tomorrowVal').textContent = '+' + fmt(assets.snapp * rate) + ' ت';
+  let bal = assets.snapp, total30 = 0;
+  for(let i=0;i<30;i++){ const p = bal*rate; total30 += p; bal += p; }
+  $('monthVal').textContent = '+' + fmt(total30) + ' ت';
+}
+
+function renderTxs(){
+  const el = $('txList');
+  if(txs.length === 0){ el.innerHTML = '<div class="empty">هنوز تغییری ثبت نشده</div>'; return; }
+  const sorted = [...txs].sort((a,b)=> a.date < b.date ? 1 : -1);
+  el.innerHTML = sorted.slice(0,12).map(t => {
+    const pos = t.delta >= 0;
+    return `<div class="log-item"><span class="d">${toJalaliStr(t.date)}</span><span class="n">${t.note}</span><span class="p ${pos?'':'neg'}">${pos?'+':''}${fmt(t.delta)} ت</span></div>`;
+  }).join('');
+}
+
+function renderHistory(){
+  const el = $('historyList');
+  if(history.length === 0){ el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده</div>'; return; }
+  const sorted = [...history].sort((a,b)=> a.date < b.date ? 1 : -1);
+  el.innerHTML = sorted.slice(0,10).map(h=>{
+    return `<div class="log-item"><span class="d">${toJalaliStr(h.date)}</span><span class="n"></span><span class="p" style="color:var(--gold)">${fmt(h.total)} ت</span></div>`;
+  }).join('');
+}
+
+$('addLogBtn').addEventListener('click', ()=>{
+  const date = $('logDate').value;
+  const profit = parseMoney($('logProfit').value);
+  if(!date || isNaN(profit) || profit<=0){ showToast('تاریخ و سود رو درست وارد کن', true); return; }
+  logs.push({date, profit});
+  assets.snapp = (assets.snapp||0) + profit;
+  txs.push({date, key:'snapp', delta: profit, note: 'سود روزانه اسنپ'});
+  if(persist()){
+    $('logProfit').value = '';
+    showToast('ثبت شد');
+    render();
+  }
+});
+
+$('snapshotBtn').addEventListener('click', ()=>{
+  const date = todayISO();
+  history = history.filter(h=>h.date !== date);
+  history.push({date, total: computeTotal()});
+  if(persist()){ showToast('نقطه امروز ثبت شد'); render(); }
+});
+
+$('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify({assets, logs, txs, history}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `daftar-mali-backup-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('فایل پشتیبان دانلود شد');
+});
+
+$('importBtn').addEventListener('click', ()=> $('importFile').click());
+$('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const d = JSON.parse(ev.target.result);
+      if(d.assets) assets = {...assets, ...d.assets};
+      if(d.logs) logs = d.logs;
+      if(d.txs) txs = d.txs;
+      if(d.history) history = d.history;
+      persist();
+      render();
+      showToast('بازگردانی شد');
+    }catch(err){ showToast('فایل نامعتبره', true); }
+  };
+  reader.readAsText(file);
+});
+
+loadAll();
+</script>
+</body>
+</html>
