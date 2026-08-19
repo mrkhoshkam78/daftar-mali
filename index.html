@@ -166,6 +166,11 @@
   .jalali-picker{display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:5px;}
   .jalali-picker select{font-family:'Vazirmatn',sans-serif; direction:rtl; padding:9px 6px; font-size:12px;}
 
+  .nb-summary-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .nb-stat{border:1px solid var(--border); border-radius:12px; padding:10px; background:var(--card-2);}
+  .nb-stat .lbl{font-size:11px; color:var(--ink-dim); margin-bottom:4px;}
+  .nb-stat .val{font-family:'Martian Mono',monospace; font-weight:700; direction:ltr; font-size:14px;}
+
   .btn{
     width:100%; background:linear-gradient(90deg, var(--blue), var(--blue-deep)); color:#fff; border:none;
     border-radius:10px; padding:11px; font-family:'Vazirmatn',sans-serif;
@@ -180,6 +185,8 @@
   .log-item .p{font-family:'Martian Mono',monospace; direction:ltr; color:var(--green); font-weight:600;}
   .log-item .p.neg{color:var(--red);}
   .log-item .n{flex:1; color:var(--ink-dim); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #nbList .log-item{flex-wrap:wrap; align-items:flex-start;}
+  #nbList .log-item .n{white-space:normal; overflow:visible; text-overflow:unset; word-break:break-word; flex-basis:100%; order:3; margin-top:2px;}
 
   .proj-card{background:var(--blue-soft); border:1px solid var(--border-strong); border-radius:12px; padding:12px; margin-top:10px;}
   .proj-card .rate{font-size:11px; color:var(--blue-light); margin-bottom:8px;}
@@ -298,6 +305,7 @@
   <a href="#" class="menu-item" data-page="page-assets"><span class="ic">💳</span>دارایی‌ها</a>
   <a href="#" class="menu-item" data-page="page-noncash"><span class="ic">💎</span>دارایی غیرنقد</a>
   <a href="#" class="menu-item" data-page="page-snapp"><span class="ic">📈</span>سود اسنپ</a>
+  <a href="#" class="menu-item" data-page="page-notebook"><span class="ic">📔</span>دفترچه یادداشت</a>
   <a href="#" class="menu-item" data-page="page-history"><span class="ic">🕘</span>تاریخچه</a>
   <a href="#" class="menu-item" data-page="page-settings"><span class="ic">⚙️</span>تنظیمات</a>
 </div>
@@ -332,10 +340,10 @@
       <div class="section-title"><span class="dot"></span>روند کلی دارایی</div>
       <div class="section-sub">تغییر جمع کل دارایی (نقدینگی + سرمایه‌گذاری) در بازه انتخابی</div>
       <div class="trend-tabs" id="trendTabs">
-        <button class="trend-tab" data-range="86400000">۲۴ ساعت</button>
-        <button class="trend-tab active" data-range="604800000">۱ هفته</button>
-        <button class="trend-tab" data-range="2592000000">۱ ماه</button>
-        <button class="trend-tab" data-range="31536000000">۱ سال</button>
+        <button class="trend-tab" data-range="24h">۲۴ ساعت</button>
+        <button class="trend-tab active" data-range="week">۱ هفته</button>
+        <button class="trend-tab" data-range="month">۱ ماه</button>
+        <button class="trend-tab" data-range="year">۱ سال</button>
       </div>
       <div class="trend-badge" id="trendBadge"></div>
       <div class="trend-chart-wrap">
@@ -430,6 +438,64 @@
         <div class="proj-row"><span>سود پیش‌بینی فردا</span><span class="val" id="tomorrowVal">—</span></div>
         <div class="proj-row"><span>سود پیش‌بینی ۳۰ روز آینده</span><span class="val" id="monthVal">—</span></div>
       </div>
+    </div>
+    </div>
+
+    <div class="page" id="page-notebook">
+    <div class="section reveal">
+      <div class="section-title"><span class="dot"></span>ثبت تراکنش جدید</div>
+      <div class="section-sub">پایه محاسبه، موجودی فعلی «کارت» از صفحه دارایی‌هاست — این دفترچه جدا حساب می‌کنه و خودِ دارایی کارت رو تغییر نمی‌ده</div>
+
+      <label class="field">نوع تراکنش</label>
+      <select id="nbType">
+        <option value="deposit">واریز</option>
+        <option value="payment">پرداخت</option>
+        <option value="lent">قرض داده</option>
+        <option value="borrowed">قرض گرفته</option>
+      </select>
+
+      <div id="nbPersonWrap" style="display:none; margin-top:8px;">
+        <label class="field">شخص</label>
+        <input type="text" id="nbPerson" placeholder="اسم طرف حساب">
+      </div>
+
+      <div class="grid2" style="margin-top:8px;">
+        <div><label class="field">مبلغ (تومان)</label><input type="text" inputmode="numeric" id="nbAmount" placeholder="مثلاً 150,000" class="money-input"></div>
+        <div><label class="field">ساعت</label><input type="time" id="nbTime"></div>
+      </div>
+
+      <label class="field" style="margin-top:8px;">تاریخ (شمسی)</label>
+      <div class="jalali-picker">
+        <select id="nbDateDay"></select>
+        <select id="nbDateMonth"></select>
+        <select id="nbDateYear"></select>
+      </div>
+
+      <label class="field" style="margin-top:8px;">توضیحات</label>
+      <input type="text" id="nbDesc" placeholder="مثلاً خرید نان و لبنیات">
+
+      <button class="btn" id="nbAddBtn">ثبت تراکنش</button>
+    </div>
+
+    <div class="section reveal">
+      <div class="section-title"><span class="dot"></span>تراکنش‌های ثبت‌شده</div>
+      <div id="nbList"></div>
+    </div>
+
+    <div class="section reveal">
+      <div class="section-title"><span class="dot"></span>خلاصه دسته‌ها</div>
+      <div class="nb-summary-grid" id="nbSummaryGrid"></div>
+    </div>
+
+    <div class="proj-card" style="margin:0 0 16px;">
+      <div class="rate">محاسبه‌گر پایین صفحه (جدا از دارایی رسمی کارت)</div>
+      <div class="proj-row"><span>پایه — موجودی فعلی کارت</span><span class="val" id="nbBase">—</span></div>
+      <div class="proj-row"><span>جمع تراکنش‌های این دفترچه</span><span class="val" id="nbDelta">—</span></div>
+      <div class="proj-row" style="border-top:1px dashed var(--border); padding-top:8px; margin-top:4px;">
+        <span style="font-weight:700;">موجودی محاسبه‌شده</span><span class="val" id="nbResult" style="font-size:16px;">—</span>
+      </div>
+      <button class="btn" id="nbSyncBtn">🔄 همگام‌سازی با موجودی کارت</button>
+      <div class="note">این کار موجودی «کارت» رو برابر با نتیجه محاسبه‌شده بالا می‌کنه و بعدش دفترچه رو خالی می‌کنه (چون اثرش قبلاً روی کارت اعمال شده).</div>
     </div>
     </div>
 
@@ -618,13 +684,13 @@ function daysInJalaliMonth(jy, jm){
 }
 function pad2(n){ return String(n).padStart(2,'0'); }
 
-/* راه‌اندازی انتخابگر تاریخ شمسی برای ثبت سود اسنپ */
-function setupJalaliPicker(){
-  const daySel = $('logDateDay'), monthSel = $('logDateMonth'), yearSel = $('logDateYear');
+/* راه‌اندازی عمومی انتخابگر تاریخ شمسی — قابل استفاده برای چند فیلد مختلف در صفحه */
+function setupJalaliPicker(dayId, monthId, yearId){
+  const daySel = $(dayId), monthSel = $(monthId), yearSel = $(yearId);
   const [ty, tm, td] = gregorianToJalali(...todayISO().split('-').map(Number));
 
   monthSel.innerHTML = JMONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
-  yearSel.innerHTML = [ty, ty-1, ty-2].map(y=>`<option value="${y}">${y}</option>`).join('');
+  yearSel.innerHTML = [ty-1, ty, ty+1, ty+2, ty+3].map(y=>`<option value="${y}">${y}</option>`).join('');
 
   function rebuildDays(){
     const jy = parseInt(yearSel.value), jm = parseInt(monthSel.value);
@@ -639,12 +705,15 @@ function setupJalaliPicker(){
   monthSel.addEventListener('change', rebuildDays);
   yearSel.addEventListener('change', rebuildDays);
 }
-function selectedLogDateISO(){
-  const jy = parseInt($('logDateYear').value), jm = parseInt($('logDateMonth').value), jd = parseInt($('logDateDay').value);
+function getJalaliPickerISO(dayId, monthId, yearId){
+  const jy = parseInt($(yearId).value), jm = parseInt($(monthId).value), jd = parseInt($(dayId).value);
   const [gy,gm,gd] = jalaliToGregorian(jy, jm, jd);
   return `${gy}-${pad2(gm)}-${pad2(gd)}`;
 }
-setupJalaliPicker();
+function selectedLogDateISO(){ return getJalaliPickerISO('logDateDay','logDateMonth','logDateYear'); }
+setupJalaliPicker('logDateDay','logDateMonth','logDateYear');
+setupJalaliPicker('nbDateDay','nbDateMonth','nbDateYear');
+$('nbTime').value = new Date().toTimeString().slice(0,5);
 
 /* ================= MONEY INPUT FORMAT ================= */
 document.addEventListener('input', (e)=>{
@@ -701,6 +770,7 @@ let txs = [];
 let history = [];
 let noncash = []; // {id, category, label, manualValue}
 let netSeries = []; // {ts, total} — ثبت خودکار با هر تغییر دارایی، برای نمودار روند
+let notebook = []; // {id, type, amount, person, date, time, desc} — دفترچه یادداشت مالی روزانه
 
 const STORE_KEY = 'daftar-mali-v1';
 
@@ -715,6 +785,7 @@ function loadAll(){
       if(d.history) history = d.history;
       if(d.noncash) noncash = d.noncash;
       if(d.netSeries) netSeries = d.netSeries;
+      if(d.notebook) notebook = d.notebook;
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
     }
   }catch(e){ console.error(e); }
@@ -730,7 +801,7 @@ function pushSeriesPoint(){
 }
 function persist(){
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history, noncash, netSeries, assetDefs: ASSET_DEFS}));
+    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history, noncash, netSeries, notebook, assetDefs: ASSET_DEFS}));
     return true;
   }catch(e){ showToast('خطا در ذخیره: ' + e.message, true); return false; }
 }
@@ -743,7 +814,7 @@ function computeCash(){ return sumKeys(cashKeys()); }
 function computeTotal(){ return computeInvest() + computeCash(); }
 
 /* ================= RENDER ================= */
-let currentTrendRange = 604800000; // پیش‌فرض: ۱ هفته
+let currentTrendRange = 'week'; // پیش‌فرض: ۱ هفته
 function render(){
   $('sumInvest').textContent = fmt(computeInvest());
   $('sumCash').textContent = fmt(computeCash());
@@ -755,6 +826,7 @@ function render(){
   renderTxs();
   renderHistory();
   renderNonCash();
+  renderNotebook();
 }
 
 function renderDonut(){
@@ -783,16 +855,57 @@ function renderDonut(){
   }).join('');
 }
 
-function renderTrendChart(rangeMs){
+/* تولید نقاط زمانیِ ثابت هر بازه: ۲۴ساعت→ساعتی، هفته/ماه→روزانه، سال→ماهانه.
+   نقطه آخر همیشه «همین لحظه» است (زنده، در تاریخچه ذخیره نمی‌شود). */
+function getBucketTimes(rangeKey){
+  const nowD = new Date();
+  const now = nowD.getTime();
+  const times = [];
+  if(rangeKey === '24h'){
+    for(let i=23;i>=1;i--){
+      const d = new Date(nowD); d.setMinutes(0,0,0); d.setHours(d.getHours()-i);
+      times.push(d.getTime());
+    }
+  } else if(rangeKey === 'week' || rangeKey === 'month'){
+    const days = rangeKey === 'week' ? 6 : 29;
+    for(let i=days;i>=1;i--){
+      const d = new Date(nowD); d.setHours(23,59,59,999); d.setDate(d.getDate()-i);
+      times.push(d.getTime());
+    }
+  } else if(rangeKey === 'year'){
+    for(let i=11;i>=1;i--){
+      const d = new Date(nowD.getFullYear(), nowD.getMonth()-i+1, 0, 23,59,59,999);
+      times.push(d.getTime());
+    }
+  }
+  times.push(now); // نقطه آخر: لحظه فعلی سیستم (زنده)
+  return times;
+}
+
+/* برای هر نقطه زمانیِ تایم‌لاین، آخرین مقدار ثبت‌شده تا آن لحظه را برمی‌گرداند (حفظ آخرین مقدار در نبود داده جدید).
+   اگر پیش از اولین ثبت باشد، مقدار آن بازه null می‌ماند (خالی، اما جای آن در تایم‌لاین حفظ می‌شود). */
+function buildBucketSeries(rangeKey){
+  const times = getBucketTimes(rangeKey);
+  const sorted = [...netSeries].sort((a,b)=> a.ts - b.ts);
+  const values = times.map((T, i)=>{
+    if(i === times.length - 1) return computeTotal(); // نقطه آخر همیشه زنده و لحظه‌ایست
+    let found = null;
+    for(const p of sorted){ if(p.ts <= T) found = p; else break; }
+    return found ? found.total : null;
+  });
+  return { times, values };
+}
+
+function renderTrendChart(rangeKey){
   const svg = $('trendSvg');
   const badge = $('trendBadge');
   const emptyEl = $('trendEmpty');
-  const now = Date.now();
-  const points = netSeries
-    .filter(p => now - p.ts <= rangeMs)
-    .sort((a,b)=> a.ts - b.ts);
 
-  if(points.length < 2){
+  const { times, values } = buildBucketSeries(rangeKey);
+  const firstDataIdx = values.findIndex(v => v !== null);
+  const knownCount = values.filter(v => v !== null).length;
+
+  if(knownCount < 2){
     svg.innerHTML = '';
     emptyEl.style.display = 'block';
     badge.textContent = '';
@@ -802,20 +915,25 @@ function renderTrendChart(rangeMs){
   emptyEl.style.display = 'none';
 
   const w = 300, h = 100, pad = 6;
-  const windowStart = now - rangeMs;
-  const values = points.map(p=>p.total);
-  let minV = Math.min(...values), maxV = Math.max(...values);
-  if(minV === maxV){ minV -= 1; maxV += 1; } // جلوگیری از تقسیم بر صفر وقتی همه نقاط برابرن
+  const n = times.length;
+  const xOf = i => n > 1 ? pad + (i/(n-1)) * (w - pad*2) : w/2;
 
-  const xOf = t => pad + ((t - windowStart) / rangeMs) * (w - pad*2);
+  const knownValues = values.filter(v => v !== null);
+  let minV = Math.min(...knownValues), maxV = Math.max(...knownValues);
+  if(minV === maxV){ minV -= 1; maxV += 1; } // جلوگیری از تقسیم بر صفر وقتی همه نقاط برابرن
   const yOf = v => (h-pad) - ((v - minV) / (maxV - minV)) * (h - pad*2);
 
-  const linePts = points.map(p => `${xOf(p.ts).toFixed(1)},${yOf(p.total).toFixed(1)}`).join(' ');
-  const first = points[0].total, last = points[points.length-1].total;
+  // فقط از اولین بازه‌ای که داده دارد به بعد رسم می‌شود؛ بازه‌های خالیِ قبل از آن جایشان در محور حفظ می‌شود ولی رسم نمی‌شوند
+  const drawnPts = [];
+  for(let i=firstDataIdx;i<n;i++){ drawnPts.push(`${xOf(i).toFixed(1)},${yOf(values[i]).toFixed(1)}`); }
+  const linePts = drawnPts.join(' ');
+
+  const first = values[firstDataIdx], last = values[n-1];
   const changePct = first !== 0 ? ((last-first)/Math.abs(first))*100 : 0;
 
-  const lastX = xOf(points[points.length-1].ts), lastY = yOf(last);
-  const areaPts = `${pad},${h-pad} ${linePts} ${lastX.toFixed(1)},${h-pad}`;
+  const lastX = xOf(n-1), lastY = yOf(last);
+  const firstX = xOf(firstDataIdx);
+  const areaPts = `${firstX.toFixed(1)},${h-pad} ${linePts} ${lastX.toFixed(1)},${h-pad}`;
 
   svg.innerHTML = `
     <defs>
@@ -839,7 +957,7 @@ document.querySelectorAll('.trend-tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.trend-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    currentTrendRange = parseInt(btn.dataset.range);
+    currentTrendRange = btn.dataset.range;
     renderTrendChart(currentTrendRange);
   });
 });
@@ -995,6 +1113,65 @@ function renderNonCash(){
   });
 }
 
+/* ================= دفترچه یادداشت مالی ================= */
+const NB_TYPES = {
+  deposit:  {label:'واریز',        sign: 1, color:'var(--green)'},
+  payment:  {label:'پرداخت',       sign:-1, color:'var(--red)'},
+  lent:     {label:'قرض داده',      sign:-1, color:'var(--red)'},
+  borrowed: {label:'قرض گرفته',     sign: 1, color:'var(--green)'},
+};
+function nbDelta(){
+  return notebook.reduce((s,e)=> s + (NB_TYPES[e.type]?.sign||0) * (e.amount||0), 0);
+}
+function renderNotebook(){
+  const el = $('nbList');
+  if(notebook.length === 0){
+    el.innerHTML = '<div class="empty">هنوز تراکنشی ثبت نشده</div>';
+  } else {
+    const sorted = [...notebook].sort((a,b)=>{
+      const ka = a.date + (a.time||'00:00'), kb = b.date + (b.time||'00:00');
+      return ka < kb ? 1 : -1;
+    });
+    el.innerHTML = sorted.map(e=>{
+      const t = NB_TYPES[e.type];
+      const sign = t.sign > 0 ? '+' : '−';
+      const personTxt = e.person ? ` — ${e.person}` : '';
+      return `<div class="log-item">
+        <span class="d">${toJalaliStr(e.date)} ${e.time||''}</span>
+        <span class="n">${t.label}${personTxt}${e.desc ? ' — '+e.desc : ''}</span>
+        <span class="p" style="color:${t.color}">${sign}${fmt(e.amount)} ت</span>
+        <button class="del" data-id="${e.id}">×</button>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
+        showConfirmModal('حذف این تراکنش؟', entry ? `${NB_TYPES[entry.type].label} — ${fmt(entry.amount)} تومان` : '', ()=>{
+          notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
+          if(persist()) renderNotebook();
+        });
+      });
+    });
+  }
+
+  // خلاصه دسته‌ها
+  const sums = {deposit:0, payment:0, lent:0, borrowed:0};
+  notebook.forEach(e=>{ if(sums.hasOwnProperty(e.type)) sums[e.type] += (e.amount||0); });
+  $('nbSummaryGrid').innerHTML = Object.keys(NB_TYPES).map(k=>`
+    <div class="nb-stat">
+      <div class="lbl">${NB_TYPES[k].label}</div>
+      <div class="val" style="color:${NB_TYPES[k].color}">${fmt(sums[k])} ت</div>
+    </div>
+  `).join('');
+
+  // محاسبه‌گر پایین صفحه — پایه: دارایی «کارت» فعلی (بدون تغییر خودِ آن)
+  const base = assets.card || 0;
+  const delta = nbDelta();
+  $('nbBase').textContent = fmt(base) + ' ت';
+  $('nbDelta').textContent = (delta>=0?'+':'') + fmt(delta) + ' ت';
+  $('nbResult').textContent = fmt(base + delta) + ' ت';
+}
+
 /* ================= EVENTS ================= */
 $('ncAddBtn').addEventListener('click', ()=>{
   const category = $('ncCategory').value;
@@ -1021,6 +1198,57 @@ $('addLogBtn').addEventListener('click', ()=>{
   if(persist()){ $('logProfit').value=''; showToast('ثبت شد'); render(); }
 });
 
+/* ---- دفترچه یادداشت مالی ---- */
+function updateNbPersonVisibility(){
+  const needsPerson = ['lent','borrowed'].includes($('nbType').value);
+  $('nbPersonWrap').style.display = needsPerson ? 'block' : 'none';
+}
+$('nbType').addEventListener('change', updateNbPersonVisibility);
+updateNbPersonVisibility();
+
+$('nbAddBtn').addEventListener('click', ()=>{
+  const type = $('nbType').value;
+  const person = $('nbPerson').value.trim();
+  const amount = parseMoney($('nbAmount').value);
+  const time = $('nbTime').value || new Date().toTimeString().slice(0,5);
+  const date = getJalaliPickerISO('nbDateDay','nbDateMonth','nbDateYear');
+  const desc = $('nbDesc').value.trim();
+  const needsPerson = ['lent','borrowed'].includes(type);
+
+  if(isNaN(amount) || amount<=0){ showToast('مبلغ معتبر وارد کن', true); return; }
+  if(needsPerson && !person){ showToast('برای قرض، اسم شخص رو وارد کن', true); return; }
+
+  notebook.push({
+    id: Date.now(), type, amount, time, date, desc,
+    person: needsPerson ? person : '',
+  });
+  if(persist()){
+    $('nbAmount').value=''; $('nbPerson').value=''; $('nbDesc').value='';
+    showToast('تراکنش ثبت شد');
+    renderNotebook();
+  }
+});
+
+$('nbSyncBtn').addEventListener('click', ()=>{
+  if(notebook.length === 0){ showToast('دفترچه خالیه، چیزی برای همگام‌سازی نیست'); return; }
+  const delta = nbDelta();
+  const newBase = (assets.card||0) + delta;
+  showConfirmModal(
+    'همگام‌سازی دفترچه با کارت؟',
+    `موجودی کارت از ${fmt(assets.card||0)} به ${fmt(newBase)} تومان تغییر می‌کنه و ${notebook.length} تراکنش ثبت‌شده در دفترچه پاک می‌شه.`,
+    ()=>{
+      assets.card = newBase;
+      txs.push({date: todayISO(), key:'card', delta, note:'همگام‌سازی با دفترچه یادداشت'});
+      notebook = [];
+      pushSeriesPoint();
+      if(persist()){
+        showToast('همگام‌سازی شد');
+        render();
+      }
+    }
+  );
+});
+
 $('snapshotBtn').addEventListener('click', ()=>{
   const date = todayISO();
   history = history.filter(h=>h.date !== date);
@@ -1029,7 +1257,7 @@ $('snapshotBtn').addEventListener('click', ()=>{
 });
 
 $('exportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify({assets, logs, txs, history, noncash, netSeries, assetDefs: ASSET_DEFS}, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({assets, logs, txs, history, noncash, netSeries, notebook, assetDefs: ASSET_DEFS}, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `daftar-mali-backup-${todayISO()}.json`; a.click();
@@ -1050,6 +1278,7 @@ $('importFile').addEventListener('change', (e)=>{
       if(d.history) history = d.history;
       if(d.noncash) noncash = d.noncash;
       if(d.netSeries) netSeries = d.netSeries;
+      if(d.notebook) notebook = d.notebook;
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
       persist(); render();
       showToast('بازگردانی شد');
