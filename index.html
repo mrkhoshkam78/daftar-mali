@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مبحث درآمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
+    --app-font:'Vazirmatn',sans-serif;
     --bg:#070b16; --bg-2:#0a1020;
     --card:#0d1526; --card-2:#101a30;
     --border:rgba(96,165,250,.14); --border-strong:rgba(96,165,250,.32);
@@ -61,7 +62,7 @@
       radial-gradient(900px 400px at 15% -5%, var(--blue-glow), transparent 60%),
       var(--bg);
     color:var(--ink);
-    font-family:'Vazirmatn',sans-serif;
+    font-family:var(--app-font);
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
     transition:background .3s, color .3s;
@@ -350,6 +351,14 @@
   .switch input:checked + .slider::before{
     transform:translateX(-18px); background:var(--blue-light);
   }
+  .settings-stack{display:flex; flex-direction:column; gap:14px;}
+  .settings-stack > .section{margin-bottom:0;}
+  .settings-stack .section-title{margin-bottom:6px;}
+  .pin-actions{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  @media (min-width:480px){
+    .pin-actions{flex-direction:row;}
+    .pin-actions .btn{flex:1; margin-top:0;}
+  }
   .app-version{
     text-align:center; font-size:11px; color:var(--ink-dim);
     padding:16px 8px 8px; letter-spacing:.02em;
@@ -396,6 +405,41 @@
     html[data-anim="on"] .section-title .dot{animation:none;}
   }
   .section-sub{font-size:11px; color:var(--ink-dim); margin-bottom:12px;}
+
+  .nc-item{
+    display:flex; align-items:center; gap:10px; padding:11px 6px;
+    border-bottom:1px dashed var(--border);
+  }
+  .nc-item:last-child{border-bottom:none;}
+  .nc-item .nc-meta{flex:1; min-width:0;}
+  .nc-item .nc-cat{
+    display:inline-block; font-size:10px; font-weight:700; color:var(--blue-light);
+    background:var(--blue-soft); border:1px solid var(--border);
+    padding:3px 9px; border-radius:999px;
+  }
+  .nc-item .nc-name{font-size:12.5px; color:var(--ink); margin-top:4px;}
+  .nc-item .nc-updated{font-size:9.5px; color:var(--ink-dim); opacity:.55; margin-top:3px;}
+  .nc-item .nc-val{
+    font-family:'Martian Mono',monospace; direction:ltr; font-weight:700;
+    color:var(--blue-light); font-size:13px; flex-shrink:0;
+  }
+
+
+  /* انتقال بین دارایی‌ها */
+  .transfer-box{
+    margin-top:14px; padding:14px; border-radius:14px;
+    border:1px solid var(--border); background:var(--card-2);
+  }
+  .transfer-box .tb-title{font-size:12px; font-weight:700; color:var(--ink); margin-bottom:8px;}
+  .transfer-arrow{
+    text-align:center; color:var(--ink-dim); font-size:12px; padding:4px 0;
+  }
+  /* عملکرد لود دارایی */
+  #assetCards.rendering .asset-card,
+  #assetCards.rendering .asset-card:hover{
+    transition:none !important; transform:none !important; will-change:auto !important;
+  }
+
 
   .noncash-card{border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:var(--card-2);}
   .noncash-card:last-child{margin-bottom:0;}
@@ -817,13 +861,22 @@
   .fc-snap-item .p{font-family:'Martian Mono',monospace; font-weight:700; direction:ltr;}
   .fc-snap-title{font-size:11px; color:var(--ink-dim); margin-bottom:4px; margin-top:4px;}
 
-  .hist-filters{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
-  .hist-filter{
-    flex:1; min-width:72px; text-align:center; padding:7px 6px; border-radius:9px; font-size:11px;
-    border:1px solid var(--border); background:var(--card-2); color:var(--ink-dim); cursor:pointer;
-    font-family:'Vazirmatn',sans-serif; font-weight:600;
-  }
-  .hist-filter.active{background:var(--blue-soft); color:var(--blue-light); border-color:var(--border-strong);}
+  .hist-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .hist-filter{position:relative;min-width:0;min-height:58px;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:13px;border:1px solid var(--border);background:linear-gradient(145deg,var(--card-2),var(--bg-2));color:var(--ink-dim);cursor:pointer;font-family:var(--app-font);text-align:start;font-weight:600;overflow:hidden;transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;}
+  .hist-filter::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.04) 50%,transparent 70%);transform:translateX(-120%);transition:transform .5s ease;}
+  .hist-filter:hover::after{transform:translateX(120%);}
+  .hist-filter:hover{transform:translateY(-1px);border-color:var(--border-strong);color:var(--ink);}
+  .hist-filter.active{background:linear-gradient(145deg,var(--blue-soft),var(--card-2));color:var(--blue-light);border-color:var(--border-strong);box-shadow:0 5px 18px var(--blue-glow);}
+  .hist-filter-icon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:rgba(96,165,250,.07);border:1px solid var(--border);}
+  .hist-filter-icon svg{width:16px;height:16px;}
+  .hist-filter-icon.deficit{color:var(--red);background:var(--red-soft);}
+  .hist-filter-icon.receipt{color:var(--green);background:var(--green-soft);}
+  .hist-filter-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+  .hist-filter-copy b{font-size:11.5px;line-height:1.2;}
+  .hist-filter-copy small{font-size:9px;color:var(--ink-dim);font-weight:500;white-space:nowrap;}
+  .filter-count{min-width:22px;height:22px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--border);font-family:'Martian Mono',monospace;font-size:9px;direction:ltr;}
+  .hist-filter.active .filter-count{background:var(--blue-soft);border-color:var(--border-strong);color:var(--blue-light);}
+  @media (min-width:620px){.hist-filters{grid-template-columns:repeat(4,1fr);}}
   .scroll-list{max-height:none; overflow-y:visible;}
   .scroll-list.scrollable{overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
   .scroll-list.scrollable::-webkit-scrollbar{width:5px;}
@@ -832,6 +885,43 @@
   #fcSnapList .scroll-list.scrollable,
   #fcSnapScroll.scrollable{max-height:210px;}
   #logList.scrollable{max-height:210px;}
+
+
+  /* Language / font controls */
+  .select-setting{min-width:170px;max-width:48%;padding:9px 11px;border-radius:10px;background:var(--bg-2);border:1px solid var(--border);color:var(--ink);font-family:var(--app-font);font-size:12px;cursor:pointer;direction:inherit;}
+  .security-username{width:160px!important;max-width:46%;font-family:var(--app-font)!important;direction:ltr!important;letter-spacing:normal!important;font-size:12px!important;}
+  .lock-field{position:relative;margin-bottom:10px;text-align:inherit;}
+  .lock-field svg{position:absolute;top:50%;transform:translateY(-50%);inset-inline-start:13px;width:17px;height:17px;color:var(--ink-dim);pointer-events:none;}
+  .lock-field input{margin:0!important;padding:13px 42px 13px 42px!important;letter-spacing:normal!important;text-align:start!important;font-size:13px!important;font-family:var(--app-font)!important;direction:ltr!important;}
+  .lock-field.password input{font-family:'Martian Mono',monospace!important;letter-spacing:3px!important;}
+  /* Modern login design only */
+  .lock-screen{overflow:hidden;isolation:isolate;}
+  .lock-screen::before,.lock-screen::after{content:'';position:absolute;border-radius:50%;pointer-events:none;z-index:-1;}
+  .lock-screen::before{width:360px;height:360px;right:-150px;top:-130px;border:1px solid var(--border-strong);opacity:.35;animation:lockOrbit 9s linear infinite;}
+  .lock-screen::after{width:260px;height:260px;left:-120px;bottom:-120px;background:radial-gradient(circle,var(--blue-glow),transparent 68%);animation:lockFloat 5s ease-in-out infinite;}
+  .lock-box{position:relative;max-width:380px!important;overflow:hidden;border-radius:22px!important;padding:30px 24px 24px!important;box-shadow:0 24px 70px rgba(0,0,0,.35),var(--shadow)!important;animation:lockIn .45s cubic-bezier(.2,.8,.2,1) both;}
+  .lock-box::before{content:'';position:absolute;width:180px;height:180px;right:-90px;top:-100px;background:radial-gradient(circle,var(--blue-glow),transparent 70%);pointer-events:none;}
+  .lock-visual{width:68px;height:68px;margin:0 auto 16px;position:relative;display:grid;place-items:center;color:var(--blue-light);}
+  .lock-visual::before{content:'';position:absolute;inset:0;border-radius:22px;background:var(--blue-soft);border:1px solid var(--border-strong);animation:lockPulse 2.8s ease-in-out infinite;}
+  .lock-visual svg{position:relative;z-index:1;width:34px;height:34px;filter:drop-shadow(0 0 8px var(--blue-glow));}
+  .lock-visual .lock-shackle{transform-origin:12px 11px;animation:shackleIn .7s .15s ease-out both;}
+  .lock-box .lock-title{font-size:18px;font-weight:800;margin-bottom:7px;}
+  .lock-box .lock-sub{margin-bottom:20px;}
+  .lock-box .btn{position:relative;overflow:hidden;}
+  .lock-box .btn::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%);transform:translateX(-120%);transition:transform .5s ease;}
+  .lock-box .btn:hover::after{transform:translateX(120%);}
+  .lock-box.login-error{animation:lockShake .34s ease-in-out;}
+  @keyframes lockIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+  @keyframes lockPulse{0%,100%{transform:scale(.96);opacity:.7}50%{transform:scale(1.05);opacity:1}}
+  @keyframes shackleIn{from{transform:rotate(-18deg) translateY(3px);opacity:.2}to{transform:none;opacity:1}}
+  @keyframes lockOrbit{to{transform:rotate(360deg)}}
+  @keyframes lockFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(12px,-10px,0)}}
+  @keyframes lockShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  @media(max-width:520px){.select-setting{min-width:145px}.security-username{width:135px!important;max-width:44%;}}
+
+
+  body, button, input, select, textarea{font-family:var(--app-font);}
+  .hero-num,.trend-badge,.nb-stat .val,.proj-row .val,.loan-amt,.asset-balance,.ms-amt,.log-item .d,.log-item .p{font-family:'Martian Mono',monospace;}
 
 </style>
 </head>
@@ -849,14 +939,13 @@
 </div>
 
 <div class="lock-screen" id="lockScreen" style="display:none;">
-  <div class="lock-box">
+  <div class="lock-box" id="lockBox">
+    <div class="lock-visual" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="lock-shackle" d="M7.5 10V7.8a4.5 4.5 0 0 1 9 0V10"/><rect x="5" y="10" width="14" height="11" rx="2.5"/><circle cx="12" cy="15" r="1" fill="currentColor"/><path d="M12 16v2"/></svg></div>
     <div class="lock-title">🔒 دفتر مالی قفل است</div>
-    <div class="lock-sub">برای ادامه، رمز عبور را وارد کنید</div>
-    <input type="password" inputmode="numeric" id="lockInput" placeholder="••••" autocomplete="off">
-    <button class="btn icon-btn-svg" id="lockUnlockBtn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0"/></svg>
-      باز کردن
-    </button>
+    <div class="lock-sub">برای ورود، نام کاربری و رمز عبور خود را وارد کنید</div>
+    <div class="lock-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><input type="text" id="lockUsername" placeholder="نام کاربری" autocomplete="username" spellcheck="false"></div>
+    <div class="lock-field password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2.5"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10"/></svg><input type="password" inputmode="numeric" id="lockInput" placeholder="رمز عبور" autocomplete="current-password"></div>
+    <button class="btn icon-btn-svg" id="lockUnlockBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>ورود</button>
     <div class="lock-err" id="lockErr"></div>
   </div>
 </div>
@@ -894,7 +983,7 @@
 
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>آمار دارایی‌ها</div>
-      <div class="section-sub">سهم هر دارایی (نقدینگی و سرمایه‌گذاری) از کل دفتر</div>
+      <div class="section-sub">سهم هر دارایی از مجموع نقدینگی و سرمایه‌گذاری را در یک نگاه ببینید.</div>
       <div class="donut-wrap">
         <div style="position:relative;">
           <div class="donut" id="donutChart"></div>
@@ -907,7 +996,7 @@
 
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>روند کلی دارایی</div>
-      <div class="section-sub">تغییر جمع کل دارایی (نقدینگی + سرمایه‌گذاری) در بازه انتخابی</div>
+      <div class="section-sub">روند تغییر ارزش کل دارایی را در بازه زمانی انتخاب‌شده دنبال کنید.</div>
       <div class="trend-tabs" id="trendTabs">
         <button class="trend-tab" data-range="24h">۲۴ ساعت</button>
         <button class="trend-tab active" data-range="week">۱ هفته</button>
@@ -929,7 +1018,7 @@
 
     <div class="section reveal" id="sec-forecast">
       <div class="section-title"><span class="dot"></span>پیش‌بینی مالی ماهانه</div>
-      <div class="section-sub">خرج بر اساس ۱۵ پرداخت آخر همین ماه؛ دریافتی‌ها فقط در محاسبه توان مالی استفاده می‌شوند</div>
+      <div class="section-sub">برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.</div>
       <div class="forecast-card">
         <div class="forecast-meta" id="forecastMeta">
           <span>ماه: <b id="fcMonth">—</b></span>
@@ -962,11 +1051,32 @@
     <div class="page" id="page-assets">
     <div class="section reveal" id="sec-assets">
       <div class="section-title"><span class="dot"></span>دارایی‌ها</div>
-      <div class="section-sub">مبلغ را وارد کنید و + یا − بزنید · حذف با ×</div>
+      <div class="section-sub">مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.</div>
       <div id="assetCards"></div>
 
+      <div class="transfer-box" id="transferBox">
+        <div class="tb-title">انتقال بین دارایی‌ها</div>
+        <div class="section-sub" style="margin-bottom:8px;">مبلغ از یک دارایی کم و به دارایی دیگر اضافه می‌شود و در تراکنش‌ها ثبت می‌گردد.</div>
+        <div class="grid2">
+          <div>
+            <label class="field">از</label>
+            <select id="tfFrom"></select>
+          </div>
+          <div>
+            <label class="field">به</label>
+            <select id="tfTo"></select>
+          </div>
+        </div>
+        <label class="field" style="margin-top:8px;">مبلغ (تومان)</label>
+        <input type="text" inputmode="numeric" id="tfAmount" placeholder="مثلاً 500,000" class="money-input">
+        <button class="btn icon-btn-svg" id="tfBtn" style="margin-top:10px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+          انتقال
+        </button>
+      </div>
+
       <div class="new-asset-box">
-        <div class="section-sub" style="margin-bottom:8px;">افزودن دارایی نقدی/سرمایه‌گذاری جدید</div>
+        <div class="section-sub" style="margin-bottom:8px;">یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.</div>
         <div class="grid2">
           <div><label class="field">نام دارایی</label><input type="text" id="newAssetName" placeholder="مثلاً صندوق دوم"></div>
           <div>
@@ -990,7 +1100,7 @@
     <div class="page" id="page-noncash">
     <div class="section reveal" id="sec-noncash">
       <div class="section-title"><span class="dot"></span>دارایی‌های غیرنقد</div>
-      <div class="section-sub">ارزش تخمینی — در جمع کل دارایی رسمی لحاظ نمی‌شود</div>
+      <div class="section-sub">ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.</div>
 
       <div class="nc-hero" id="ncHero">
         <div class="nc-hero-top">
@@ -1057,7 +1167,11 @@
       <div id="logList" class="scroll-list" style="margin-top:12px;"></div>
       <div class="proj-card" id="projCard" style="display:none;">
         <div class="rate" id="rateLabel">میانگین نرخ روزانه</div>
-        <div class="proj-row"><span>نرخ روزانه</span><span class="val" id="rateVal">—</span></div>
+        <div class="proj-row"><span>نرخ مؤثر روزانه</span><span class="val" id="rateVal">—</span></div>
+        <div class="proj-row"><span>نرخ مؤثر سالانه (مرکب)</span><span class="val" id="annualEffVal">—</span></div>
+        <div class="proj-row"><span>نرخ اسمی سالانه</span><span class="val" id="annualNomVal">—</span></div>
+        <div class="proj-row"><span>سود کل تا الان</span><span class="val" id="totalProfitVal">—</span></div>
+        <div class="proj-row"><span>موجودی فعلی اسنپ</span><span class="val" id="snappBalVal">—</span></div>
         <div class="proj-row"><span>سود پیش‌بینی فردا</span><span class="val" id="tomorrowVal">—</span></div>
         <div class="proj-row"><span>سود مرکب ۳۰ روز آینده</span><span class="val" id="monthVal">—</span></div>
         <div class="proj-row"><span>موجودی پس از ۳۰ روز</span><span class="val" id="bal30Val">—</span></div>
@@ -1068,7 +1182,7 @@
     <div class="page" id="page-notebook">
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>ثبت تراکنش جدید</div>
-      <div class="section-sub">پایه محاسبه، موجودی فعلی «کارت» از صفحه دارایی‌هاست — این بخش جدا حساب می‌کنه و خودِ دارایی کارت رو تغییر نمی‌ده</div>
+      <div class="section-sub">کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.</div>
 
       <label class="field">نوع تراکنش</label>
       <select id="nbType">
@@ -1106,7 +1220,7 @@
 
     <div class="section reveal" id="sec-loans">
       <div class="section-title"><span class="dot"></span>قرض‌ها</div>
-      <div class="section-sub">قرض داده‌شده و قرض گرفته — وضعیت تسویه را مشخص کن</div>
+      <div class="section-sub">قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.</div>
       <div class="loan-remain">
         <span class="lbl">قرض باقی‌مانده (تسویه‌نشده)</span>
         <span class="amt" id="loanRemain">۰ ت</span>
@@ -1134,21 +1248,21 @@
       </div>
       <button class="btn icon-btn-svg" id="nbSyncBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-        همگام‌سازی با موجودی کارت
+        ثبت موجودی کارت
       </button>
-      <div class="note">این کار موجودی «کارت» رو برابر با نتیجه محاسبه‌شده بالا می‌کنه و بعدش لیست تراکنش‌ها رو خالی می‌کنه (چون اثرش قبلاً روی کارت اعمال شده).</div>
+      <div class="note">با ثبت، موجودی نهایی کارت برابر عدد محاسبه‌شده می‌شود. قرض‌های تسویه‌نشده حفظ می‌شوند؛ بقیه تراکنش‌های این بخش پاک می‌شوند.</div>
     </div>
     </div>
 
     <div class="page" id="page-history">
     <div class="section reveal" id="sec-history">
       <div class="section-title"><span class="dot"></span>تاریخچه تغییرات دارایی</div>
-      <div class="section-sub">فیلتر و مرتب‌سازی رکوردها — در صورت بیش از ۱۵ مورد، لیست اسکرول می‌شود</div>
-      <div class="hist-filters" id="txFilters">
-        <button class="hist-filter active" data-filter="newest">جدیدترین</button>
-        <button class="hist-filter" data-filter="oldest">قدیمی‌ترین</button>
-        <button class="hist-filter" data-filter="deficit">نمایش کسری‌ها</button>
-        <button class="hist-filter" data-filter="receipt">نمایش دریافتی‌ها</button>
+      <div class="section-sub">تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.</div>
+      <div class="hist-filters" id="txFilters" role="tablist" aria-label="فیلتر تاریخچه">
+        <button class="hist-filter active" data-filter="newest" role="tab"><span class="hist-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="hist-filter-copy"><b>جدیدترین</b><small>آخرین تغییرات</small></span><span class="filter-count" data-count-for="newest">0</span></button>
+        <button class="hist-filter" data-filter="oldest" role="tab"><span class="hist-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M4 12h16M4 17h16"/></svg></span><span class="hist-filter-copy"><b>قدیمی‌ترین</b><small>شروع سابقه</small></span><span class="filter-count" data-count-for="oldest">0</span></button>
+        <button class="hist-filter" data-filter="deficit" role="tab"><span class="hist-filter-icon deficit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M7 14l5 5 5-5"/></svg></span><span class="hist-filter-copy"><b>کسری‌ها</b><small>کاهش دارایی</small></span><span class="filter-count" data-count-for="deficit">0</span></button>
+        <button class="hist-filter" data-filter="receipt" role="tab"><span class="hist-filter-icon receipt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 19V5M7 10l5-5 5 5"/></svg></span><span class="hist-filter-copy"><b>دریافتی‌ها</b><small>افزایش دارایی</small></span><span class="filter-count" data-count-for="receipt">0</span></button>
       </div>
       <div id="txList" class="scroll-list"></div>
     </div>
@@ -1164,9 +1278,10 @@
     </div>
 
     <div class="page" id="page-settings">
+    <div class="settings-stack">
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>🎨 تم</div>
-      <div class="section-sub">ظاهر کلی برنامه رو انتخاب کن</div>
+      <div class="section-sub">ظاهر موردعلاقه‌تان را انتخاب کنید؛ انتخاب شما ذخیره می‌شود.</div>
       <div class="theme-grid" id="themeGrid">
         <button class="theme-card" data-theme-val="dark">
           <span class="theme-dot" style="background:linear-gradient(135deg,#0d1526,#3b82f6)"></span>
@@ -1191,9 +1306,27 @@
       </div>
     </div>
 
+    <div class="section reveal" id="sec-language">
+      <div class="section-title"><span class="dot"></span>🌐 زبان</div>
+      <div class="section-sub">زبان رابط کاربری را انتخاب کنید؛ فارسی پیش‌فرض است و English بر پایه استاندارد آمریکایی نمایش داده می‌شود.</div>
+      <div class="setting-row">
+        <div><div class="s-label">زبان</div><div class="s-sub">فارسی پیش‌فرض است · انگلیسی با استاندارد آمریکایی</div></div>
+        <select class="select-setting" id="languageSelect" aria-label="Language"><option value="fa">فارسی</option><option value="en">English (US)</option></select>
+      </div>
+    </div>
+
+    <div class="section reveal" id="sec-font">
+      <div class="section-title"><span class="dot"></span>🔤 فونت</div>
+      <div class="section-sub">فونت رابط کاربری را انتخاب کنید؛ انتخاب شما در کل برنامه اعمال و ذخیره می‌شود.</div>
+      <div class="setting-row">
+        <div><div class="s-label">فونت سایت</div><div class="s-sub">Vazirmatn فونت پیش‌فرض فعلی است</div></div>
+        <select class="select-setting" id="fontSelect" aria-label="Font"><option value="Vazirmatn">Vazirmatn (پیش‌فرض)</option><option value="Noto Sans Arabic">Noto Sans Arabic</option><option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option><option value="Cairo">Cairo</option></select>
+      </div>
+    </div>
+
     <div class="section reveal" id="sec-motion">
       <div class="section-title"><span class="dot"></span>انیمیشن</div>
-      <div class="section-sub">برای دستگاه‌های ضعیف می‌توانید انیمیشن را خاموش کنید</div>
+      <div class="section-sub">برای عملکرد روان‌تر روی دستگاه‌های ضعیف، انیمیشن‌های تعاملی را خاموش کنید.</div>
       <div class="setting-row">
         <div>
           <div class="s-label">انیمیشن‌های تعاملی</div>
@@ -1211,6 +1344,10 @@
       <div class="section-sub">
         رمز با PBKDF2+Salt در همین مرورگر هش می‌شود و قفل ورود دارد. این جلوی مشاهده تصادفی را می‌گیرد و در برابر حدس ساده مقاوم‌تر است،
         اما چون همه چیز سمت کلاینت است، در برابر مهاجم فنی روی همین دستگاه امنیت مطلق نیست. حداقل ۴ رقم انتخاب کن.
+      </div>
+      <div class="setting-row security-username-row">
+        <div><div class="s-label">نام کاربری ورود</div><div class="s-sub">نام کاربری مورد استفاده برای ورود به دفتر</div></div>
+        <input class="security-username" type="text" id="loginUsername" placeholder="admin" autocomplete="username" spellcheck="false">
       </div>
       <div id="pinStatus">🔓 رمز عبوری تنظیم نشده</div>
       <div class="grid2 pin-grid">
@@ -1231,13 +1368,14 @@
 
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>پشتیبان‌گیری دستی (فایل)</div>
-      <div class="section-sub">اطلاعات فقط روی همین گوشی/مرورگر ذخیره می‌شه؛ برای اطمینان هر از گاهی یه فایل پشتیبان بگیر</div>
+      <div class="section-sub">اطلاعات این دفتر در همین مرورگر ذخیره می‌شود؛ برای جلوگیری از از دست رفتن داده‌ها، مرتب پشتیبان بگیرید.</div>
       <button class="btn ghost" id="exportBtn">دانلود فایل پشتیبان (JSON)</button>
       <button class="btn ghost" id="importBtn">بازگردانی از فایل پشتیبان</button>
       <input type="file" id="importFile" accept=".json" style="display:none;">
     </div>
 
-    <div class="app-version" id="appVersion">مبحث درآمد · <b>v2.01</b></div>
+    </div>
+    <div class="app-version" id="appVersion">مبحث درآمد · <b>v2.02</b></div>
     </div>
 
   </div>
@@ -1261,10 +1399,159 @@ const parseMoney = str => {
   return (isFinite(v) && !isNaN(v)) ? v : NaN;
 };
 
+/* ================= LANGUAGE & FONT ================= */
+const LANG_KEY = 'daftar-language';
+const FONT_KEY = 'daftar-font';
+const VALID_LANGS = ['fa','en'];
+const VALID_FONTS = ['Vazirmatn','Noto Sans Arabic','IBM Plex Sans Arabic','Cairo'];
+const FONT_STACKS = {
+  'Vazirmatn': "'Vazirmatn',sans-serif",
+  'Noto Sans Arabic': "'Noto Sans Arabic',sans-serif",
+  'IBM Plex Sans Arabic': "'IBM Plex Sans Arabic',sans-serif",
+  'Cairo': "'Cairo',sans-serif"
+};
+const I18N = {
+  'مبحث درآمد':'Income Ledger','انصراف':'Cancel','حذف کن':'Delete','🔒 دفتر مالی قفل است':'🔒 Financial Ledger Locked',
+  'برای ادامه، رمز عبور را وارد کنید':'Enter your password to continue','باز کردن':'Unlock','خانه':'Home','دارایی‌ها':'Assets',
+  'دارایی غیرنقد':'Non-cash Assets','سود اسنپ':'Snapp Profit','تراکنش‌ها':'Transactions','تاریخچه':'History','تنظیمات':'Settings',
+  'جمع کل دارایی (نقدی + سرمایه‌گذاری)':'Total Assets (Cash + Investments)','سرمایه‌گذاری:':'Investments:','نقدینگی:':'Cash:',
+  'آمار دارایی‌ها':'Asset Statistics','سهم هر دارایی از مجموع نقدینگی و سرمایه‌گذاری را در یک نگاه ببینید.':'Each asset\'s share of the total ledger',
+  'جمع کل':'Total','روی هر دارایی بزن تا جزئیاتش را ببینی':'Tap an asset to see its details','روند کلی دارایی':'Overall Asset Trend',
+  'روند تغییر ارزش کل دارایی را در بازه زمانی انتخاب‌شده دنبال کنید.':'Change in total assets over the selected period',
+  '۲۴ ساعت':'24 Hours','۱ هفته':'1 Week','۱ ماه':'1 Month','۱ سال':'1 Year',
+  'داده کافی برای این بازه هنوز ثبت نشده — با هر تغییر دارایی یه نقطه جدید اضافه می‌شه':'Not enough data for this range yet — a new point is added whenever an asset changes',
+  'این نمودار فقط از لحظه‌ای که این ویژگی اضافه شد نقطه ثبت می‌کنه؛ سابقه قبل از اون رو نداره.':'This chart only records points since this feature was added; earlier history is unavailable.',
+  'پیش‌بینی مالی ماهانه':'Monthly Financial Forecast','برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.':'Expenses are based on the last 15 payments this month; income is used only to calculate financial capacity.',
+  'ماه:':'Month:','موجودی:':'Balance:','تراکنش:':'Transactions:','روز داده:':'Data Days:','روز باقی‌مانده:':'Days Remaining:',
+  'خرج ماهانه پیش‌بینی‌شده':'Projected Monthly Expense','منابع مالی':'Financial Resources','توان مالی (۸۰٪ منابع)':'Financial Capacity (80% of Resources)',
+  'نسبت فشار مالی':'Financial Pressure Ratio','کسری بودجه':'Budget Deficit','فشار مالی':'Financial Pressure',
+  'با ثبت پرداخت‌های جدید، این پیش‌بینی خودکار به‌روز می‌شود.':'This forecast updates automatically when new payments are recorded.',
+  'مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.':'Enter an amount and press + or − · Remove with ×',
+  'یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.':'Add New Cash/Investment Asset','نام دارایی':'Asset Name','دسته':'Category','سرمایه‌گذاری':'Investment',
+  'نقدینگی':'Cash','موجودی اولیه (تومان — اختیاری)':'Initial Balance (Toman — optional)','افزودن دارایی جدید':'Add New Asset',
+  'دارایی‌های غیرنقد':'Non-cash Assets','ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.':'Estimated value — not included in official total assets',
+  'ارزش کل دارایی‌های غیرنقد':'Total Non-cash Asset Value','تومان':'Toman','تخمینی · غیررسمی':'Estimated · unofficial','افزودن مورد جدید':'Add New Item',
+  'طلا':'Gold','نقره':'Silver','دلار':'US Dollar','سکه':'Coin','حساب سپرده':'Deposit Account','بورس':'Stock Market','سایر':'Other',
+  'توضیح کوتاه':'Short Description','ارزش تقریبی (تومان)':'Approximate Value (Toman)','افزودن':'Add',
+  'ثبت سود روزانه اسنپ':'Record Daily Snapp Profit','تاریخ (شمسی)':'Date (Jalali)','سود آن روز (تومان)':'Daily Profit (Toman)',
+  'ثبت سود، خودکار همین مبلغ رو هم به موجودی اسنپ اضافه می‌کنه.':'Recording profit also automatically adds the same amount to the Snapp balance.',
+  'ثبت سود':'Record Profit','میانگین نرخ روزانه':'Average Daily Rate','نرخ روزانه':'Daily Rate','سود پیش‌بینی فردا':'Projected Tomorrow Profit',
+  'سود مرکب ۳۰ روز آینده':'30-Day Compound Profit','موجودی پس از ۳۰ روز':'Balance After 30 Days','ثبت تراکنش جدید':'New Transaction',
+  'نوع تراکنش':'Transaction Type','دریافتی':'Income','پرداخت':'Payment','قرض داده':'Lent','قرض گرفته':'Borrowed','شخص':'Person',
+  'مبلغ (تومان)':'Amount (Toman)','ساعت':'Time','توضیحات':'Description','ثبت تراکنش':'Record Transaction','قرض‌ها':'Loans',
+  'قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.':'Lent and borrowed money — mark settlement status',
+  'قرض باقی‌مانده (تسویه‌نشده)':'Outstanding Loans','تراکنش‌های ثبت‌شده':'Recorded Transactions','خلاصه دسته‌ها':'Category Summary',
+  'محاسبه‌گر پایین صفحه (جدا از دارایی رسمی کارت)':'Calculator Below (Separate from Official Card Asset)','پایه — موجودی فعلی کارت':'Base — Current Card Balance',
+  'جمع تراکنش‌های این بخش':'Total Transactions Here','موجودی محاسبه‌شده':'Calculated Balance','ثبت موجودی کارت':'Save Card Balance',
+  'تاریخچه تغییرات دارایی':'Asset Change History','تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.':'Filter and sort records — the list becomes scrollable above 15 items',
+  'جدیدترین':'Newest','قدیمی‌ترین':'Oldest','نمایش کسری‌ها':'Show Deficits','نمایش دریافتی‌ها':'Show Income','تاریخچه جمع کل دارایی':'Total Asset History',
+  'ثبت وضعیت امروز':'Record Today\'s Status','🎨 تم':'🎨 Theme','ظاهر موردعلاقه‌تان را انتخاب کنید؛ انتخاب شما ذخیره می‌شود.':'Choose the app\'s overall appearance',
+  'سرمه‌ای (پیش‌فرض)':'Navy (Default)','مشکی پلاتینیومی':'Platinum Black','مشکی طلایی':'Black & Gold','روشن':'Light',
+  'انیمیشن':'Animation','برای عملکرد روان‌تر روی دستگاه‌های ضعیف، انیمیشن‌های تعاملی را خاموش کنید.':'Disable animations on lower-end devices',
+  'انیمیشن‌های تعاملی':'Interactive Animations','ورود صفحه، منو، هاور کارت‌ها و پالس‌ها':'Page entry, menus, card hovers and pulses',
+  '🔒 امنیت':'🔒 Security','🔓 رمز عبوری تنظیم نشده':'🔓 No password set','رمز فعلی':'Current Password','رمز جدید (حداقل ۴ رقم)':'New Password (min. 4 digits)',
+  'تنظیم / تغییر رمز':'Set / Change Password','حذف رمز عبور':'Remove Password','پشتیبان‌گیری دستی (فایل)':'Manual Backup (File)',
+  'دانلود فایل پشتیبان (JSON)':'Download Backup (JSON)','بازگردانی از فایل پشتیبان':'Restore from Backup','هدف رسید':'Goal Reached','🌐 زبان':'🌐 Language','زبان رابط کاربری را انتخاب کنید؛ فارسی پیش‌فرض است و English بر پایه استاندارد آمریکایی نمایش داده می‌شود.':'Choose the language used throughout the app','زبان':'Language','فارسی پیش‌فرض است · انگلیسی با استاندارد آمریکایی':'Persian is the default · English uses American English','فونت':'Font','فونت رابط کاربری را انتخاب کنید؛ انتخاب شما در کل برنامه اعمال و ذخیره می‌شود.':'Choose the font used throughout the interface','فونت سایت':'Site Font','Vazirmatn فونت پیش‌فرض فعلی است':'Vazirmatn is the current default font'
+};
+  I18N['نام کاربری ورود']='Login Username';
+  I18N['نام کاربری برای ورود به دفتر؛ پیش‌فرض «admin» است.']='Username used to enter the ledger; default is “admin”.';
+  I18N['نام کاربری']='Username'; I18N['رمز عبور']='Password';
+  I18N['برای ورود، نام کاربری و رمز عبور خود را وارد کنید']='Enter your username and password to continue'; I18N['ورود']='Sign In';
+  I18N['نام کاربری یا رمز عبور اشتباه است']='Incorrect username or password'; I18N['نام کاربری باید بین ۳ تا ۳۲ کاراکتر باشد']='Username must be 3–32 characters'; I18N['نام کاربری ذخیره شد']='Username saved';
+  I18N['نرخ مؤثر سالانه (مرکب)']='Effective Annual Rate (compound)'; I18N['نرخ اسمی سالانه']='Nominal Annual Rate'; I18N['سود کل تا الان']='Total profit to date'; I18N['موجودی فعلی اسنپ']='Current Snapp balance'; I18N['ثبت موجودی نهایی کارت؟']='Save final card balance?'; I18N['آخرین تغییرات']='Latest changes'; I18N['شروع سابقه']='Start of history'; I18N['کاهش دارایی']='Asset decrease'; I18N['افزایش دارایی']='Asset increase';
+  I18N['سهم هر دارایی از مجموع نقدینگی و سرمایه‌گذاری را در یک نگاه ببینید.']='See each asset’s share of total cash and investments at a glance.';
+  I18N['روند تغییر ارزش کل دارایی را در بازه زمانی انتخاب‌شده دنبال کنید.']='Track changes in total asset value over the selected period.';
+  I18N['برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.']='Estimate monthly expenses from recent payments; income is used only to measure financial capacity.';
+  I18N['مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.']='Enter the change and use + or − to update the balance; remove with ×.';
+  I18N['یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.']='Add a new cash or investment asset to your ledger.';
+  I18N['ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.']='Estimated value of assets excluded from the official cash-asset total.';
+  I18N['کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.']='Card is managed only here. “Save Card Balance” stores the calculated amount as the final card balance.';
+  I18N['قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.']='Track money lent or borrowed and mark each item when it is settled.';
+  I18N['تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.']='Filter asset changes by time or type; long lists can be scrolled.';
+  I18N['ظاهر موردعلاقه‌تان را انتخاب کنید؛ انتخاب شما ذخیره می‌شود.']='Choose your preferred appearance; your selection is saved.';
+  I18N['زبان رابط کاربری را انتخاب کنید؛ فارسی پیش‌فرض است و English بر پایه استاندارد آمریکایی نمایش داده می‌شود.']='Choose the interface language; Persian is default and English uses US English.';
+  I18N['فونت رابط کاربری را انتخاب کنید؛ انتخاب شما در کل برنامه اعمال و ذخیره می‌شود.']='Choose the interface font; your selection is applied across the app and saved.';
+  I18N['برای عملکرد روان‌تر روی دستگاه‌های ضعیف، انیمیشن‌های تعاملی را خاموش کنید.']='Disable interactive animations for smoother performance on lower-end devices.';
+  I18N['اطلاعات این دفتر در همین مرورگر ذخیره می‌شود؛ برای جلوگیری از از دست رفتن داده‌ها، مرتب پشتیبان بگیرید.']='This ledger is stored in this browser; make regular backups to avoid data loss.';
+function translateTextNode(node, lang){
+  const raw = node.nodeValue;
+  const key = raw.trim();
+  if(!key) return;
+  if(lang === 'en' && I18N[key]){
+    const lead = raw.match(/^\s*/)?.[0] || '';
+    const trail = raw.match(/\s*$/)?.[0] || '';
+    node.nodeValue = lead + I18N[key] + trail;
+  }else if(lang === 'fa' && node.__faOriginal){
+    node.nodeValue = node.__faOriginal;
+  }
+}
+function translateDOM(lang){
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    if(n.__faOriginal === undefined) n.__faOriginal = n.nodeValue;
+    if(lang === 'en') translateTextNode(n,'en'); else n.nodeValue = n.__faOriginal;
+  });
+  document.documentElement.lang = lang === 'en' ? 'en-US' : 'fa';
+  document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
+  document.documentElement.setAttribute('data-lang', lang);
+  const sel=$('languageSelect'); if(sel) sel.value=lang;
+  updateTopbarDate();
+}
+function updateLoginPlaceholders(lang){
+  const u=$('lockUsername'), p=$('lockInput'), s=$('loginUsername');
+  if(lang==='en'){ if(u)u.placeholder=''; if(p)p.placeholder='Password'; if(s)s.placeholder='admin'; }
+  else { if(u)u.placeholder=''; if(p)p.placeholder='رمز عبور'; if(s)s.placeholder='admin'; }
+}
+function applyLanguage(lang){
+  if(!VALID_LANGS.includes(lang)) lang='fa';
+  try{localStorage.setItem(LANG_KEY,lang);}catch(e){}
+  translateDOM(lang);
+  updateLoginPlaceholders(lang);
+}
+function applyFont(font){
+  if(!VALID_FONTS.includes(font)) font='Vazirmatn';
+  document.documentElement.style.setProperty('--app-font', FONT_STACKS[font]);
+  try{localStorage.setItem(FONT_KEY,font);}catch(e){}
+  const sel=$('fontSelect'); if(sel) sel.value=font;
+}
+(function initLanguageAndFont(){
+  let lang='fa', font='Vazirmatn';
+  try{
+    lang=localStorage.getItem(LANG_KEY)||'fa';
+    const fontMigration=localStorage.getItem('daftar-font-v2');
+    if(fontMigration!=='1'){
+      font='Vazirmatn';
+      localStorage.setItem(FONT_KEY,'Vazirmatn');
+      localStorage.setItem('daftar-font-v2','1');
+    }else{
+      font=localStorage.getItem(FONT_KEY)||'Vazirmatn';
+    }
+  }catch(e){}
+  applyFont(font);
+  document.addEventListener('DOMContentLoaded',()=>applyLanguage(lang),{once:true});
+})();
+if($('languageSelect')) $('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
+if($('fontSelect')) $('fontSelect').addEventListener('change',e=>applyFont(e.target.value));
+const langObserver = new MutationObserver(mutations=>{
+  const lang=document.documentElement.getAttribute('data-lang')||'fa';
+  if(lang!=='en') return;
+  mutations.forEach(m=>m.addedNodes.forEach(n=>{
+    if(n.nodeType===Node.TEXT_NODE){ if(n.__faOriginal===undefined)n.__faOriginal=n.nodeValue; translateTextNode(n,'en'); }
+    else if(n.nodeType===Node.ELEMENT_NODE){
+      const walker=document.createTreeWalker(n,NodeFilter.SHOW_TEXT); const arr=[]; while(walker.nextNode())arr.push(walker.currentNode);
+      arr.forEach(x=>{if(x.__faOriginal===undefined)x.__faOriginal=x.nodeValue;translateTextNode(x,'en');});
+    }
+  }));
+});
+langObserver.observe(document.body,{childList:true,subtree:true});
+
+
 /* ================= THEME ================= */
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
-const APP_VERSION = '2.01';
+const APP_VERSION = '2.02';
 const VALID_THEMES = ['dark','matte-green','black','gold','light'];
 function applyTheme(t){
   if(!VALID_THEMES.includes(t)) t = 'dark';
@@ -1587,9 +1874,11 @@ const DEFAULT_ASSET_DEFS = [
   {key:'wallet', name:'پول نقد',      cat:'نقدینگی',      color:'#fbbf24'},
 ];
 let ASSET_DEFS = DEFAULT_ASSET_DEFS.map(d=>({...d})); // قابل حذف با فشار طولانی، پس دیگه ثابت نیست
+const FIXED_ASSET_KEYS = ['card', 'wallet']; // همیشه در انتقال؛ غیرقابل حذف از لیست اصلی
+
 const NC_CATS = {gold:'طلا', silver:'نقره', usd:'دلار', coin:'سکه', deposit:'حساب سپرده', stock:'بورس', other:'سایر'};
 
-let assets = { snapp: 4591690, hami: 5155000, farabi: 148690, card: 2100000, wallet: 570000 };
+let assets = { snapp: 4607188, hami: 5155000, farabi: 148690, card: 2100000, wallet: 570000 };
 let logs = [];
 let txs = [];
 let history = [];
@@ -1619,6 +1908,7 @@ function loadAll(){
       if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
       if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+      ensureCoreAssets();
     }
   }catch(e){ console.error(e); }
   // مهاجرت: اگر fcEvents خالی است ولی notebook داده دارد، یک‌بار کپی کن
@@ -1630,6 +1920,7 @@ function loadAll(){
     });
   }
   // اولین بار: بدون جشن، همه اهداف رد‌شده را ثبت کن
+  ensureCoreAssets();
   initMilestonesBaseline();
   milestonesReady = true;
   if(netSeries.length === 0){
@@ -1738,6 +2029,19 @@ function checkMilestones(key, prevVal, newVal){
   persist();
 }
 
+
+
+function ensureCoreAssets(){
+  // کارت و پول نقد همیشه در مدل باشند (کارت در UI لیست دارایی‌ها نشان داده نمی‌شود)
+  const cores = [
+    {key:'card', name:'کارت', cat:'نقدینگی', color:'#34d399'},
+    {key:'wallet', name:'پول نقد', cat:'نقدینگی', color:'#fbbf24'},
+  ];
+  cores.forEach(c => {
+    if(!ASSET_DEFS.some(d => d.key === c.key)) ASSET_DEFS.push({...c});
+    if(assets[c.key] == null) assets[c.key] = 0;
+  });
+}
 
 function investKeys(){ return ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key); }
 function cashKeys(){ return ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key); }
@@ -2082,14 +2386,32 @@ document.querySelectorAll('.trend-tab').forEach(btn=>{
   });
 });
 
+function fillTransferSelects(){
+  const from = $('tfFrom'), to = $('tfTo');
+  if(!from || !to) return;
+  const opts = ASSET_DEFS.map(d => {
+    const bal = safeNum(assets[d.key], 0);
+    return `<option value="${d.key}">${d.name} (${fmt(bal)})</option>`;
+  }).join('');
+  const prevFrom = from.value, prevTo = to.value;
+  from.innerHTML = opts;
+  to.innerHTML = opts;
+  if(ASSET_DEFS.some(d => d.key === prevFrom)) from.value = prevFrom;
+  if(ASSET_DEFS.some(d => d.key === prevTo)) to.value = prevTo;
+  else if(ASSET_DEFS.length > 1) to.selectedIndex = Math.min(1, ASSET_DEFS.length - 1);
+}
+
 function renderAssetCards(){
   const el = $('assetCards');
-  el.innerHTML = ASSET_DEFS.map(d => {
+  el.classList.add('rendering');
+  // کارت فقط در خانه/نمودار/انتقال — نه در لیست قابل‌ویرایش دارایی‌ها
+  const visibleDefs = ASSET_DEFS.filter(d => d.key !== 'card');
+  el.innerHTML = visibleDefs.map(d => {
     const accent = d.color || 'var(--blue-light)';
     const val = safeNum(assets[d.key], 0);
     return `
     <div class="asset-card" style="--asset-accent:${accent}">
-      <div class="asset-card-head" data-longpress-key="${d.key}">
+      <div class="asset-card-head">
         <div>
           <div class="asset-name">${d.name}</div>
           <div class="asset-cat">${d.cat}</div>
@@ -2143,24 +2465,15 @@ function renderAssetCards(){
     });
   });
 
-  // فشار طولانی روی نام دارایی هم همون کار رو می‌کنه (میانبر اضافه)
-  el.querySelectorAll('[data-longpress-key]').forEach(topEl=>{
-    let pressTimer = null;
-    const start = ()=>{
-      pressTimer = setTimeout(()=>{
-        confirmDeleteAsset(topEl.dataset.longpressKey);
-      }, 600);
-    };
-    const cancel = ()=>{ if(pressTimer) clearTimeout(pressTimer); };
-    topEl.addEventListener('pointerdown', start);
-    topEl.addEventListener('pointerup', cancel);
-    topEl.addEventListener('pointerleave', cancel);
-    topEl.addEventListener('pointercancel', cancel);
-    topEl.addEventListener('contextmenu', (e)=>{ e.preventDefault(); });
-  });
+  fillTransferSelects();
+  requestAnimationFrame(()=>{ el.classList.remove('rendering'); });
 }
 
 function confirmDeleteAsset(key){
+  if(FIXED_ASSET_KEYS.includes(key) || key === 'card' || key === 'wallet'){
+    showToast('کارت و پول نقد قابل حذف نیستند', true);
+    return;
+  }
   const def = ASSET_DEFS.find(d=>d.key===key);
   if(!def) return;
   showConfirmModal(
@@ -2188,7 +2501,15 @@ function renderLogs(){
     return `<div class="log-item"><span class="d">${toJalaliStr(l.date)||'—'}</span><span class="n"></span><span class="p">+${fmt(safeNum(l.profit))} ت</span><button class="del" data-idx="${realIdx}">×</button></div>`;
   }).join('');
   el.querySelectorAll('.del').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ logs.splice(parseInt(btn.dataset.idx),1); if(persist()) render(); });
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.idx, 10);
+      const row = logs[idx];
+      showConfirmModal(
+        'حذف این ثبت سود؟',
+        row ? (toJalaliStr(row.date) || '') + ' — +' + fmt(safeNum(row.profit)) + ' تومان' : '',
+        ()=>{ logs.splice(idx, 1); if(persist()) render(); }
+      );
+    });
   });
 
   // نرخ روزانه مؤثر: میانگین وزنی نرخ‌های ثبت‌شده (ثبت جدیدتر وزن بیشتر)
@@ -2214,16 +2535,26 @@ function renderLogs(){
   rate = safeNum(rate, 0);
 
   const bal0 = safeNum(assets.snapp, 0);
-  // سود مرکب روزانه با فرمول بسته: سود n روز = B * ((1+r)^n - 1)
+  // سود مرکب روزانه: سود n روز = B * ((1+r)^n - 1)
   const profit1 = bal0 * rate;
   const profit30 = bal0 * (Math.pow(1 + rate, 30) - 1);
   const bal30 = bal0 + profit30;
+  // نرخ مؤثر سالانه مرکب (EAR): (1+r)^365 - 1
+  const annualEff = Math.pow(1 + rate, 365) - 1;
+  // نرخ اسمی سالانه: r * 365
+  const annualNom = rate * 365;
+  // سود کل ثبت‌شده تا الان
+  const totalProfit = (logs || []).reduce((s, l) => s + safeNum(l && l.profit, 0), 0);
 
   $('projCard').style.display = 'block';
   $('rateLabel').textContent = rateSamples.length
     ? `نرخ مؤثر روزانه (میانگین وزنی ${rateSamples.length} ثبت — سود مرکب)`
     : 'نرخ مؤثر روزانه';
   $('rateVal').textContent = (rate * 100).toFixed(4) + '%';
+  if($('annualEffVal')) $('annualEffVal').textContent = (annualEff * 100).toFixed(2) + '%';
+  if($('annualNomVal')) $('annualNomVal').textContent = (annualNom * 100).toFixed(2) + '%';
+  if($('totalProfitVal')) $('totalProfitVal').textContent = '+' + fmt(totalProfit) + ' ت';
+  if($('snappBalVal')) $('snappBalVal').textContent = fmt(bal0) + ' ت';
   $('tomorrowVal').textContent = '+' + fmt(profit1) + ' ت';
   $('monthVal').textContent = '+' + fmt(profit30) + ' ت';
   if($('bal30Val')) $('bal30Val').textContent = fmt(bal30) + ' ت';
@@ -2250,6 +2581,7 @@ function getFilteredTxs(){
 }
 
 function renderTxs(){
+  updateTxFilterCounts();
   const el = $('txList');
   if(!el) return;
   const list = getFilteredTxs();
@@ -2269,13 +2601,13 @@ function renderTxs(){
   }).join('');
 }
 
+function updateTxFilterCounts(){
+  const all=(txs||[]).filter(t=>t&&t.date!=null);
+  const counts={newest:all.length,oldest:all.length,deficit:all.filter(t=>safeNum(t.delta)<0).length,receipt:all.filter(t=>safeNum(t.delta)>0).length};
+  Object.keys(counts).forEach(k=>{const el=document.querySelector(`[data-count-for="${k}"]`);if(el)el.textContent=counts[k];});
+}
 document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('#txFilters .hist-filter').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentTxFilter = btn.dataset.filter || 'newest';
-    renderTxs();
-  });
+  btn.addEventListener('click',()=>{document.querySelectorAll('#txFilters .hist-filter').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});btn.classList.add('active');btn.setAttribute('aria-selected','true');currentTxFilter=btn.dataset.filter||'newest';renderTxs();});
 });
 
 
@@ -2293,38 +2625,50 @@ function renderNonCash(){
   const totalEl = $('ncTotal');
   const chip = $('ncCountChip');
   const list = Array.isArray(noncash) ? noncash : [];
-  let total = 0;
-  list.forEach(item => { total += safeNum(item.manualValue, 0); });
+  const total = list.reduce((s, item) => s + safeNum(item.manualValue, 0), 0);
 
-  if(totalEl){
-    totalEl.innerHTML = fmt(total) + ' <small>تومان</small>';
-  }
-  if(chip){
-    chip.textContent = list.length + ' مورد';
-  }
-
+  if(totalEl) totalEl.innerHTML = fmt(total) + ' <small>تومان</small>';
+  if(chip) chip.textContent = list.length + ' مورد';
   if(!el) return;
+
   if(list.length === 0){
     el.innerHTML = '<div class="empty">هنوز دارایی غیرنقدی ثبت نشده</div>';
     return;
   }
 
-  el.innerHTML = list.map(item=>{
+  el.innerHTML = list.map(item => {
     const cat = NC_CATS[item.category] || 'سایر';
     const name = (item.label && String(item.label).trim()) ? item.label : '';
     const val = safeNum(item.manualValue, 0);
-    return `<div class="log-item">
-      <span class="d">${cat}</span>
-      <span class="n">${name}</span>
-      <span class="p" style="color:var(--blue-light)">${fmt(val)} ت</span>
-      <button class="del" data-id="${item.id}" title="حذف">×</button>
+    const upd = item.updatedAt
+      ? `<div class="nc-updated">آخرین به‌روزرسانی: ${toJalaliStr(item.updatedAt) || item.updatedAt}</div>`
+      : '';
+    return `<div class="nc-item" data-id="${item.id}">
+      <div class="nc-meta">
+        <span class="nc-cat">${cat}</span>
+        ${name ? `<div class="nc-name">${name}</div>` : ''}
+        ${upd}
+      </div>
+      <span class="nc-val">${fmt(val)} ت</span>
+      <button type="button" class="del" data-id="${item.id}" title="حذف" aria-label="حذف">×</button>
     </div>`;
   }).join('');
 
-  el.querySelectorAll('.del').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      noncash = noncash.filter(x => String(x.id) !== btn.dataset.id);
-      if(persist()) renderNonCash();
+  el.querySelectorAll('.del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const item = noncash.find(x => String(x.id) === String(id));
+      const cat = item ? (NC_CATS[item.category] || item.category) : '';
+      const val = item ? safeNum(item.manualValue, 0) : 0;
+      showConfirmModal(
+        'حذف این دارایی غیرنقد؟',
+        (cat ? cat + ' — ' : '') + fmt(val) + ' تومان',
+        () => {
+          noncash = noncash.filter(x => String(x.id) !== String(id));
+          if(persist()) renderNonCash();
+        }
+      );
     });
   });
 }
@@ -2335,6 +2679,7 @@ const NB_TYPES = {
   payment:  {label:'پرداخت',       sign:-1, color:'var(--red)'},
   lent:     {label:'قرض داده',      sign:-1, color:'var(--red)'},
   borrowed: {label:'قرض گرفته',     sign: 1, color:'var(--green)'},
+  transfer: {label:'انتقال',        sign: 0, color:'var(--blue-light)'},
 };
 function nbDelta(){
   // قرض تسویه‌شده اثرش صفر است (پول برگشته / پس داده شده)
@@ -2699,13 +3044,26 @@ $('ncAddBtn').addEventListener('click', ()=>{
   const label = $('ncLabel').value.trim();
   const manualValue = parseMoney($('ncManualValue').value);
   if(isNaN(manualValue) || manualValue<=0){ showToast('ارزش تومانی رو وارد کن', true); return; }
-  noncash.push({ id: Date.now(), category, label, manualValue });
-  if(persist()){
-    $('ncLabel').value=''; $('ncManualValue').value='';
-    showToast('اضافه شد');
-    renderNonCash();
+  const existing = noncash.find(x => x.category === category);
+  if(existing){
+    existing.manualValue = safeNum(existing.manualValue, 0) + manualValue;
+    if(label) existing.label = label;
+    existing.updatedAt = todayISO();
+    if(persist()){
+      $('ncLabel').value=''; $('ncManualValue').value='';
+      showToast('به همان دسته اضافه و به‌روز شد');
+      renderNonCash();
+    }
+  } else {
+    noncash.push({ id: Date.now(), category, label, manualValue, updatedAt: todayISO() });
+    if(persist()){
+      $('ncLabel').value=''; $('ncManualValue').value='';
+      showToast('اضافه شد');
+      renderNonCash();
+    }
   }
 });
+
 
 $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
@@ -2766,19 +3124,33 @@ $('nbSyncBtn').addEventListener('click', ()=>{
   if(btn){ btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'), 650); }
 
   if(notebook.length === 0){ showToast('لیست تراکنش‌ها خالیه، چیزی برای همگام‌سازی نیست'); return; }
-  const delta = nbDelta();
-  const newBase = (assets.card||0) + delta;
+
+  // قرض‌های تسویه‌نشده حفظ می‌شوند؛ فقط بقیه هم‌گام و پاک می‌شوند
+  const keepLoans = notebook.filter(e => e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled);
+  const toClear = notebook.filter(e => !(e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled));
+  if(toClear.length === 0){
+    showToast('فقط قرض تسویه‌نشده مانده — چیزی برای همگام‌سازی نیست');
+    return;
+  }
+  const clearDelta = toClear.reduce((s, e) => {
+    if((e.type === 'lent' || e.type === 'borrowed') && e.settled) return s;
+    if(e.type === 'transfer') return s; // انتقال روی کارت جدا اثر ندارد مگر از/به کارت
+    const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || 0;
+    return s + sign * safeNum(e.amount, 0);
+  }, 0);
+  const newBase = (assets.card||0) + clearDelta;
+  const keepN = keepLoans.length;
   showConfirmModal(
-    'همگام‌سازی تراکنش‌ها با کارت؟',
-    `موجودی کارت از ${fmt(assets.card||0)} به ${fmt(newBase)} تومان تغییر می‌کنه و ${notebook.length} تراکنش ثبت‌شده پاک می‌شه.`,
+    'ثبت موجودی نهایی کارت؟',
+    `موجودی کارت از ${fmt(assets.card||0)} به ${fmt(newBase)} تومان ثبت می‌شود. ${toClear.length} تراکنش پاک می‌شود` +
+    (keepN ? ` و ${keepN} قرض تسویه‌نشده حفظ می‌شود.` : '.'),
     ()=>{
       assets.card = newBase;
-      txs.push({date: todayISO(), key:'card', delta, note:'همگام‌سازی با تراکنش‌ها'});
-      notebook = [];
-      // fcEvents و fcSnapshots عمداً پاک نمی‌شوند تا پیش‌بینی و تاریخچه حفظ شود
+      txs.push({date: todayISO(), key:'card', delta: clearDelta, note:'ثبت موجودی کارت'});
+      notebook = keepLoans;
       pushSeriesPoint();
       if(persist()){
-        showToast('همگام‌سازی شد — پیش‌بینی مالی حفظ شد');
+        showToast(keepN ? `موجودی کارت ثبت شد — ${keepN} قرض تسویه‌نشده ماند` : 'موجودی کارت ثبت شد');
         render();
       }
     }
@@ -2816,6 +3188,7 @@ $('importFile').addEventListener('change', (e)=>{
       if(d.netSeries) netSeries = d.netSeries;
       if(d.notebook) notebook = d.notebook;
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+      ensureCoreAssets();
       // ریست کامل بخش پیش‌بینی طبق فایل پشتیبان (حتی اگر در بکاپ خالی باشد)
       fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents : [];
       fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
@@ -2829,6 +3202,52 @@ $('importFile').addEventListener('change', (e)=>{
     }catch(err){ showToast('فایل نامعتبره', true); }
   };
   reader.readAsText(file);
+});
+
+
+/* ================= TRANSFER ================= */
+$('tfBtn').addEventListener('click', ()=>{
+  const fromKey = $('tfFrom').value;
+  const toKey = $('tfTo').value;
+  const amount = parseMoney($('tfAmount').value);
+  if(!fromKey || !toKey){ showToast('مبدأ و مقصد را انتخاب کن', true); return; }
+  if(fromKey === toKey){ showToast('مبدأ و مقصد نباید یکی باشند', true); return; }
+  if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کن', true); return; }
+  const fromBal = safeNum(assets[fromKey], 0);
+  if(amount > fromBal){ showToast('موجودی مبدأ کافی نیست', true); return; }
+  const fromDef = ASSET_DEFS.find(d => d.key === fromKey);
+  const toDef = ASSET_DEFS.find(d => d.key === toKey);
+  const fromName = fromDef ? fromDef.name : fromKey;
+  const toName = toDef ? toDef.name : toKey;
+
+  const prevFrom = fromBal;
+  const prevTo = safeNum(assets[toKey], 0);
+  assets[fromKey] = prevFrom - amount;
+  assets[toKey] = prevTo + amount;
+
+  const note = `انتقال از ${fromName} به ${toName}`;
+  txs.push({date: todayISO(), key: fromKey, delta: -amount, note});
+  txs.push({date: todayISO(), key: toKey, delta: amount, note});
+
+  const entryId = Date.now();
+  notebook.push({
+    id: entryId,
+    type: 'transfer',
+    amount,
+    time: todayDate().toTimeString().slice(0,5),
+    date: todayISO(),
+    desc: note,
+    person: '',
+    fromKey, toKey,
+  });
+
+  pushSeriesPoint();
+  checkMilestones(toKey, prevTo, assets[toKey]);
+  if(persist()){
+    $('tfAmount').value = '';
+    showToast(`${fmt(amount)} از ${fromName} به ${toName} منتقل شد`);
+    render();
+  }
 });
 
 /* ================= NEW ASSET ================= */
@@ -2857,6 +3276,8 @@ $('newAssetBtn').addEventListener('click', ()=>{
 });
 
 /* ================= PIN LOCK ================= */
+const USERNAME_KEY = 'daftar-login-username';
+const DEFAULT_USERNAME = 'admin';
 const PIN_KEY = 'daftar-pin-hash';
 const UNLOCK_FLAG = 'daftar-unlocked';
 const PIN_FAIL_KEY = 'daftar-pin-fails';
@@ -2953,57 +3374,49 @@ function lockRemainingMs(){
   return Math.max(0, until - Date.now());
 }
 
+function getLoginUsername(){
+  try{const value=String(localStorage.getItem(USERNAME_KEY)||DEFAULT_USERNAME).trim();return value||DEFAULT_USERNAME;}catch(e){return DEFAULT_USERNAME;}
+}
+function saveLoginUsername(value){
+  const username=String(value||'').trim();
+  if(username.length<3||username.length>32)return false;
+  try{localStorage.setItem(USERNAME_KEY,username);}catch(e){return false;}
+  return true;
+}
 function refreshPinStatus(){
-  const rec = loadPinRecord();
-  $('pinStatus').textContent = rec ? '🔒 رمز عبور فعال است (PBKDF2 + Salt)' : '🔓 رمز عبوری تنظیم نشده';
+  const rec=loadPinRecord(),username=getLoginUsername();
+  if($('loginUsername'))$('loginUsername').value=username;
+  $('pinStatus').textContent=rec?`🔒 رمز عبور فعال است · نام کاربری: ${username}`:'🔓 رمز عبوری تنظیم نشده';
 }
 function showLockScreen(){
-  $('lockScreen').style.display = 'flex';
-  $('lockInput').value = '';
-  $('lockErr').textContent = '';
-  setTimeout(()=> $('lockInput').focus(), 50);
+  $('lockScreen').style.display='flex';$('lockUsername').value='';$('lockInput').value='';$('lockErr').textContent='';
+  setTimeout(()=>$('lockUsername').focus(),50);
 }
-async function checkLock(){
-  const rec = loadPinRecord();
-  if(rec && sessionStorage.getItem(UNLOCK_FLAG) !== '1'){ showLockScreen(); }
-}
-$('lockUnlockBtn').addEventListener('click', async ()=>{
-  const wait = lockRemainingMs();
-  if(wait > 0){
-    $('lockErr').textContent = `تلاش زیاد — ${Math.ceil(wait/1000)} ثانیه صبر کن`;
-    return;
-  }
-  const entered = $('lockInput').value;
-  if(!entered){ $('lockErr').textContent = 'رمز را وارد کن'; return; }
+async function checkLock(){const rec=loadPinRecord();if(rec&&sessionStorage.getItem(UNLOCK_FLAG)!=='1')showLockScreen();}
+function triggerLoginError(){const box=$('lockBox');if(!box)return;box.classList.remove('login-error');void box.offsetWidth;box.classList.add('login-error');}
+$('lockUnlockBtn').addEventListener('click',async()=>{
+  const wait=lockRemainingMs();
+  if(wait>0){$('lockErr').textContent=`تلاش زیاد — ${Math.ceil(wait/1000)} ثانیه صبر کن`;triggerLoginError();return;}
+  const username=String($('lockUsername').value||'').trim(),entered=$('lockInput').value;
+  if(!username||username.length<3){$('lockErr').textContent='نام کاربری را وارد کن';triggerLoginError();return;}
+  if(!entered){$('lockErr').textContent='رمز را وارد کن';triggerLoginError();return;}
   try{
-    const ok = await verifyPin(entered);
-    if(ok){
-      clearFails();
-      sessionStorage.setItem(UNLOCK_FLAG, '1');
-      $('lockScreen').style.display = 'none';
-      $('lockInput').value = '';
-      $('lockErr').textContent = '';
-    } else {
-      registerFail();
-      $('lockInput').value = '';
-      const left = PIN_MAX_FAILS - (getFailState().fails || 0);
-      const rem = lockRemainingMs();
-      if(rem > 0){
-        $('lockErr').textContent = `رمز اشتباه — ${Math.ceil(rem/1000)} ثانیه قفل شد`;
-      } else {
-        $('lockErr').textContent = `رمز اشتباهه (باقی‌مانده تلاش: ${Math.max(left,1)})`;
-      }
-    }
-  }catch(err){
-    $('lockErr').textContent = 'خطا در بررسی رمز';
-  }
+    const ok=username.toLowerCase()===getLoginUsername().toLowerCase()&&await verifyPin(entered);
+    if(ok){clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';}
+    else{registerFail();$('lockInput').value='';const left=PIN_MAX_FAILS-(getFailState().fails||0),rem=lockRemainingMs();triggerLoginError();$('lockErr').textContent=rem>0?`ورود ناموفق — ${Math.ceil(rem/1000)} ثانیه قفل شد`:`نام کاربری یا رمز عبور اشتباه است (تلاش باقی‌مانده: ${Math.max(left,1)})`;}
+  }catch(err){$('lockErr').textContent='خطا در بررسی اطلاعات ورود';triggerLoginError();}
 });
-$('lockInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') $('lockUnlockBtn').click(); });
+$('lockUsername').addEventListener('keydown',e=>{if(e.key==='Enter')$('lockInput').focus();});
+$('lockInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('lockUnlockBtn').click();});
+if($('loginUsername'))$('loginUsername').addEventListener('change',()=>{const value=$('loginUsername').value.trim();if(value.length<3||value.length>32){showToast('نام کاربری باید بین ۳ تا ۳۲ کاراکتر باشد',true);$('loginUsername').value=getLoginUsername();return;}if(saveLoginUsername(value)){refreshPinStatus();showToast('نام کاربری ذخیره شد');}});
 
 $('pinSetBtn').addEventListener('click', async ()=>{
   const current = $('pinCurrent').value;
   const next = $('pinNew').value;
+  const usernameInput = $('loginUsername') ? $('loginUsername').value.trim() : getLoginUsername();
   const rec = loadPinRecord();
+  if(usernameInput.length < 3 || usernameInput.length > 32){ showToast('نام کاربری باید بین ۳ تا ۳۲ کاراکتر باشد', true); return; }
+  saveLoginUsername(usernameInput);
   if(!next || String(next).length < 4){ showToast('رمز جدید حداقل ۴ کاراکتر باشد', true); return; }
   if(rec){
     const ok = await verifyPin(current);
@@ -3024,11 +3437,17 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
   const current = $('pinCurrent').value;
   const ok = await verifyPin(current);
   if(!ok){ showToast('رمز فعلی درست نیست', true); return; }
-  localStorage.removeItem(PIN_KEY);
-  clearFails();
-  $('pinCurrent').value='';
-  showToast('رمز عبور حذف شد');
-  refreshPinStatus();
+  showConfirmModal(
+    'حذف رمز عبور؟',
+    'قفل ورود برای این دفتر غیرفعال می‌شود.',
+    ()=>{
+      localStorage.removeItem(PIN_KEY);
+      clearFails();
+      $('pinCurrent').value='';
+      showToast('رمز عبور حذف شد');
+      refreshPinStatus();
+    }
+  );
 });
 
 // پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
@@ -3039,6 +3458,7 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
 refreshPinStatus();
 checkLock();
 loadAll();
+ensureCoreAssets();
 scheduleDateRollover();
 updateTopbarDate();
 </script>
