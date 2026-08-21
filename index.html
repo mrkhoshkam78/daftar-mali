@@ -99,6 +99,49 @@
     backdrop-filter:blur(12px) saturate(1.15);
     -webkit-backdrop-filter:blur(12px) saturate(1.15);
   }
+  
+  .theme-dn-btn{
+    width:38px; height:38px; border-radius:11px; border:1px solid var(--border);
+    background:var(--card); color:var(--ink); cursor:pointer; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+    transition:background .2s, border-color .2s, transform .15s;
+  }
+  .theme-dn-btn:hover{border-color:var(--border-strong); background:var(--card-2);}
+  .theme-dn-btn:active{transform:scale(.94);}
+  .theme-dn-btn svg{
+    position:absolute; width:18px; height:18px;
+    transition:opacity .28s ease, transform .35s ease;
+  }
+  .theme-dn-btn .ic-sun{opacity:0; transform:rotate(-40deg) scale(.6);}
+  .theme-dn-btn .ic-moon{opacity:1; transform:rotate(0) scale(1);}
+  html[data-theme="light"] .theme-dn-btn .ic-sun{opacity:1; transform:rotate(0) scale(1);}
+  html[data-theme="light"] .theme-dn-btn .ic-moon{opacity:0; transform:rotate(40deg) scale(.6);}
+  .transfer-flow{
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .transfer-flow .tf-row{display:grid; grid-template-columns:1fr; gap:8px;}
+  .transfer-flow .tf-arrow-wrap{
+    display:flex; align-items:center; justify-content:center;
+    color:var(--blue-light); opacity:.85; height:20px;
+  }
+  .transfer-flow .tf-arrow-wrap svg{display:block;}
+  .nc-item{flex-wrap:wrap;}
+  .nc-item .nc-actions{display:flex; gap:4px; flex-shrink:0; align-items:center;}
+  .nc-edit-btn{
+    background:transparent; border:1px solid var(--border); color:var(--ink-dim);
+    border-radius:8px; width:28px; height:28px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .nc-edit-btn:hover{color:var(--blue-light); border-color:var(--border-strong); background:var(--blue-soft);}
+  .nc-edit-panel{
+    flex-basis:100%; order:5; margin-top:8px; padding:10px;
+    border:1px solid var(--border); border-radius:12px; background:var(--bg-2);
+    display:none;
+  }
+  .nc-edit-panel.open{display:block;}
+  .nc-edit-panel .grid2{margin-bottom:8px;}
+
   .topbar-main{display:flex; align-items:center; min-width:0; flex:1;}
   .topbar-date{
     display:inline-flex; align-items:center; gap:7px;
@@ -425,15 +468,31 @@
   }
 
 
-  /* انتقال بین دارایی‌ها */
+
+  .nc-gold-fields{
+    display:none; margin-top:10px; padding:12px;
+    border:1px solid var(--border); border-radius:12px; background:var(--bg-2);
+  }
+  .nc-gold-fields.show{display:block;}
+  .nc-gold-fields .gold-hint{
+    font-size:10.5px; color:var(--ink-dim); margin-bottom:8px; line-height:1.7;
+  }
+  .nc-gold-sum{
+    margin-top:8px; font-size:12px; color:var(--blue-light);
+    font-family:'Martian Mono',monospace; direction:ltr; text-align:right;
+  }
   .transfer-box{
-    margin-top:14px; padding:14px; border-radius:14px;
-    border:1px solid var(--border); background:var(--card-2);
+    margin-top:14px; padding:16px; border-radius:16px;
+    border:1px solid var(--border-strong); background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    box-shadow:0 4px 16px rgba(0,0,0,.06);
   }
-  .transfer-box .tb-title{font-size:12px; font-weight:700; color:var(--ink); margin-bottom:8px;}
-  .transfer-arrow{
-    text-align:center; color:var(--ink-dim); font-size:12px; padding:4px 0;
+  .transfer-box .tb-title{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px;
   }
+  .transfer-box .tb-title svg{color:var(--blue-light); flex-shrink:0;}
+    .sec-ic{display:inline-flex; width:16px; height:16px; color:var(--blue-light); flex-shrink:0;}
+  .sec-ic svg{width:16px; height:16px; display:block;}
   /* عملکرد لود دارایی */
   #assetCards.rendering .asset-card,
   #assetCards.rendering .asset-card:hover{
@@ -941,7 +1000,7 @@
 <div class="lock-screen" id="lockScreen" style="display:none;">
   <div class="lock-box" id="lockBox">
     <div class="lock-visual" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="lock-shackle" d="M7.5 10V7.8a4.5 4.5 0 0 1 9 0V10"/><rect x="5" y="10" width="14" height="11" rx="2.5"/><circle cx="12" cy="15" r="1" fill="currentColor"/><path d="M12 16v2"/></svg></div>
-    <div class="lock-title">🔒 دفتر مالی قفل است</div>
+    <div class="lock-title"><span class="sec-ic" style="vertical-align:middle;margin-left:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0"/></svg></span> دفتر مالی قفل است</div>
     <div class="lock-sub">برای ورود، نام کاربری و رمز عبور خود را وارد کنید</div>
     <div class="lock-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><input type="text" id="lockUsername" placeholder="نام کاربری" autocomplete="username" spellcheck="false"></div>
     <div class="lock-field password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2.5"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10"/></svg><input type="password" inputmode="numeric" id="lockInput" placeholder="رمز عبور" autocomplete="current-password"></div>
@@ -954,6 +1013,10 @@
   <div class="topbar-main">
     <div class="topbar-date"><span class="live-dot" aria-hidden="true"></span><span id="topbarDate">—</span></div>
   </div>
+  <button type="button" class="theme-dn-btn" id="themeDayNight" aria-label="حالت روز و شب" title="روز / شب">
+    <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
+    <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+  </button>
   <button class="hamburger-btn" id="menuToggle" aria-label="منو"><span></span><span></span><span></span></button>
 </div>
 
@@ -1055,23 +1118,29 @@
       <div id="assetCards"></div>
 
       <div class="transfer-box" id="transferBox">
-        <div class="tb-title">انتقال بین دارایی‌ها</div>
-        <div class="section-sub" style="margin-bottom:8px;">مبلغ از یک دارایی کم و به دارایی دیگر اضافه می‌شود و در تراکنش‌ها ثبت می‌گردد.</div>
-        <div class="grid2">
-          <div>
+        <div class="tb-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+          انتقال بین دارایی‌ها
+        </div>
+        <div class="section-sub" style="margin-bottom:10px;">مبلغ از مبدأ کم و به مقصد اضافه می‌شود و در تراکنش‌ها ثبت می‌گردد.</div>
+        <div class="transfer-flow">
+          <div class="tf-row">
             <label class="field">از</label>
             <select id="tfFrom"></select>
           </div>
-          <div>
+          <div class="tf-arrow-wrap" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
+          </div>
+          <div class="tf-row">
             <label class="field">به</label>
             <select id="tfTo"></select>
           </div>
         </div>
-        <label class="field" style="margin-top:8px;">مبلغ (تومان)</label>
+        <label class="field" style="margin-top:10px;">مبلغ (تومان)</label>
         <input type="text" inputmode="numeric" id="tfAmount" placeholder="مثلاً 500,000" class="money-input">
         <button class="btn icon-btn-svg" id="tfBtn" style="margin-top:10px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
-          انتقال
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          انجام انتقال
         </button>
       </div>
 
@@ -1100,7 +1169,7 @@
     <div class="page" id="page-noncash">
     <div class="section reveal" id="sec-noncash">
       <div class="section-title"><span class="dot"></span>دارایی‌های غیرنقد</div>
-      <div class="section-sub">ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.</div>
+      <div class="section-sub">افزودن مورد جدید از فرم پایین؛ برای اصلاح همان مورد از دکمه ویرایش استفاده کنید (جایگزین می‌شود، نه اضافه).</div>
 
       <div class="nc-hero" id="ncHero">
         <div class="nc-hero-top">
@@ -1116,7 +1185,7 @@
       <div id="ncList" class="nc-list"></div>
 
       <div class="nc-form-box">
-        <div class="section-sub" style="margin-bottom:8px;">افزودن مورد جدید</div>
+        <div class="section-sub" style="margin-bottom:8px;">افزودن دارایی غیرنقد جدید — اگر دسته تکراری باشد مقدار به قبلی اضافه می‌شود</div>
         <div class="grid2">
           <div>
             <label class="field">دسته</label>
@@ -1132,8 +1201,22 @@
           </div>
           <div>
             <label class="field">توضیح کوتاه</label>
-            <input type="text" id="ncLabel" placeholder="مثلاً گردنبند ۱۳.۷ گرم">
+            <input type="text" id="ncLabel" placeholder="مثلاً گردنبند">
           </div>
+        </div>
+        <div class="nc-gold-fields" id="ncGoldFields">
+          <div class="gold-hint">۱ مثقال = ۴٫۶۰۸ گرم = ۲۴ سوت · ۱ سوت = ۰٫۱۹۲ گرم</div>
+          <div class="grid2">
+            <div>
+              <label class="field">گرم</label>
+              <input type="text" inputmode="decimal" id="ncGoldGram" placeholder="مثلاً 13.7">
+            </div>
+            <div>
+              <label class="field">سوت</label>
+              <input type="text" inputmode="decimal" id="ncGoldSoot" placeholder="مثلاً 2">
+            </div>
+          </div>
+          <div class="nc-gold-sum" id="ncGoldSum">مجموع وزن: ۰ گرم</div>
         </div>
         <label class="field" style="margin-top:8px;">ارزش تقریبی (تومان)</label>
         <input type="text" inputmode="numeric" id="ncManualValue" placeholder="مثلاً 40,000,000" class="money-input">
@@ -1280,7 +1363,7 @@
     <div class="page" id="page-settings">
     <div class="settings-stack">
     <div class="section reveal">
-      <div class="section-title"><span class="dot"></span>🎨 تم</div>
+      <div class="section-title"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg></span>تم</div>
       <div class="section-sub">ظاهر موردعلاقه‌تان را انتخاب کنید؛ انتخاب شما ذخیره می‌شود.</div>
       <div class="theme-grid" id="themeGrid">
         <button class="theme-card" data-theme-val="dark">
@@ -1307,7 +1390,7 @@
     </div>
 
     <div class="section reveal" id="sec-language">
-      <div class="section-title"><span class="dot"></span>🌐 زبان</div>
+      <div class="section-title"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>زبان</div>
       <div class="section-sub">زبان رابط کاربری را انتخاب کنید؛ فارسی پیش‌فرض است و English بر پایه استاندارد آمریکایی نمایش داده می‌شود.</div>
       <div class="setting-row">
         <div><div class="s-label">زبان</div><div class="s-sub">فارسی پیش‌فرض است · انگلیسی با استاندارد آمریکایی</div></div>
@@ -1316,7 +1399,7 @@
     </div>
 
     <div class="section reveal" id="sec-font">
-      <div class="section-title"><span class="dot"></span>🔤 فونت</div>
+      <div class="section-title"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20L10 4h2l6 16M6.5 14h7"/></svg></span>فونت</div>
       <div class="section-sub">فونت رابط کاربری را انتخاب کنید؛ انتخاب شما در کل برنامه اعمال و ذخیره می‌شود.</div>
       <div class="setting-row">
         <div><div class="s-label">فونت سایت</div><div class="s-sub">Vazirmatn فونت پیش‌فرض فعلی است</div></div>
@@ -1325,7 +1408,7 @@
     </div>
 
     <div class="section reveal" id="sec-motion">
-      <div class="section-title"><span class="dot"></span>انیمیشن</div>
+      <div class="section-title"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 12c2-6 4-8 7-8s5 2 7 8c-2 6-4 8-7 8s-5-2-7-8z"/><circle cx="12" cy="12" r="2.5"/></svg></span>انیمیشن</div>
       <div class="section-sub">برای عملکرد روان‌تر روی دستگاه‌های ضعیف، انیمیشن‌های تعاملی را خاموش کنید.</div>
       <div class="setting-row">
         <div>
@@ -1340,10 +1423,9 @@
     </div>
 
     <div class="section reveal" id="sec-backup">
-      <div class="section-title"><span class="dot"></span>🔒 امنیت</div>
+      <div class="section-title"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0"/></svg></span>امنیت</div>
       <div class="section-sub">
-        رمز با PBKDF2+Salt در همین مرورگر هش می‌شود و قفل ورود دارد. این جلوی مشاهده تصادفی را می‌گیرد و در برابر حدس ساده مقاوم‌تر است،
-        اما چون همه چیز سمت کلاینت است، در برابر مهاجم فنی روی همین دستگاه امنیت مطلق نیست. حداقل ۴ رقم انتخاب کن.
+        ورود با PBKDF2 تأیید می‌شود؛ پس از ورود، دادهٔ محلی و فایل پشتیبان با AES-GCM (کلید مشتق از رمز) رمز می‌شوند. بکاپ رمزشده بدون رمز قابل بازیابی نیست. حداقل ۴ کاراکتر.
       </div>
       <div class="setting-row security-username-row">
         <div><div class="s-label">نام کاربری ورود</div><div class="s-sub">نام کاربری مورد استفاده برای ورود به دفتر</div></div>
@@ -1429,7 +1511,7 @@ const I18N = {
   'مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.':'Enter an amount and press + or − · Remove with ×',
   'یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.':'Add New Cash/Investment Asset','نام دارایی':'Asset Name','دسته':'Category','سرمایه‌گذاری':'Investment',
   'نقدینگی':'Cash','موجودی اولیه (تومان — اختیاری)':'Initial Balance (Toman — optional)','افزودن دارایی جدید':'Add New Asset',
-  'دارایی‌های غیرنقد':'Non-cash Assets','ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.':'Estimated value — not included in official total assets',
+  'دارایی‌های غیرنقد':'Non-cash Assets','افزودن مورد جدید از فرم پایین؛ برای اصلاح همان مورد از دکمه ویرایش استفاده کنید (جایگزین می‌شود، نه اضافه).':'Estimated value — not included in official total assets',
   'ارزش کل دارایی‌های غیرنقد':'Total Non-cash Asset Value','تومان':'Toman','تخمینی · غیررسمی':'Estimated · unofficial','افزودن مورد جدید':'Add New Item',
   'طلا':'Gold','نقره':'Silver','دلار':'US Dollar','سکه':'Coin','حساب سپرده':'Deposit Account','بورس':'Stock Market','سایر':'Other',
   'توضیح کوتاه':'Short Description','ارزش تقریبی (تومان)':'Approximate Value (Toman)','افزودن':'Add',
@@ -1464,7 +1546,7 @@ const I18N = {
   I18N['برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.']='Estimate monthly expenses from recent payments; income is used only to measure financial capacity.';
   I18N['مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.']='Enter the change and use + or − to update the balance; remove with ×.';
   I18N['یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.']='Add a new cash or investment asset to your ledger.';
-  I18N['ارزش تقریبی دارایی‌هایی که در جمع رسمی دارایی‌های نقدی محاسبه نمی‌شوند.']='Estimated value of assets excluded from the official cash-asset total.';
+  I18N['افزودن مورد جدید از فرم پایین؛ برای اصلاح همان مورد از دکمه ویرایش استفاده کنید (جایگزین می‌شود، نه اضافه).']='Estimated value of assets excluded from the official cash-asset total.';
   I18N['کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.']='Card is managed only here. “Save Card Balance” stores the calculated amount as the final card balance.';
   I18N['قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.']='Track money lent or borrowed and mark each item when it is settled.';
   I18N['تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.']='Filter asset changes by time or type; long lists can be scrolled.';
@@ -1564,6 +1646,13 @@ function applyTheme(t){
 document.querySelectorAll('.theme-card').forEach(card=>{
   card.addEventListener('click', ()=> applyTheme(card.dataset.themeVal));
 });
+if($('themeDayNight')){
+  $('themeDayNight').addEventListener('click', ()=>{
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    // فقط روشن (روز) و سرمه‌ای تیره (شب)
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  });
+}
 (function initTheme(){
   let saved = 'dark';
   try{ saved = localStorage.getItem(THEME_KEY) || 'dark'; }catch(e){}
@@ -1877,6 +1966,38 @@ let ASSET_DEFS = DEFAULT_ASSET_DEFS.map(d=>({...d})); // قابل حذف با ف
 const FIXED_ASSET_KEYS = ['card', 'wallet']; // همیشه در انتقال؛ غیرقابل حذف از لیست اصلی
 
 const NC_CATS = {gold:'طلا', silver:'نقره', usd:'دلار', coin:'سکه', deposit:'حساب سپرده', stock:'بورس', other:'سایر'};
+// طلا: ۱ مثقال = ۴٫۶۰۸ گرم = ۲۴ سوت → ۱ سوت = ۰٫۱۹۲ گرم
+const GOLD_GRAM_PER_SOOT = 4.608 / 24;
+function parseDec(str){
+  if(str == null || str === '') return 0;
+  const n = parseFloat(String(str).replace(/,/g, '').replace(/[^\d.\-]/g, ''));
+  return isFinite(n) ? n : 0;
+}
+function goldTotalGrams(gram, soot){
+  return Math.round((safeNum(gram, 0) + safeNum(soot, 0) * GOLD_GRAM_PER_SOOT) * 1000) / 1000;
+}
+function formatGoldWeight(item){
+  if(!item || item.category !== 'gold') return '';
+  const g = safeNum(item.grams, 0);
+  const s = safeNum(item.soot, 0);
+  const tot = goldTotalGrams(g, s);
+  const parts = [];
+  if(g) parts.push(g + ' گرم');
+  if(s) parts.push(s + ' سوت');
+  if(!parts.length && tot) parts.push(tot + ' گرم');
+  return parts.length ? parts.join(' + ') + (tot && (g || s) ? ' ≈ ' + tot + ' گرم' : '') : '';
+}
+function updateGoldSumUI(){
+  const box = $('ncGoldFields');
+  if(!box) return;
+  const isGold = $('ncCategory') && $('ncCategory').value === 'gold';
+  box.classList.toggle('show', isGold);
+  if(!isGold) return;
+  const g = parseDec($('ncGoldGram') && $('ncGoldGram').value);
+  const s = parseDec($('ncGoldSoot') && $('ncGoldSoot').value);
+  const tot = goldTotalGrams(g, s);
+  if($('ncGoldSum')) $('ncGoldSum').textContent = 'مجموع وزن: ' + tot + ' گرم';
+}
 
 let assets = { snapp: 4607188, hami: 5155000, farabi: 148690, card: 2100000, wallet: 570000 };
 let logs = [];
@@ -1897,18 +2018,22 @@ function loadAll(){
     const raw = localStorage.getItem(STORE_KEY);
     if(raw){
       const d = JSON.parse(raw);
-      if(d.assets) assets = {...assets, ...d.assets};
-      if(d.logs) logs = d.logs;
-      if(d.txs) txs = d.txs;
-      if(d.history) history = d.history;
-      if(d.noncash) noncash = d.noncash;
-      if(d.netSeries) netSeries = d.netSeries;
-      if(d.notebook) notebook = d.notebook;
-      if(d.fcEvents) fcEvents = d.fcEvents;
-      if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
-      if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
-      if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
-      ensureCoreAssets();
+      if(d && d.enc === true && d.ct && d.iv && d.salt){
+        window._pendingEncStore = d;
+      } else {
+        if(d.assets) assets = {...assets, ...d.assets};
+        if(d.logs) logs = d.logs;
+        if(d.txs) txs = d.txs;
+        if(d.history) history = d.history;
+        if(d.noncash) noncash = d.noncash;
+        if(d.netSeries) netSeries = d.netSeries;
+        if(d.notebook) notebook = d.notebook;
+        if(d.fcEvents) fcEvents = d.fcEvents;
+        if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
+        if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+        if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+        ensureCoreAssets();
+      }
     }
   }catch(e){ console.error(e); }
   // مهاجرت: اگر fcEvents خالی است ولی notebook داده دارد، یک‌بار کپی کن
@@ -1933,11 +2058,49 @@ function pushSeriesPoint(){
   netSeries.push({ts: Date.now(), total: computeTotal()});
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
+function getStatePayload(){
+  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, assetDefs: ASSET_DEFS};
+}
+function applyStatePayload(d){
+  if(!d || typeof d !== 'object') return;
+  if(d.assets) assets = Object.assign({}, assets, d.assets);
+  if(d.logs) logs = d.logs;
+  if(d.txs) txs = d.txs;
+  if(d.history) history = d.history;
+  if(d.noncash) noncash = d.noncash;
+  if(d.netSeries) netSeries = d.netSeries;
+  if(d.notebook) notebook = d.notebook;
+  if(d.fcEvents) fcEvents = d.fcEvents;
+  if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
+  if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+  if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+  if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
+}
+let sessionCryptoKey = null;
+let persistChain = Promise.resolve();
+const DATA_KDF_ITERS = 210000;
+const BACKUP_MAGIC = 'DMENC1';
+
 function persist(){
+  const payload = getStatePayload();
+  persistChain = persistChain.then(function(){ return writeStore(payload); }).catch(function(err){
+    console.error(err);
+    showToast('خطا در ذخیره رمزشده', true);
+  });
+  return true;
+}
+async function writeStore(payload){
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify({assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, assetDefs: ASSET_DEFS}));
-    return true;
-  }catch(e){ showToast('خطا در ذخیره: ' + e.message, true); return false; }
+    if(sessionCryptoKey && typeof loadPinRecord === 'function' && loadPinRecord()){
+      var env = await encryptPayload(payload, sessionCryptoKey);
+      localStorage.setItem(STORE_KEY, JSON.stringify(env));
+    } else {
+      localStorage.setItem(STORE_KEY, JSON.stringify(payload));
+    }
+  }catch(e){
+    showToast('خطا در ذخیره: ' + (e && e.message ? e.message : e), true);
+    throw e;
+  }
 }
 
 
@@ -2640,17 +2803,36 @@ function renderNonCash(){
     const cat = NC_CATS[item.category] || 'سایر';
     const name = (item.label && String(item.label).trim()) ? item.label : '';
     const val = safeNum(item.manualValue, 0);
+    const goldW = formatGoldWeight(item);
     const upd = item.updatedAt
       ? `<div class="nc-updated">آخرین به‌روزرسانی: ${toJalaliStr(item.updatedAt) || item.updatedAt}</div>`
       : '';
+    const isGold = item.category === 'gold';
     return `<div class="nc-item" data-id="${item.id}">
       <div class="nc-meta">
         <span class="nc-cat">${cat}</span>
         ${name ? `<div class="nc-name">${name}</div>` : ''}
+        ${goldW ? `<div class="nc-updated">${goldW}</div>` : ''}
         ${upd}
       </div>
       <span class="nc-val">${fmt(val)} ت</span>
-      <button type="button" class="del" data-id="${item.id}" title="حذف" aria-label="حذف">×</button>
+      <div class="nc-actions">
+        <button type="button" class="nc-edit-btn" data-edit-id="${item.id}" title="ویرایش" aria-label="ویرایش">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+        <button type="button" class="del" data-id="${item.id}" title="حذف" aria-label="حذف">×</button>
+      </div>
+      <div class="nc-edit-panel" id="ncEdit-${item.id}">
+        ${isGold ? `<div class="grid2">
+          <div><label class="field">گرم</label><input type="text" inputmode="decimal" data-eg="${item.id}" value="${safeNum(item.grams,0)}"></div>
+          <div><label class="field">سوت</label><input type="text" inputmode="decimal" data-es="${item.id}" value="${safeNum(item.soot,0)}"></div>
+        </div>` : ''}
+        <label class="field">قیمت / ارزش (تومان)</label>
+        <input type="text" inputmode="numeric" data-ev="${item.id}" class="money-input" value="${fmt(val).replace(/,/g,'')}">
+        <label class="field" style="margin-top:6px;">توضیح</label>
+        <input type="text" data-el="${item.id}" value="${(name||'').replace(/"/g,'&quot;')}">
+        <button type="button" class="btn" data-save-nc="${item.id}" style="margin-top:8px;">ذخیره تغییرات</button>
+      </div>
     </div>`;
   }).join('');
 
@@ -2669,6 +2851,49 @@ function renderNonCash(){
           if(persist()) renderNonCash();
         }
       );
+    });
+  });
+
+  el.querySelectorAll('.nc-edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.editId;
+      const panel = $('ncEdit-' + id);
+      if(!panel) return;
+      document.querySelectorAll('.nc-edit-panel.open').forEach(p => {
+        if(p !== panel) p.classList.remove('open');
+      });
+      panel.classList.toggle('open');
+    });
+  });
+
+  el.querySelectorAll('[data-save-nc]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = String(btn.dataset.saveNc);
+      const idx = noncash.findIndex(x => x && String(x.id) === id);
+      if(idx < 0){ showToast('مورد پیدا نشد', true); return; }
+      const item = noncash[idx];
+      const valInp = el.querySelector('input[data-ev="'+id+'"]');
+      const labInp = el.querySelector('input[data-el="'+id+'"]');
+      const newVal = parseMoney(valInp ? valInp.value : '');
+      if(isNaN(newVal) || newVal < 0){ showToast('قیمت معتبر نیست', true); return; }
+      // فقط همان رکورد به‌روز می‌شود — دارایی جدید ساخته نمی‌شود
+      item.manualValue = newVal;
+      if(labInp) item.label = labInp.value.trim();
+      if(item.category === 'gold'){
+        const gInp = el.querySelector('input[data-eg="'+id+'"]');
+        const sInp = el.querySelector('input[data-es="'+id+'"]');
+        item.grams = parseDec(gInp && gInp.value);
+        item.soot = parseDec(sInp && sInp.value);
+        item.totalGrams = goldTotalGrams(item.grams, item.soot);
+      }
+      item.updatedAt = todayISO();
+      noncash[idx] = item;
+      if(persist()){
+        showToast('همان مورد به‌روز شد');
+        renderNonCash();
+      }
     });
   });
 }
@@ -3039,31 +3264,63 @@ function renderNotebook(){
 }
 
 /* ================= EVENTS ================= */
-$('ncAddBtn').addEventListener('click', ()=>{
-  const category = $('ncCategory').value;
-  const label = $('ncLabel').value.trim();
-  const manualValue = parseMoney($('ncManualValue').value);
-  if(isNaN(manualValue) || manualValue<=0){ showToast('ارزش تومانی رو وارد کن', true); return; }
-  const existing = noncash.find(x => x.category === category);
-  if(existing){
-    existing.manualValue = safeNum(existing.manualValue, 0) + manualValue;
-    if(label) existing.label = label;
-    existing.updatedAt = todayISO();
-    if(persist()){
-      $('ncLabel').value=''; $('ncManualValue').value='';
-      showToast('به همان دسته اضافه و به‌روز شد');
-      renderNonCash();
-    }
-  } else {
-    noncash.push({ id: Date.now(), category, label, manualValue, updatedAt: todayISO() });
-    if(persist()){
-      $('ncLabel').value=''; $('ncManualValue').value='';
-      showToast('اضافه شد');
-      renderNonCash();
-    }
-  }
-});
 
+
+
+
+function clearNcForm(){
+  if($('ncLabel')) $('ncLabel').value = '';
+  if($('ncManualValue')) $('ncManualValue').value = '';
+  if($('ncGoldGram')) $('ncGoldGram').value = '';
+  if($('ncGoldSoot')) $('ncGoldSoot').value = '';
+  if(typeof updateGoldSumUI === 'function') updateGoldSumUI();
+}
+
+if($('ncAddBtn')){
+  $('ncAddBtn').addEventListener('click', ()=>{
+    const category = $('ncCategory').value;
+    const label = ($('ncLabel').value || '').trim();
+    const manualValue = parseMoney($('ncManualValue').value);
+    if(isNaN(manualValue) || manualValue <= 0){ showToast('ارزش تومانی رو وارد کن', true); return; }
+    const addGram = category === 'gold' ? parseDec($('ncGoldGram') && $('ncGoldGram').value) : 0;
+    const addSoot = category === 'gold' ? parseDec($('ncGoldSoot') && $('ncGoldSoot').value) : 0;
+    const existing = noncash.find(x => x && x.category === category);
+    if(existing){
+      existing.manualValue = safeNum(existing.manualValue, 0) + manualValue;
+      if(label) existing.label = label;
+      if(category === 'gold'){
+        existing.grams = safeNum(existing.grams, 0) + addGram;
+        existing.soot = safeNum(existing.soot, 0) + addSoot;
+        existing.totalGrams = goldTotalGrams(existing.grams, existing.soot);
+      }
+      existing.updatedAt = todayISO();
+      if(persist()){
+        clearNcForm();
+        showToast('به موجودی قبلی همان دسته اضافه شد');
+        renderNonCash();
+      }
+    } else {
+      const row = { id: Date.now(), category, label, manualValue, updatedAt: todayISO() };
+      if(category === 'gold'){
+        row.grams = addGram;
+        row.soot = addSoot;
+        row.totalGrams = goldTotalGrams(addGram, addSoot);
+      }
+      noncash.push(row);
+      if(persist()){
+        clearNcForm();
+        showToast('دارایی غیرنقد جدید اضافه شد');
+        renderNonCash();
+      }
+    }
+  });
+}
+if($('ncCategory')){
+  $('ncCategory').addEventListener('change', updateGoldSumUI);
+  updateGoldSumUI();
+}
+if($('ncGoldGram')) $('ncGoldGram').addEventListener('input', updateGoldSumUI);
+if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 
 $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
@@ -3164,45 +3421,53 @@ $('snapshotBtn').addEventListener('click', ()=>{
   if(persist()){ showToast('نقطه امروز ثبت شد'); render(); }
 });
 
-$('exportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify({assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, assetDefs: ASSET_DEFS}, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `daftar-mali-backup-${todayISO()}.json`; a.click();
-  URL.revokeObjectURL(url);
-  showToast('فایل پشتیبان دانلود شد');
+$('exportBtn').addEventListener('click', async ()=>{
+  try{
+    const body = await buildBackupBlob();
+    const encrypted = !!(sessionCryptoKey && loadPinRecord());
+    const blob = new Blob([body], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'daftar-mali-backup-' + todayISO() + (encrypted ? '-enc' : '') + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(encrypted ? 'پشتیبان رمزشده دانلود شد' : 'پشتیبان بدون رمز دانلود شد');
+  }catch(err){ showToast('خطا در ساخت پشتیبان', true); }
 });
 $('importBtn').addEventListener('click', ()=> $('importFile').click());
 $('importFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = (ev)=>{
+  reader.onload = async (ev)=>{
     try{
-      const d = JSON.parse(ev.target.result);
-      if(d.assets) assets = {...assets, ...d.assets};
-      if(d.logs) logs = d.logs;
-      if(d.txs) txs = d.txs;
-      if(d.history) history = d.history;
-      if(d.noncash) noncash = d.noncash;
-      if(d.netSeries) netSeries = d.netSeries;
-      if(d.notebook) notebook = d.notebook;
-      if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
-      ensureCoreAssets();
-      // ریست کامل بخش پیش‌بینی طبق فایل پشتیبان (حتی اگر در بکاپ خالی باشد)
+      const parsed = await parseBackupText(ev.target.result);
+      let d;
+      if(parsed.encrypted){
+        let pin = ($('pinCurrent') && $('pinCurrent').value) || '';
+        if(!pin) pin = window.prompt('پشتیبان رمز شده است. رمز عبور را وارد کنید:') || '';
+        if(!pin){ showToast('برای بازگردانی رمزدار، رمز لازم است', true); e.target.value=''; return; }
+        try{ d = await decryptEnvelope(parsed.env, pin); }
+        catch(err){ showToast('رمز اشتباه یا فایل آسیب‌دیده', true); e.target.value=''; return; }
+      } else {
+        d = parsed.data;
+      }
+      applyStatePayload(d);
       fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents : [];
       fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
       milestonesClaimed = (d.milestonesClaimed && typeof d.milestonesClaimed === 'object') ? d.milestonesClaimed : {};
       initMilestonesBaseline();
       persist();
       render();
-      renderForecast();
-      showToast('بازگردانی شد — پیش‌بینی هم با فایل هم‌تراز شد');
+      if(typeof renderForecast === 'function') renderForecast();
+      showToast('بازگردانی شد');
       e.target.value = '';
     }catch(err){ showToast('فایل نامعتبره', true); }
   };
   reader.readAsText(file);
 });
+
 
 
 /* ================= TRANSFER ================= */
@@ -3341,7 +3606,7 @@ async function verifyPin(pin){
   if(legacy === rec.hash){
     const salt = randomSaltHex(16);
     const hash = await pbkdf2Hash(pin, salt);
-    savePinRecord({v:2, salt, hash});
+    savePinRecord({v:2, salt, hash, dataSalt: randomSaltHex(16)});
     return true;
   }
   return false;
@@ -3349,7 +3614,84 @@ async function verifyPin(pin){
 async function storeNewPin(pin){
   const salt = randomSaltHex(16);
   const hash = await pbkdf2Hash(pin, salt);
-  savePinRecord({v:2, salt, hash});
+  const dataSalt = randomSaltHex(16);
+  savePinRecord({v:2, salt, hash, dataSalt});
+}
+function isEncryptedEnvelope(obj){
+  return !!(obj && obj.enc === true && obj.ct && obj.iv && obj.salt);
+}
+async function deriveAesKey(pin, dataSaltHex){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(String(pin)), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:hexToBuf(dataSaltHex), iterations:DATA_KDF_ITERS, hash:'SHA-256'},
+    keyMaterial,
+    {name:'AES-GCM', length:256},
+    false,
+    ['encrypt','decrypt']
+  );
+}
+async function ensureSessionKey(pin){
+  let rec = loadPinRecord();
+  if(!rec || rec.v !== 2) return null;
+  if(!rec.dataSalt){
+    rec = Object.assign({}, rec, {dataSalt: randomSaltHex(16)});
+    savePinRecord(rec);
+  }
+  sessionCryptoKey = await deriveAesKey(pin, rec.dataSalt);
+  return sessionCryptoKey;
+}
+async function encryptPayload(payload, key){
+  const rec = loadPinRecord();
+  let dataSalt = rec && rec.dataSalt ? rec.dataSalt : randomSaltHex(16);
+  if(rec && !rec.dataSalt) savePinRecord(Object.assign({}, rec, {dataSalt:dataSalt}));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plain = new TextEncoder().encode(JSON.stringify(payload));
+  const ctBuf = await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, plain);
+  return {
+    v:3, enc:true, alg:'AES-GCM', kdf:'PBKDF2-SHA256', iter:DATA_KDF_ITERS,
+    salt:dataSalt, iv:bufToHex(iv), ct:bufToHex(ctBuf)
+  };
+}
+async function decryptEnvelope(env, pin){
+  if(!isEncryptedEnvelope(env)) throw new Error('not encrypted');
+  const key = await deriveAesKey(pin, env.salt);
+  const plainBuf = await crypto.subtle.decrypt(
+    {name:'AES-GCM', iv:hexToBuf(env.iv)},
+    key,
+    hexToBuf(env.ct)
+  );
+  return JSON.parse(new TextDecoder().decode(plainBuf));
+}
+async function unlockDataLayer(pin){
+  await ensureSessionKey(pin);
+  if(window._pendingEncStore){
+    try{
+      const data = await decryptEnvelope(window._pendingEncStore, pin);
+      applyStatePayload(data);
+      window._pendingEncStore = null;
+    }catch(err){
+      sessionCryptoKey = null;
+      throw err;
+    }
+  } else {
+    await writeStore(getStatePayload());
+  }
+}
+async function buildBackupBlob(){
+  const payload = getStatePayload();
+  if(sessionCryptoKey && loadPinRecord()){
+    const env = await encryptPayload(payload, sessionCryptoKey);
+    return JSON.stringify(Object.assign({magic:BACKUP_MAGIC}, env), null, 2);
+  }
+  return JSON.stringify(payload, null, 2);
+}
+async function parseBackupText(raw){
+  const d = JSON.parse(raw);
+  if(isEncryptedEnvelope(d) || (d && d.magic === BACKUP_MAGIC && d.enc)){
+    return {encrypted:true, env:d};
+  }
+  return {encrypted:false, data:d};
 }
 function getFailState(){
   const fails = parseInt(sessionStorage.getItem(PIN_FAIL_KEY)||'0', 10) || 0;
@@ -3386,13 +3728,22 @@ function saveLoginUsername(value){
 function refreshPinStatus(){
   const rec=loadPinRecord(),username=getLoginUsername();
   if($('loginUsername'))$('loginUsername').value=username;
-  $('pinStatus').textContent=rec?`🔒 رمز عبور فعال است · نام کاربری: ${username}`:'🔓 رمز عبوری تنظیم نشده';
+  $('pinStatus').textContent=rec?`رمز فعال · AES-GCM · کاربر: ${username}`:'بدون رمز — داده و بکاپ خام ذخیره می‌شوند';
 }
 function showLockScreen(){
   $('lockScreen').style.display='flex';$('lockUsername').value='';$('lockInput').value='';$('lockErr').textContent='';
   setTimeout(()=>$('lockUsername').focus(),50);
 }
-async function checkLock(){const rec=loadPinRecord();if(rec&&sessionStorage.getItem(UNLOCK_FLAG)!=='1')showLockScreen();}
+async function checkLock(){
+  const rec = loadPinRecord();
+  if(!rec) return;
+  if(window._pendingEncStore){
+    sessionStorage.removeItem(UNLOCK_FLAG);
+    showLockScreen();
+    return;
+  }
+  if(sessionStorage.getItem(UNLOCK_FLAG)!=='1') showLockScreen();
+}
 function triggerLoginError(){const box=$('lockBox');if(!box)return;box.classList.remove('login-error');void box.offsetWidth;box.classList.add('login-error');}
 $('lockUnlockBtn').addEventListener('click',async()=>{
   const wait=lockRemainingMs();
@@ -3402,7 +3753,12 @@ $('lockUnlockBtn').addEventListener('click',async()=>{
   if(!entered){$('lockErr').textContent='رمز را وارد کن';triggerLoginError();return;}
   try{
     const ok=username.toLowerCase()===getLoginUsername().toLowerCase()&&await verifyPin(entered);
-    if(ok){clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';}
+    if(ok){
+      try{ await unlockDataLayer(entered); }
+      catch(err){ $('lockErr').textContent='داده رمزشده باز نشد — رمز یا فایل ذخیره را بررسی کن'; triggerLoginError(); return; }
+      clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';
+      render();
+    }
     else{registerFail();$('lockInput').value='';const left=PIN_MAX_FAILS-(getFailState().fails||0),rem=lockRemainingMs();triggerLoginError();$('lockErr').textContent=rem>0?`ورود ناموفق — ${Math.ceil(rem/1000)} ثانیه قفل شد`:`نام کاربری یا رمز عبور اشتباه است (تلاش باقی‌مانده: ${Math.max(left,1)})`;}
   }catch(err){$('lockErr').textContent='خطا در بررسی اطلاعات ورود';triggerLoginError();}
 });
@@ -3424,10 +3780,12 @@ $('pinSetBtn').addEventListener('click', async ()=>{
   }
   try{
     await storeNewPin(next);
+    await ensureSessionKey(next);
+    await writeStore(getStatePayload());
     sessionStorage.setItem(UNLOCK_FLAG, '1');
     clearFails();
     $('pinCurrent').value=''; $('pinNew').value='';
-    showToast('رمز عبور با امنیت بالاتر ذخیره شد');
+    showToast('رمز ذخیره شد — داده و بکاپ با AES-GCM رمز می‌شوند');
     refreshPinStatus();
   }catch(err){ showToast('ذخیره رمز ناموفق بود', true); }
 });
@@ -3440,12 +3798,16 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
   showConfirmModal(
     'حذف رمز عبور؟',
     'قفل ورود برای این دفتر غیرفعال می‌شود.',
-    ()=>{
-      localStorage.removeItem(PIN_KEY);
-      clearFails();
-      $('pinCurrent').value='';
-      showToast('رمز عبور حذف شد');
-      refreshPinStatus();
+    async ()=>{
+      try{
+        sessionCryptoKey = null;
+        localStorage.removeItem(PIN_KEY);
+        localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload()));
+        clearFails();
+        $('pinCurrent').value='';
+        showToast('رمز حذف شد — ذخیره بدون رمز');
+        refreshPinStatus();
+      }catch(err){ showToast('حذف رمز ناموفق', true); }
     }
   );
 });
