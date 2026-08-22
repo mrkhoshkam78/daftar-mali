@@ -2083,7 +2083,19 @@ let persistChain = Promise.resolve();
 const DATA_KDF_ITERS = 210000;
 const BACKUP_MAGIC = 'DMENC1';
 
+function canPersistSafely(){
+  // تا وقتی دادهٔ رمزشده هنوز در حافظه بار نشده، نباید state پیش‌فرض روی localStorage نوشته شود
+  if(window._pendingEncStore && !sessionCryptoKey) return false;
+  try{
+    if(typeof loadPinRecord === 'function'){
+      const rec = loadPinRecord();
+      if(rec && !sessionCryptoKey) return false; // قفل است و کلید نشست نیست
+    }
+  }catch(e){}
+  return true;
+}
 function persist(){
+  if(!canPersistSafely()) return false;
   const payload = getStatePayload();
   persistChain = persistChain.then(function(){ return writeStore(payload); }).catch(function(err){
     console.error(err);
@@ -2093,6 +2105,7 @@ function persist(){
 }
 async function writeStore(payload){
   try{
+    if(!canPersistSafely()) return;
     if(sessionCryptoKey && typeof loadPinRecord === 'function' && loadPinRecord()){
       var env = await encryptPayload(payload, sessionCryptoKey);
       localStorage.setItem(STORE_KEY, JSON.stringify(env));
@@ -2963,9 +2976,16 @@ function clearNotebookForNewMonth(){
 
 function ensureNotebookMonth(){
   try{
+    // قبل از بارگذاری دادهٔ رمزشده هیچ‌کار ماهانه انجام نده
+    if(window._pendingEncStore && !sessionCryptoKey) return false;
     const cur = currentNbMonthKey();
     let saved = null;
     try{ saved = localStorage.getItem(NB_MONTH_KEY); }catch(e){}
+    // نرمال‌سازی کلید ماه قدیمی بدون صفر پیشوند
+    if(saved){
+      const m = String(saved).match(/^(\d{4})-(\d{1,2})$/);
+      if(m) saved = m[1] + '-' + String(parseInt(m[2],10)).padStart(2,'0');
+    }
     if(saved == null){
       try{ localStorage.setItem(NB_MONTH_KEY, cur); }catch(e){}
       return false;
@@ -2974,9 +2994,10 @@ function ensureNotebookMonth(){
       const changed = clearNotebookForNewMonth();
       try{ localStorage.setItem(NB_MONTH_KEY, cur); }catch(e){}
       if(changed){
-        persist();
-        if(typeof renderNotebook === 'function') renderNotebook();
-        else if(typeof render === 'function') render();
+        if(persist()){
+          if(typeof renderNotebook === 'function') renderNotebook();
+          if(typeof renderForecast === 'function') renderForecast();
+        }
       }
       return changed;
     }
@@ -3052,6 +3073,7 @@ function renderForecastSnapshots(){
 
 function renderForecast(){
   try{
+    if(!$('fcMonth') || !$('fcExpense')) return;
     const [jy, jm, jd] = currentJalaliParts();
     const monthLabel = JMONTHS[jm-1] + ' ' + jy;
     $('fcMonth').textContent = monthLabel;
@@ -3414,6 +3436,7 @@ $('nbAddBtn').addEventListener('click', ()=>{
     $('nbAmount').value=''; $('nbPerson').value=''; $('nbDesc').value='';
     showToast('تراکنش ثبت شد');
     renderNotebook();
+    if(typeof renderForecast === 'function') renderForecast();
   }
 });
 
@@ -3702,6 +3725,16 @@ async function unlockDataLayer(pin){
       const data = await decryptEnvelope(window._pendingEncStore, pin);
       applyStatePayload(data);
       window._pendingEncStore = null;
+      // مهاجرت fcEvents بعد از بارگذاری واقعی
+      if((!fcEvents || !fcEvents.length) && notebook && notebook.length){
+        notebook.forEach(e=>{
+          if(e && (e.type === 'payment' || e.type === 'deposit')){
+            fcEvents.push({id:e.id, type:e.type, amount:e.amount, date:e.date, time:e.time||''});
+          }
+        });
+      }
+      if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
+      await writeStore(getStatePayload());
     }catch(err){
       sessionCryptoKey = null;
       throw err;
