@@ -122,8 +122,13 @@
   }
   .notes-toolbar .notes-search{
     width:100%; margin:0;
-    border-radius:12px; border:1px solid var(--border);
+    border-radius:9px; border:1px solid var(--border);
     background:var(--bg-2); color:var(--ink);
+    font-family:var(--app-font); direction:rtl; text-align:right;
+    padding:9px 10px; font-size:12.5px;
+  }
+  .notes-toolbar .notes-search:focus{
+    border-color:var(--border-strong); box-shadow:0 0 0 3px var(--blue-soft); outline:none;
   }
   .notes-sort{
     margin:0; font-size:12px; border-radius:12px;
@@ -280,13 +285,16 @@
   .note-md-preview blockquote{
     margin:0.45em 0; padding:6px 12px; border-right:3px solid var(--blue-light); color:var(--ink-dim);
   }
-  .note-editor textarea{
+  .note-editor textarea,
+  .note-edit-panel textarea#noteBody{
     min-height:140px; resize:vertical; width:100%;
-    border-radius:12px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
-    font-family:var(--app-font);
+    border-radius:9px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+    font-family:var(--app-font); direction:rtl; text-align:right; padding:9px 10px; font-size:12.5px; line-height:1.7;
   }
-  .note-editor input[type="text"]{
-    border-radius:12px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+  .note-editor input[type="text"],
+  .note-edit-panel input[type="text"]{
+    border-radius:9px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+    font-family:var(--app-font); direction:rtl; text-align:right; padding:9px 10px; font-size:12.5px;
   }
   .note-editor-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
   .note-editor-actions .btn{margin-top:0; flex:1; min-width:100px;}
@@ -875,15 +883,19 @@
   .adj-btn.plus:hover{background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.35);}
   .adj-btn.minus:hover{background:rgba(248,113,113,.12); border-color:rgba(248,113,113,.35);}
 
-  input[type=text], input[type=password], input[type=date], input[type=time], input[type=number], select{
+  input[type=text], input[type=password], input[type=date], input[type=time], input[type=number], input[type=search], select, textarea{
     width:100%; background:var(--bg-2); border:1px solid var(--border);
     color:var(--ink); border-radius:9px; padding:9px 10px;
     font-family:'Martian Mono',monospace; font-size:12.5px; direction:ltr;
     outline:none; transition:border-color .15s, box-shadow .15s;
     -webkit-appearance:none; appearance:none;
   }
+  input[type=search], textarea{
+    font-family:var(--app-font); direction:rtl; text-align:right;
+  }
+  textarea{min-height:100px; resize:vertical; line-height:1.7;}
   input[type=text]:focus, input[type=password]:focus, input[type=date]:focus,
-  input[type=time]:focus, input[type=number]:focus, select:focus{
+  input[type=time]:focus, input[type=number]:focus, input[type=search]:focus, select:focus, textarea:focus{
     border-color:var(--border-strong); box-shadow:0 0 0 3px var(--blue-soft);
   }
   select{font-family:'Vazirmatn',sans-serif; direction:rtl;}
@@ -2429,11 +2441,10 @@ function loadAll(){
         if(d.history) history = d.history;
         if(d.noncash) noncash = d.noncash;
         if(d.netSeries) netSeries = d.netSeries;
-        if(d.notebook) notebook = d.notebook;
-        if(d.fcEvents) fcEvents = d.fcEvents;
-        if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
+        if(Array.isArray(d.notebook)) notebook = d.notebook;
+        if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
+        if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
         if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
-  if(Array.isArray(d.notes)) notes = d.notes;
         if(Array.isArray(d.notes)) notes = d.notes;
         if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
@@ -2474,10 +2485,11 @@ function applyStatePayload(d){
   if(d.history) history = d.history;
   if(d.noncash) noncash = d.noncash;
   if(d.netSeries) netSeries = d.netSeries;
-  if(d.notebook) notebook = d.notebook;
-  if(d.fcEvents) fcEvents = d.fcEvents;
-  if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
+  if(Array.isArray(d.notebook)) notebook = d.notebook;
+  if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
+  if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
   if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+  if(Array.isArray(d.notes)) notes = d.notes;
   if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
   if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
 }
@@ -2500,6 +2512,12 @@ function canPersistSafely(){
 function persist(){
   if(!canPersistSafely()) return false;
   const payload = getStatePayload();
+  // نوشتن همزمان برای حالت بدون رمز — جلوگیری از از‌دست‌رفتن با Refresh فوری
+  try{
+    if(!(sessionCryptoKey && typeof loadPinRecord === 'function' && loadPinRecord())){
+      localStorage.setItem(STORE_KEY, JSON.stringify(payload));
+    }
+  }catch(e){ console.error(e); }
   persistChain = persistChain.then(function(){ return writeStore(payload); }).catch(function(err){
     console.error(err);
     showToast('خطا در ذخیره رمزشده', true);
@@ -3326,8 +3344,12 @@ const NB_TYPES = {
   transfer: {label:'انتقال',        sign: 0, color:'var(--blue-light)'},
 };
 function nbEntryInCurrentMonth(e){
-  if(!e || !e.date) return false;
-  return isoToJalaliMonthKey(e.date) === currentNbMonthKey();
+  if(!e) return false;
+  // بدون تاریخ → ماه جاری (نمایش و دلتا)
+  if(!e.date) return true;
+  const key = isoToJalaliMonthKey(e.date);
+  if(!key) return true; // تاریخ نامعتبر را حذف نکن
+  return key === currentNbMonthKey();
 }
 
 function nbDelta(){
@@ -3597,17 +3619,21 @@ function renderForecast(){
       $('fcExpense').textContent = fmt(monthlyExpense) + ' ت';
     }
 
-    // --- درآمد مورد انتظار ---
+    // --- درآمد مورد انتظار (نرخ پایدار بر اساس روزهای سپری‌شدهٔ ماه) ---
+    // موجودی مؤثر = کارت ثبت‌شده + تراکنش‌های اعمال‌نشده (هم‌تراز محاسبه‌گر تراکنش‌ها)
+    // درآمد مورد انتظار از میانگین روزانه دریافتی × روز باقی‌مانده؛
+    // تقسیم بر max(روزهای دارای دریافتی، روز سپری‌شده ماه) تا با یک دریافتی بزرگ عدد منفجر نشود
     let avgDailyReceipt = 0;
     if(receipts.length > 0){
       const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
       const rDays = Math.max(1, new Set(receipts.map(e=>e.date)).size);
-      avgDailyReceipt = sumR / rDays;
-      if(!isFinite(avgDailyReceipt) || isNaN(avgDailyReceipt)) avgDailyReceipt = 0;
+      const elapsed = Math.max(1, safeNum(jd, 1));
+      avgDailyReceipt = sumR / Math.max(rDays, elapsed);
+      if(!isFinite(avgDailyReceipt) || isNaN(avgDailyReceipt) || avgDailyReceipt < 0) avgDailyReceipt = 0;
     }
-    const expectedIncome = avgDailyReceipt * remain;
-    const resources = currentBal + expectedIncome;
-    const capacity = resources * 0.8;
+    const expectedIncome = safeNum(avgDailyReceipt * remain, 0);
+    const resources = safeNum(currentBal, 0) + expectedIncome;
+    const capacity = safeNum(resources * 0.8, 0);
 
     $('fcResources').textContent = fmt(safeNum(resources)) + ' ت';
     $('fcCapacity').textContent = fmt(safeNum(capacity)) + ' ت';
@@ -3798,7 +3824,7 @@ function renderNotebook(){
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
           // حذف از آرشیو پیش‌بینی زنده — Snapshotهای قبلی دست‌نخورده می‌مانند
           fcEvents = fcEvents.filter(x=>String(x.id)!==btn.dataset.id);
-          if(persist()) renderNotebook();
+          if(persist()){ renderNotebook(); if(typeof renderForecast==='function') renderForecast(); }
         });
       });
     });
