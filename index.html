@@ -3629,24 +3629,26 @@ function renderForecast(){
       if($('fcExpense')) $('fcExpense').textContent = fmt(monthlyExpense) + ' ت';
     }
 
-    // --- درآمد مورد انتظار ---
-    // میانگین روزانه = مجموع دریافتی ماه ÷ max(روزهای دارای دریافتی، روز سپری‌شده)
-    // درآمد مورد انتظار = میانگین × روز باقی‌مانده
-    // منابع = موجودی کارت + درآمد مورد انتظار (بدون nbDelta)
+    // --- درآمد مورد انتظار و منابع مالی ---
+    // با ۱ روز دریافتی، تعمیم نرخ روزانه به بقیه ماه منابع را باد می‌کند
+    // (مثلاً ۳٫۴M کارت + ∼۳۰M درآمد خیالی → ∼۳۳M).
+    // فقط وقتی حداقل ۲ روز جداگانه دریافتی باشد، درآمد باقی‌مانده برآورد می‌شود.
     let avgDailyReceipt = 0;
-    if(receipts.length > 0){
-      const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
-      const rDays = Math.max(1, new Set(receipts.map(e=>e.date)).size);
-      const elapsed = Math.max(1, safeNum(jd, 1));
-      avgDailyReceipt = sumR / Math.max(rDays, elapsed);
-      if(!isFinite(avgDailyReceipt) || isNaN(avgDailyReceipt) || avgDailyReceipt < 0) avgDailyReceipt = 0;
+    let expectedIncome = 0;
+    const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
+    const rDays = receipts.length ? new Set(receipts.map(e=>e.date)).size : 0;
+    const elapsed = Math.max(1, safeNum(jd, 1));
+    if(rDays >= 2 && sumR > 0){
+      avgDailyReceipt = sumR / elapsed;
+      if(!isFinite(avgDailyReceipt) || avgDailyReceipt < 0) avgDailyReceipt = 0;
+      expectedIncome = safeNum(avgDailyReceipt * remain, 0);
     }
-    const expectedIncome = safeNum(avgDailyReceipt * remain, 0);
-    const resources = currentBal + expectedIncome;
-    const capacity = resources * 0.8;
+    // منابع = موجودی ثبت‌شده کارت + درآمد مورد انتظار (بدون nbDelta و بدون fcEvents تکراری)
+    const resources = safeNum(currentBal + expectedIncome, 0);
+    const capacity = safeNum(resources * 0.8, 0);
 
-    $('fcResources').textContent = fmt(safeNum(resources)) + ' ت';
-    $('fcCapacity').textContent = fmt(safeNum(capacity)) + ' ت';
+    if($('fcResources')) $('fcResources').textContent = fmt(resources) + ' ت';
+    if($('fcCapacity')) $('fcCapacity').textContent = fmt(capacity) + ' ت';
 
     let pressure = 0;
     if(capacity > 1e-9){
@@ -4071,12 +4073,32 @@ $('importFile').addEventListener('change', (e)=>{
       } else {
         d = parsed.data;
       }
-      applyStatePayload(d);
-      fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents : [];
+      // بازگردانی کامل و تمیز — بدون مخلوط شدن با state قبلی
+      if(d.assets && typeof d.assets === 'object'){
+        assets = Object.assign({}, assets, d.assets);
+        // نرمال‌سازی مبالغ دارایی
+        Object.keys(assets).forEach(k=>{ assets[k] = safeNum(assets[k], 0); });
+      }
+      logs = Array.isArray(d.logs) ? d.logs : [];
+      txs = Array.isArray(d.txs) ? d.txs : [];
+      history = Array.isArray(d.history) ? d.history : [];
+      noncash = Array.isArray(d.noncash) ? d.noncash : [];
+      netSeries = Array.isArray(d.netSeries) ? d.netSeries : [];
+      notebook = Array.isArray(d.notebook) ? d.notebook : [];
+      // fcEvents: فقط پرداخت/دریافتی معتبر با مبلغ و تاریخ
+      fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents.filter(e =>
+        e && (e.type === 'payment' || e.type === 'deposit') &&
+        safeNum(e.amount) > 0 && e.date
+      ).map(e => ({
+        id: e.id, type: e.type, amount: safeNum(e.amount), date: String(e.date).slice(0,10), time: e.time || ''
+      })) : [];
       fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
       milestonesClaimed = (d.milestonesClaimed && typeof d.milestonesClaimed === 'object') ? d.milestonesClaimed : {};
-      notes = Array.isArray(d.notes) ? d.notes : notes;
+      notes = Array.isArray(d.notes) ? d.notes : [];
+      if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+      ensureCoreAssets();
       initMilestonesBaseline();
+      if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
       persist();
       render();
       if(typeof renderForecast === 'function') renderForecast();
