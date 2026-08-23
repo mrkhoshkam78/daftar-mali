@@ -532,6 +532,11 @@
     letter-spacing:-0.01em;
   }
   .topbar-date #topbarDate{color:var(--ink-dim);}
+  .topbar-date-stack{display:flex; flex-direction:column; gap:1px; min-width:0;}
+  .topbar-date-greg{
+    font-size:10.5px; font-weight:500; color:var(--ink-dim); opacity:.72;
+    letter-spacing:0.01em; direction:ltr; text-align:right; font-family:var(--app-font);
+  }
   .live-dot{
     width:6px; height:6px; border-radius:50%; flex-shrink:0;
     background:var(--green);
@@ -572,7 +577,6 @@
     .topbar{padding:14px 22px;}
     .section{padding:18px; margin-bottom:16px;}
     .hero-num{font-size:36px;}
-    .dropdown-menu{min-width:200px; top:62px; left:22px;}
   }
   @media (min-width:1024px){
     .layout{max-width:860px;}
@@ -605,13 +609,106 @@
   .hamburger-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
   .hamburger-btn.open span:nth-child(2){opacity:0;}
   .hamburger-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
-  .dropdown-menu{
-    position:fixed; top:58px; left:12px; z-index:60;
-    background:var(--card); border:1px solid var(--border-strong); border-radius:14px;
-    box-shadow:var(--shadow); padding:6px; display:none; flex-direction:column; gap:1px;
-    min-width:168px;
+  /* ---- Sidebar push (GPU) ---- */
+  :root{ --sidebar-w: 208px; }
+  @media (min-width:768px){ :root{ --sidebar-w: 236px; } }
+  @media (min-width:1024px){ :root{ --sidebar-w: 248px; } }
+
+  .menu-backdrop{
+    position:fixed; top:0; right:0; bottom:0; left:var(--sidebar-w);
+    z-index:60;
+    background:rgba(0,0,0,.28);
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .24s ease, visibility .24s ease;
+    will-change:opacity;
   }
-  .dropdown-menu.open{display:flex;}
+  body.menu-open .menu-backdrop{
+    opacity:1; visibility:visible; pointer-events:auto;
+  }
+  html[data-theme="light"] body.menu-open .menu-backdrop{
+    background:rgba(15,27,48,.18);
+  }
+
+  .side-drawer{
+    position:fixed; top:0; bottom:0; left:0; z-index:70;
+    width:var(--sidebar-w);
+    display:flex; flex-direction:column;
+    background:linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+    border-right:1px solid var(--border-strong);
+    box-shadow:6px 0 24px rgba(0,0,0,.22);
+    transform:translate3d(-100%,0,0);
+    transition:transform .24s cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+    padding:0;
+    overflow:hidden;
+    isolation:isolate;
+  }
+  body.menu-open .side-drawer{
+    transform:translate3d(0,0,0);
+  }
+  /* Abstract linear bg — کم‌کنتراست */
+  .side-drawer::before{
+    content:'';
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    opacity:.18;
+    background:
+      linear-gradient(145deg, transparent 0%, var(--blue-soft) 48%, transparent 78%),
+      repeating-linear-gradient(-18deg, transparent 0 12px, var(--border) 12px 13px);
+  }
+  .side-drawer::after{
+    content:'';
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:linear-gradient(180deg, var(--card) 0%, transparent 28%, transparent 72%, var(--card-2) 100%);
+    opacity:.75;
+  }
+  html[data-theme="light"] .side-drawer::before{ opacity:.12; }
+  .side-drawer-head,
+  .side-drawer-nav{
+    position:relative; z-index:1;
+  }
+  html[data-anim="off"] .side-drawer,
+  html[data-anim="off"] .menu-backdrop,
+  html[data-anim="off"] .topbar,
+  html[data-anim="off"] .layout{
+    transition:none !important;
+  }
+
+  /* محتوا واقعی Shift می‌شود (GPU transform) */
+  .topbar, .layout{
+    transition:transform .24s cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  body.menu-open .topbar,
+  body.menu-open .layout{
+    transform:translate3d(var(--sidebar-w),0,0);
+  }
+
+  .side-drawer-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 12px 10px;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .side-drawer-head .sd-title{
+    font-size:12.5px; font-weight:800; color:var(--ink);
+  }
+  .side-drawer-close{
+    width:32px; height:32px; border-radius:9px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink-dim); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .side-drawer-close:hover{
+    border-color:var(--border-strong); color:var(--blue-light); background:var(--blue-soft);
+  }
+  .side-drawer-nav{
+    flex:1; overflow-y:auto; padding:8px 6px 16px;
+    display:flex; flex-direction:column; gap:2px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .side-drawer .menu-item{
+    border-radius:11px; padding:10px 10px; font-size:12.5px;
+  }
   .menu-item{
     display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
     color:var(--ink-dim); text-decoration:none; font-size:12.5px; font-weight:500;
@@ -625,11 +722,6 @@
   .menu-item.active .ic{opacity:1; color:var(--blue-light);}
   .menu-item:hover{background:var(--blue-soft); color:var(--ink);}
   .menu-item.active{background:var(--blue-soft); color:var(--blue-light); font-weight:700;}
-  .menu-backdrop{
-    position:fixed; inset:0; z-index:55; background:rgba(0,0,0,.3); display:none;
-    backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-  }
-  .menu-backdrop.open{display:block;}
 
   .reveal{opacity:0; transform:translate3d(0,14px,0); transition:opacity .45s ease, transform .45s ease;}
   .reveal.in-view{opacity:1; transform:translate3d(0,0,0);}
@@ -638,7 +730,7 @@
   /* خاموش‌کردن انیمیشن از تنظیمات */
   html[data-anim="off"] .reveal{opacity:1 !important; transform:none !important; transition:none !important;}
   html[data-anim="off"] .page.active,
-  html[data-anim="off"] .dropdown-menu.open,
+  html[data-anim="off"] .side-drawer,
   html[data-anim="off"] .live-dot,
   html[data-anim="off"] .section-title .dot,
   html[data-anim="off"] .icon-btn-svg.spinning svg{animation:none !important;}
@@ -690,13 +782,6 @@
     transition:transform .2s ease, color .18s, opacity .18s;
   }
   .menu-item:hover .ic, .menu-item.active .ic{transform:scale(1.08);}
-  .dropdown-menu{
-    transform-origin: top left;
-    animation: none;
-  }
-  .dropdown-menu.open{
-    animation: menuIn .18s ease-out;
-  }
   @keyframes menuIn{
     from{opacity:0; transform:translate3d(0,-4px,0);}
     to{opacity:1; transform:translate3d(0,0,0);}
@@ -830,6 +915,25 @@
   @media (prefers-reduced-motion: reduce){
     html[data-anim="on"] .section-title .dot{animation:none;}
   }
+
+  .analysis-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid var(--border); border-radius:12px; padding:12px 14px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    color:var(--ink); cursor:pointer; font-family:var(--app-font); text-align:right;
+  }
+  .analysis-toggle:hover{border-color:var(--border-strong);}
+  .analysis-toggle .at-title{font-size:13px; font-weight:700;}
+  .analysis-toggle .at-sub{font-size:11px; color:var(--ink-dim); font-weight:500; margin-top:2px;}
+  .analysis-toggle .at-chev{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+    display:inline-flex; align-items:center; justify-content:center; color:var(--ink-dim);
+    transition:transform .25s ease; flex-shrink:0;
+  }
+  .analysis-toggle[aria-expanded="true"] .at-chev{transform:rotate(180deg);}
+  .analysis-body{display:none; margin-top:10px;}
+  .analysis-body.open{display:block;}
+
   .section-sub{font-size:11px; color:var(--ink-dim); margin-bottom:12px;}
 
   .nc-item{
@@ -1215,78 +1319,6 @@
   }
   .loan-remain .lbl{font-size:12px; color:var(--ink-dim);}
   .loan-remain .amt{font-family:'Martian Mono',monospace; font-weight:700; direction:ltr; color:var(--blue-light); font-size:15px;}
-
-  /* ---- Loan profile cards ---- */
-  .loan-profile{
-    border:1px solid var(--border); border-radius:14px;
-    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
-    padding:14px; margin-bottom:10px; position:relative;
-  }
-  .loan-profile:last-child{margin-bottom:0;}
-  .loan-profile.settled{opacity:.75;}
-  .loan-profile-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
-  .loan-avatar{
-    width:40px; height:40px; border-radius:12px; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:14px; color:var(--blue-light);
-    background:var(--blue-soft); border:1px solid var(--border);
-  }
-  .loan-profile-name{flex:1; min-width:0;}
-  .loan-profile-name .nm{font-size:14px; font-weight:800; color:var(--ink);}
-  .loan-profile-name .dir{font-size:11px; color:var(--ink-dim); margin-top:2px;}
-  .loan-profile-name .dir.out{color:var(--red);}
-  .loan-profile-name .dir.in{color:var(--green);}
-  .loan-status-pill{
-    font-size:10px; font-weight:700; padding:4px 9px; border-radius:999px;
-    border:1px solid var(--border); background:var(--bg-2); color:var(--ink-dim);
-  }
-  .loan-status-pill.open{color:var(--blue-light); background:var(--blue-soft);}
-  .loan-status-pill.done{color:var(--green); background:var(--green-soft);}
-  .loan-stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;}
-  @media (max-width:420px){.loan-stats{grid-template-columns:1fr 1fr;}}
-  .loan-stat{border:1px solid var(--border); border-radius:10px; padding:8px; background:var(--bg-2);}
-  .loan-stat .lb{font-size:10px; color:var(--ink-dim);}
-  .loan-stat .vl{font-size:12.5px; font-weight:700; margin-top:2px; font-family:'Martian Mono',monospace; direction:ltr; text-align:right;}
-  .loan-meta-row{font-size:11px; color:var(--ink-dim); line-height:1.7; margin-bottom:10px;}
-  .loan-actions{display:flex; flex-wrap:wrap; gap:6px;}
-  .loan-actions .btn{margin-top:0; flex:1; min-width:88px; padding:8px 10px; font-size:11.5px;}
-  .loan-actions .btn.ghost{background:transparent; border:1px solid var(--border); color:var(--ink-dim);}
-
-  /* Analysis collapse */
-  .analysis-toggle{
-    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border:1px solid var(--border); border-radius:12px; padding:12px 14px;
-    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
-    color:var(--ink); cursor:pointer; font-family:var(--app-font); text-align:right;
-  }
-  .analysis-toggle:hover{border-color:var(--border-strong);}
-  .analysis-toggle .at-title{font-size:13px; font-weight:700;}
-  .analysis-toggle .at-sub{font-size:11px; color:var(--ink-dim); font-weight:500; margin-top:2px;}
-  .analysis-toggle .at-chev{
-    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
-    display:inline-flex; align-items:center; justify-content:center; color:var(--ink-dim);
-    transition:transform .25s ease; flex-shrink:0;
-  }
-  .analysis-toggle[aria-expanded="true"] .at-chev{transform:rotate(180deg);}
-  .analysis-body{display:none; margin-top:10px;}
-  .analysis-body.open{display:block;}
-
-  /* Themed checkboxes */
-  .notes-filters-row label.chk input[type="checkbox"]{
-    appearance:none; -webkit-appearance:none;
-    width:18px; height:18px; border-radius:6px;
-    border:1.5px solid var(--border-strong); background:var(--bg-2);
-    cursor:pointer; position:relative; vertical-align:middle; flex-shrink:0;
-  }
-  .notes-filters-row label.chk input[type="checkbox"]:checked{
-    background:var(--blue-light); border-color:var(--blue-light);
-  }
-  .notes-filters-row label.chk input[type="checkbox"]:checked::after{
-    content:''; position:absolute; left:5px; top:2px;
-    width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0;
-    transform:rotate(45deg);
-  }
-
   .loan-item{
     display:flex; align-items:flex-start; gap:10px; padding:12px 10px;
     border-bottom:1px dashed var(--border); border-radius:10px;
@@ -1464,6 +1496,32 @@
   .nc-form-box{
     margin-top:16px; padding-top:14px; border-top:1px dashed var(--border);
   }
+  /* ---- کارت قیمت لحظه‌ای طلا/نقره/دلار (Lazy-loaded، فقط صفحه دارایی غیرنقد) ---- */
+  .price-widget{
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    padding:14px 14px 12px;
+    margin-bottom:14px;
+  }
+  .pw-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;}
+  .pw-title{font-size:12px; font-weight:700; color:var(--ink-dim); letter-spacing:.01em;}
+  .pw-refresh-btn{
+    border:1px solid var(--border); background:var(--bg-2); color:var(--ink-dim);
+    border-radius:999px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:color .15s, border-color .15s; padding:0;
+  }
+  .pw-refresh-btn:hover{color:var(--blue-light); border-color:var(--border-strong);}
+  .pw-refresh-btn.spin svg{animation:pwspin .8s linear infinite;}
+  @keyframes pwspin{to{transform:rotate(360deg);}}
+  .pw-rows{display:flex; flex-direction:column; gap:7px;}
+  .pw-row{display:flex; align-items:baseline; justify-content:space-between; font-size:12.5px;}
+  .pw-label{color:var(--ink-dim);}
+  .pw-label small{font-size:10px; opacity:.75; margin-right:3px;}
+  .pw-val{font-family:'Martian Mono',monospace; font-weight:700; color:var(--ink); direction:ltr; font-size:13px;}
+  .pw-val.pw-err{color:var(--red); font-family:var(--app-font); font-weight:600; font-size:11px;}
+  .pw-val.pw-loading{color:var(--ink-dim); font-family:var(--app-font); font-weight:500; font-size:11px;}
+  .pw-foot{margin-top:9px; font-size:10px; color:var(--ink-dim); opacity:.75; text-align:left; direction:ltr;}
   .nc-empty{
     grid-column:1 / -1; text-align:center; padding:20px 12px;
     font-size:12px; color:var(--ink-dim);
@@ -1677,7 +1735,7 @@
 
 <div class="topbar">
   <div class="topbar-main">
-    <div class="topbar-date"><span class="live-dot" aria-hidden="true"></span><span id="topbarDate">—</span></div>
+    <div class="topbar-date"><span class="live-dot" aria-hidden="true"></span><div class="topbar-date-stack"><span id="topbarDate">—</span><span id="topbarDateGreg" class="topbar-date-greg">—</span></div></div>
   </div>
   <button type="button" class="theme-dn-btn" id="themeDayNight" aria-label="حالت روز و شب" title="روز / شب">
     <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
@@ -1686,8 +1744,16 @@
   <button class="hamburger-btn" id="menuToggle" aria-label="منو"><span></span><span></span><span></span></button>
 </div>
 
-<div class="dropdown-menu" id="dropdownMenu">
-  <a href="#" class="menu-item active" data-page="page-dashboard"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span>خانه</a>
+<div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
+<div class="side-drawer" id="dropdownMenu" role="dialog" aria-modal="true" aria-label="منوی اصلی">
+  <div class="side-drawer-head">
+    <span class="sd-title">منو</span>
+    <button type="button" class="side-drawer-close" id="menuCloseBtn" aria-label="بستن منو">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <nav class="side-drawer-nav">
+<a href="#" class="menu-item active" data-page="page-dashboard"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span>خانه</a>
   <a href="#" class="menu-item" data-page="page-assets"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 14h3"/></svg></span>دارایی‌ها</a>
   <a href="#" class="menu-item" data-page="page-noncash"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5M9.5 13.5c.5 1 1.5 1.5 2.5 1.5s2-.5 2.5-1.5"/></svg></span>دارایی غیرنقد</a>
   <a href="#" class="menu-item" data-page="page-snapp"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-5 3 3 7-8"/><path d="M15 6h4v4"/></svg></span>سود اسنپ</a>
@@ -1695,8 +1761,8 @@
   <a href="#" class="menu-item" data-page="page-history"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span>تاریخچه</a>
   <a href="#" class="menu-item" data-page="page-notes"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>دفترچه یادداشت</a>
   <a href="#" class="menu-item" data-page="page-settings"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V19a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V5a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.9 1 1.51 1H19a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>تنظیمات</a>
+  </nav>
 </div>
-<div class="menu-backdrop" id="menuBackdrop"></div>
 
 <div class="layout">
   <div class="main">
@@ -1867,6 +1933,30 @@
         </div>
       </div>
 
+      <div class="price-widget" id="priceWidget">
+        <div class="pw-head">
+          <span class="pw-title">قیمت لحظه‌ای بازار</span>
+          <button type="button" class="pw-refresh-btn" id="pwRefreshBtn" title="بروزرسانی">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div class="pw-rows">
+          <div class="pw-row">
+            <span class="pw-label">طلای ۱۸ عیار <small>(هر گرم)</small></span>
+            <span class="pw-val pw-loading" id="pwGoldVal">—</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-label">نقره <small>(هر گرم)</small></span>
+            <span class="pw-val pw-loading" id="pwSilverVal">—</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-label">دلار</span>
+            <span class="pw-val pw-loading" id="pwUsdVal">—</span>
+          </div>
+        </div>
+        <div class="pw-foot" id="pwUpdated"></div>
+      </div>
+
       <div id="ncList" class="nc-list"></div>
 
       <div class="nc-form-box">
@@ -1890,10 +1980,16 @@
           </div>
         </div>
         <div class="nc-gold-fields" id="ncGoldFields">
-          <div class="gold-hint">وزن را بر حسب گرم وارد کنید</div>
-          <div>
-            <label class="field">گرم</label>
-            <input type="text" inputmode="decimal" id="ncGoldGram" placeholder="مثلاً 13.7">
+          <div class="gold-hint">۱ مثقال = ۴٫۶۰۸ گرم = ۲۴ سوت · ۱ سوت = ۰٫۱۹۲ گرم</div>
+          <div class="grid2">
+            <div>
+              <label class="field">گرم</label>
+              <input type="text" inputmode="decimal" id="ncGoldGram" placeholder="مثلاً 13.7">
+            </div>
+            <div>
+              <label class="field">سوت</label>
+              <input type="text" inputmode="decimal" id="ncGoldSoot" placeholder="مثلاً 2">
+            </div>
           </div>
           <div class="nc-gold-sum" id="ncGoldSum">مجموع وزن: ۰ گرم</div>
         </div>
@@ -2470,19 +2566,32 @@ document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 
 /* ================= HAMBURGER MENU & PAGE NAVIGATION ================= */
 function openMenu(){
-  $('dropdownMenu').classList.add('open');
-  $('menuBackdrop').classList.add('open');
-  $('menuToggle').classList.add('open');
+  document.body.classList.add('menu-open');
+  const back = $('menuBackdrop');
+  const btn = $('menuToggle');
+  if(back) back.setAttribute('aria-hidden','false');
+  if(btn){ btn.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+  document.body.style.overflow = 'hidden';
 }
 function closeMenu(){
-  $('dropdownMenu').classList.remove('open');
-  $('menuBackdrop').classList.remove('open');
-  $('menuToggle').classList.remove('open');
+  document.body.classList.remove('menu-open');
+  const back = $('menuBackdrop');
+  const btn = $('menuToggle');
+  if(back) back.setAttribute('aria-hidden','true');
+  if(btn){ btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+  document.body.style.overflow = '';
 }
-$('menuToggle').addEventListener('click', ()=>{
-  if($('dropdownMenu').classList.contains('open')) closeMenu(); else openMenu();
+if($('menuToggle')){
+  $('menuToggle').setAttribute('aria-expanded','false');
+  $('menuToggle').addEventListener('click', ()=>{
+    if(document.body.classList.contains('menu-open')) closeMenu(); else openMenu();
+  });
+}
+if($('menuBackdrop')) $('menuBackdrop').addEventListener('click', closeMenu);
+if($('menuCloseBtn')) $('menuCloseBtn').addEventListener('click', closeMenu);
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu();
 });
-$('menuBackdrop').addEventListener('click', closeMenu);
 
 const PAGE_TITLES = {
   'page-dashboard': 'خانه',
@@ -2533,8 +2642,14 @@ function syncAllDatesToHeader(){
 
 function updateTopbarDate(){
   const el = $('topbarDate');
-  if(!el) return;
-  el.textContent = formatJalaliHeaderDate(todayDate());
+  if(el) el.textContent = formatJalaliHeaderDate(todayDate());
+  const g = $('topbarDateGreg');
+  if(g){
+    const d = todayDate();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    g.textContent = days[d.getDay()] + ' · ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
 }
 
 function scheduleDateRollover(){
@@ -2563,6 +2678,7 @@ function scheduleDateRollover(){
 }
 
 function showPage(pageId){
+  const prevPageId = document.querySelector('.page.active') ? document.querySelector('.page.active').id : null;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const target = document.getElementById(pageId);
   if(target) target.classList.add('active');
@@ -2571,6 +2687,12 @@ function showPage(pageId){
   });
   window.scrollTo(0, 0);
   closeMenu();
+  // --- Lazy-load قیمت طلا/نقره/دلار: فقط هنگام ورود/خروج از صفحه دارایی غیرنقد ---
+  if(pageId === 'page-noncash' && prevPageId !== 'page-noncash'){
+    if(typeof initPriceWidget === 'function') initPriceWidget();
+  } else if(prevPageId === 'page-noncash' && pageId !== 'page-noncash'){
+    if(window.PricesAPI) window.PricesAPI.stop();
+  }
 }
 document.querySelectorAll('.menu-item').forEach(item=>{
   item.addEventListener('click', (e)=>{
@@ -2782,7 +2904,7 @@ function updateGoldSumUI(){
   box.classList.toggle('show', isGold);
   if(!isGold) return;
   const g = parseDec($('ncGoldGram') && $('ncGoldGram').value);
-  const s = 0;
+  const s = parseDec($('ncGoldSoot') && $('ncGoldSoot').value);
   const tot = goldTotalGrams(g, s);
   if($('ncGoldSum')) $('ncGoldSum').textContent = 'مجموع وزن: ' + tot + ' گرم';
 }
@@ -3633,7 +3755,10 @@ function renderNonCash(){
         <button type="button" class="del" data-id="${item.id}" title="حذف" aria-label="حذف">×</button>
       </div>
       <div class="nc-edit-panel" id="ncEdit-${item.id}">
-        ${isGold ? `<div><label class="field">گرم</label><input type="text" inputmode="decimal" data-eg="${item.id}" value="${safeNum(item.grams,0)}"></div>` : ''}
+        ${isGold ? `<div class="grid2">
+          <div><label class="field">گرم</label><input type="text" inputmode="decimal" data-eg="${item.id}" value="${safeNum(item.grams,0)}"></div>
+          <div><label class="field">سوت</label><input type="text" inputmode="decimal" data-es="${item.id}" value="${safeNum(item.soot,0)}"></div>
+        </div>` : ''}
         <label class="field">قیمت / ارزش (تومان)</label>
         <input type="text" inputmode="numeric" data-ev="${item.id}" class="money-input" value="${fmt(val).replace(/,/g,'')}">
         <label class="field" style="margin-top:6px;">توضیح</label>
@@ -3690,9 +3815,10 @@ function renderNonCash(){
       if(labInp) item.label = labInp.value.trim();
       if(item.category === 'gold'){
         const gInp = el.querySelector('input[data-eg="'+id+'"]');
+        const sInp = el.querySelector('input[data-es="'+id+'"]');
         item.grams = parseDec(gInp && gInp.value);
-        item.soot = 0;
-        item.totalGrams = goldTotalGrams(item.grams, 0);
+        item.soot = parseDec(sInp && sInp.value);
+        item.totalGrams = goldTotalGrams(item.grams, item.soot);
       }
       item.updatedAt = todayISO();
       noncash[idx] = item;
@@ -3730,15 +3856,17 @@ function loanRemaining(e){
 }
 
 function nbDelta(){
-  // تراکنش اعمال‌نشده + باقی‌مانده قرض باز — بدون تکرار پس از applied/تسویه
+  // هر مبلغ فقط یک‌بار: applied → دیگر در دلتا نیست
+  // قرض باز (تسویه‌نشده و applied نشده) با باقی‌مانده در دلتا می‌آید
+  // پس از «ثبت موجودی کارت» قرض‌ها هم applied می‌شوند تا تکرار نشود؛ وضعیت تسویه جدا می‌ماند
   return (notebook || []).reduce((s, e) => {
     if(!e) return s;
+    if(e.applied) return s;
     if(e.type === 'lent' || e.type === 'borrowed'){
       if(e.settled) return s;
       const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || 0;
       return s + sign * loanRemaining(e);
     }
-    if(e.applied) return s;
     const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || 0;
     return s + sign * safeNum(e.amount, 0);
   }, 0);
@@ -4210,118 +4338,85 @@ function renderLoans(){
   const el = $('loanList');
   const remainEl = $('loanRemain');
   if(!el) return;
-  const loans = (notebook || []).filter(e => e && (e.type === 'lent' || e.type === 'borrowed'));
 
-  let lentOpen = 0, borrowedOpen = 0;
-  loans.forEach(e => {
-    const rem = loanRemaining(e);
-    if(rem <= 0) return;
-    if(e.type === 'lent') lentOpen += rem; else borrowedOpen += rem;
+  const loans = (notebook || []).filter(e => e && (e.type === 'lent' || e.type === 'borrowed'));
+  // فعال‌ها اول، تسویه‌شده‌ها آخر؛ داخل هر گروه جدیدتر بالاتر
+  loans.sort((a,b)=>{
+    const as = a.settled ? 1 : 0, bs = b.settled ? 1 : 0;
+    if(as !== bs) return as - bs;
+    const ka = (a.date||'') + (a.time||'00:00');
+    const kb = (b.date||'') + (b.time||'00:00');
+    return ka < kb ? 1 : -1;
   });
-  const net = lentOpen - borrowedOpen;
+
+  // رفع باگ محاسباتی: قبلاً «قرض داده» و «قرض گرفته» بدون در نظر گرفتن جهت بدهی جمع می‌شدند
+  // (یعنی طلب از دیگران و بدهی به دیگران با هم جمع می‌شد که عددی گمراه‌کننده تولید می‌کرد).
+  // این‌جا مبلغ خالص (طلب منهای بدهی) با همان علامتی که در nbDelta() استفاده می‌شود محاسبه می‌شود.
+  const openLoans = loans.filter(e => !e.settled);
+  const lentOpen = openLoans.filter(e => e.type === 'lent').reduce((s,e) => s + safeNum(e.amount, 0), 0);
+  const borrowedOpen = openLoans.filter(e => e.type === 'borrowed').reduce((s,e) => s + safeNum(e.amount, 0), 0);
+  const remain = lentOpen - borrowedOpen;
   if(remainEl){
     const remainLbl = document.querySelector('.loan-remain .lbl');
-    if(net > 0){
-      remainEl.textContent = '+' + fmt(net) + ' ت';
+    if(remain > 0){
+      remainEl.textContent = '+' + fmt(remain) + ' ت';
       remainEl.style.color = 'var(--green)';
-      if(remainLbl) remainLbl.textContent = 'خالص طلب از دیگران (باز)';
-    } else if(net < 0){
-      remainEl.textContent = '−' + fmt(Math.abs(net)) + ' ت';
+      if(remainLbl) remainLbl.textContent = 'خالص طلب از دیگران (تسویه‌نشده)';
+    } else if(remain < 0){
+      remainEl.textContent = '−' + fmt(Math.abs(remain)) + ' ت';
       remainEl.style.color = 'var(--red)';
-      if(remainLbl) remainLbl.textContent = 'خالص بدهی به دیگران (باز)';
+      if(remainLbl) remainLbl.textContent = 'خالص بدهی به دیگران (تسویه‌نشده)';
     } else {
       remainEl.textContent = '۰ ت';
       remainEl.style.color = '';
-      if(remainLbl) remainLbl.textContent = 'قرض باقی‌مانده';
+      if(remainLbl) remainLbl.textContent = 'قرض باقی‌مانده (تسویه‌نشده)';
     }
   }
 
-  if(!loans.length){
+  if(loans.length === 0){
     el.innerHTML = '<div class="empty">قرضی ثبت نشده</div>';
     return;
   }
 
-  const sorted = loans.slice().sort((a,b)=>{
-    const as = (loanRemaining(a)<=0 || a.settled) ? 1 : 0;
-    const bs = (loanRemaining(b)<=0 || b.settled) ? 1 : 0;
-    if(as !== bs) return as - bs;
-    return String(b.date||'').localeCompare(String(a.date||''));
-  });
-
-  el.innerHTML = sorted.map(e => {
-    const person = (e.person && String(e.person).trim()) || 'بدون نام';
-    const total = safeNum(e.amount, 0);
-    const paid = Math.min(total, Math.max(0, safeNum(e.paidAmount, 0)));
-    const rem = loanRemaining(e);
-    const settled = !!e.settled || rem <= 0;
-    const isLent = e.type === 'lent';
-    const dir = isLent ? ('من → ' + person) : (person + ' → من');
-    const typeLbl = isLent ? 'قرض داده' : 'قرض گرفته';
-    const initial = person.charAt(0) || '?';
-    const dates = 'ثبت: ' + (toJalaliStr(e.date)||'—') + (e.settledDate ? (' · تسویه: ' + (toJalaliStr(e.settledDate)||e.settledDate)) : '');
-    return `<div class="loan-profile${settled?' settled':''}" data-id="${e.id}">
-      <div class="loan-profile-head">
-        <div class="loan-avatar">${typeof escapeHtml==='function'?escapeHtml(initial):initial}</div>
-        <div class="loan-profile-name">
-          <div class="nm">${typeof escapeHtml==='function'?escapeHtml(person):person}</div>
-          <div class="dir ${isLent?'out':'in'}">${typeLbl} · ${typeof escapeHtml==='function'?escapeHtml(dir):dir}</div>
+  el.innerHTML = loans.map(e=>{
+    const t = NB_TYPES[e.type] || {label: e.type, color: 'var(--ink-dim)'};
+    const person = e.person ? e.person : '—';
+    const settled = !!e.settled;
+    const settledTxt = settled && e.settledDate
+      ? `تسویه: ${toJalaliStr(e.settledDate)}`
+      : (settled ? 'تسویه‌شده' : 'تسویه‌نشده');
+    const settleBadge = settled
+      ? `<span class="loan-settle-badge">تسویه شده · ${e.settledDate ? (toJalaliStr(e.settledDate)||e.settledDate) : '—'}</span>`
+      : '';
+    return `<div class="loan-item${settled ? ' settled' : ''}" data-id="${e.id}">
+      <label class="loan-check-wrap" title="علامت تسویه">
+        <input type="checkbox" class="loan-check" data-id="${e.id}" ${settled ? 'checked' : ''}>
+        <span class="loan-check-ui" aria-hidden="true"></span>
+      </label>
+      <div class="loan-body">
+        <div class="loan-top">
+          <span class="loan-title">${t.label} — ${escapeHtml(person)}</span>
+          <span class="loan-amt" style="color:${settled ? 'var(--ink-dim)' : t.color}">${fmt(safeNum(e.amount))} ت</span>
         </div>
-        <span class="loan-status-pill ${settled?'done':'open'}">${settled?'تسویه‌شده':'باز'}</span>
-      </div>
-      <div class="loan-stats">
-        <div class="loan-stat"><div class="lb">مبلغ کل</div><div class="vl">${fmt(total)}</div></div>
-        <div class="loan-stat"><div class="lb">پرداخت‌شده</div><div class="vl">${fmt(paid)}</div></div>
-        <div class="loan-stat"><div class="lb">باقی‌مانده</div><div class="vl" style="color:${settled?'var(--ink-dim)':(isLent?'var(--red)':'var(--green)')}">${fmt(rem)}</div></div>
-      </div>
-      <div class="loan-meta-row">${dates}${e.desc ? ' · ' + (typeof escapeHtml==='function'?escapeHtml(e.desc):e.desc) : ''}</div>
-      <div class="loan-actions">
-        ${!settled ? `<button type="button" class="btn" data-loan-pay="${e.id}">ثبت پرداخت</button>
-        <button type="button" class="btn ghost" data-loan-settle="${e.id}">تسویه کامل</button>` :
-        `<button type="button" class="btn ghost" data-loan-reopen="${e.id}">بازگشت به باز</button>`}
-        <button type="button" class="btn ghost" data-loan-del="${e.id}">حذف</button>
+        <div class="loan-meta">${toJalaliStr(e.date)||''}${e.desc ? ' · ' + escapeHtml(e.desc) : ''}</div>
+        ${settleBadge}
       </div>
     </div>`;
   }).join('');
 
-  el.querySelectorAll('[data-loan-settle]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const e = notebook.find(x => String(x.id)===String(btn.getAttribute('data-loan-settle')));
-      if(!e) return;
-      e.paidAmount = safeNum(e.amount, 0); e.settled = true; e.settledDate = todayISO();
-      if(persist()){ showToast('تسویه کامل شد'); renderNotebook(); }
-    });
-  });
-  el.querySelectorAll('[data-loan-reopen]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const e = notebook.find(x => String(x.id)===String(btn.getAttribute('data-loan-reopen')));
-      if(!e) return;
-      e.settled = false; e.settledDate = null; e.paidAmount = 0;
-      if(persist()){ showToast('قرض دوباره باز شد'); renderNotebook(); }
-    });
-  });
-  el.querySelectorAll('[data-loan-pay]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const e = notebook.find(x => String(x.id)===String(btn.getAttribute('data-loan-pay')));
-      if(!e) return;
-      const rem = loanRemaining(e);
-      const raw = window.prompt('مبلغ پرداخت (تومان) — باقی: ' + fmt(rem), String(rem));
-      if(raw == null) return;
-      const pay = parseMoney(raw);
-      if(isNaN(pay) || pay <= 0){ showToast('مبلغ معتبر نیست', true); return; }
-      const total = safeNum(e.amount, 0);
-      e.paidAmount = Math.min(total, safeNum(e.paidAmount, 0) + pay);
-      if(e.paidAmount >= total - 0.5){ e.paidAmount = total; e.settled = true; e.settledDate = todayISO(); }
-      if(persist()){ showToast(e.settled ? 'تسویه کامل شد' : 'پرداخت ثبت شد'); renderNotebook(); }
-    });
-  });
-  el.querySelectorAll('[data-loan-del]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = btn.getAttribute('data-loan-del');
-      const e = notebook.find(x => String(x.id)===String(id));
-      showConfirmModal('حذف این قرض؟', e ? ((e.person||'') + ' — ' + fmt(e.amount)) : '', ()=>{
-        notebook = notebook.filter(x => String(x.id) !== String(id));
-        if(persist()){ showToast('حذف شد'); renderNotebook(); }
-      });
+  el.querySelectorAll('.loan-check').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      const id = chk.dataset.id;
+      const entry = notebook.find(x => String(x.id) === String(id));
+      if(!entry) return;
+      if(chk.checked){
+        entry.settled = true;
+        entry.settledDate = todayISO();
+      } else {
+        entry.settled = false;
+        entry.settledDate = null;
+      }
+      if(persist()) renderNotebook();
     });
   });
 }
@@ -4407,7 +4502,8 @@ function clearNcForm(){
   if($('ncLabel')) $('ncLabel').value = '';
   if($('ncManualValue')) $('ncManualValue').value = '';
   if($('ncGoldGram')) $('ncGoldGram').value = '';
-    if(typeof updateGoldSumUI === 'function') updateGoldSumUI();
+  if($('ncGoldSoot')) $('ncGoldSoot').value = '';
+  if(typeof updateGoldSumUI === 'function') updateGoldSumUI();
 }
 
 if($('ncAddBtn')){
@@ -4417,7 +4513,7 @@ if($('ncAddBtn')){
     const manualValue = parseMoney($('ncManualValue').value);
     if(isNaN(manualValue) || manualValue <= 0){ showToast('ارزش تومانی رو وارد کن', true); return; }
     const addGram = category === 'gold' ? parseDec($('ncGoldGram') && $('ncGoldGram').value) : 0;
-    const addSoot = 0;
+    const addSoot = category === 'gold' ? parseDec($('ncGoldSoot') && $('ncGoldSoot').value) : 0;
     const existing = noncash.find(x => x && x.category === category);
     if(existing){
       existing.manualValue = safeNum(existing.manualValue, 0) + manualValue;
@@ -4454,6 +4550,7 @@ if($('ncCategory')){
   updateGoldSumUI();
 }
 if($('ncGoldGram')) $('ncGoldGram').addEventListener('input', updateGoldSumUI);
+if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 
 if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
@@ -4506,6 +4603,7 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     if(type === 'lent' || type === 'borrowed'){
       entry.settled = false;
       entry.settledDate = null;
+      entry.paidAmount = 0;
     }
     if(!Array.isArray(notebook)) notebook = [];
     notebook.push(entry);
@@ -4542,10 +4640,10 @@ if($('nbSyncBtn')) $('nbSyncBtn').addEventListener('click', ()=>{
     ()=>{
       assets.card = newBase;
       txs.push({date: todayISO(), key:'card', delta, note:'ثبت موجودی کارت'});
-      // همهٔ اقلام غیرقرضِ باز به‌عنوان اعمال‌شده علامت می‌خورند
+      // همهٔ اقلام (از جمله قرض‌های باز) applied می‌شوند تا مبلغ فقط یک‌بار روی کارت بنشیند
+      // وضعیت settled جدا است و بعداً قابل تغییر می‌ماند بدون محاسبهٔ دوباره
       (notebook || []).forEach(e => {
         if(!e) return;
-        if((e.type === 'lent' || e.type === 'borrowed') && !e.settled) return;
         e.applied = true;
       });
       pushSeriesPoint();
@@ -5165,6 +5263,7 @@ function escapeHtml(s){
     .replace(/"/g,'&quot;');
 }
 
+
 if($('analysisToggle') && $('analysisBody')){
   $('analysisToggle').addEventListener('click', ()=>{
     const body = $('analysisBody');
@@ -5175,6 +5274,7 @@ if($('analysisToggle') && $('analysisBody')){
     if(open && typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
   });
 }
+
 if($('notesNewBtn')){
   $('notesNewBtn').addEventListener('click', ()=> openNoteEditor(null));
 }
@@ -5212,40 +5312,31 @@ document.addEventListener('keydown', (e)=>{
 if($('noteCancelBtn')) $('noteCancelBtn').addEventListener('click', closeNoteEditor);
 if($('noteSaveBtn')){
   $('noteSaveBtn').addEventListener('click', ()=>{
-    try{
-      if(!Array.isArray(notes)) notes = [];
-      const title = ($('noteTitle').value || '').trim();
-      const body = ($('noteBody').value || '').trim();
-      if(!title && !body){ showToast('عنوان یا متن را وارد کنید', true); return; }
-      const cat = typeof getActiveNoteCat === 'function' ? getActiveNoteCat() : 'general';
-      const tags = typeof uniqTags === 'function' ? uniqTags(noteDraftTags || []) : [];
-      const now = new Date().toISOString();
-      const id = ($('noteEditId') && $('noteEditId').value || '').trim();
-      let savedId = id;
-      if(id){
-        const note = notes.find(x => String(x.id) === String(id));
-        if(!note){ showToast('یادداشت پیدا نشد', true); return; }
-        note.title = title; note.body = body; note.cat = cat; note.tags = tags;
-        note.updatedAt = now;
-      } else {
-        savedId = String(Date.now());
-        notes.push({
-          id: Number(savedId), title, body, cat, tags,
-          pinned: false, createdAt: now, updatedAt: now
-        });
-      }
-      let ok = persist();
-      if(!ok){
-        try{ localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload())); ok = true; }catch(err){ console.error(err); }
-      }
-      showToast(ok ? 'ذخیره شد' : 'خطا در ذخیره یادداشت', !ok);
-      if(typeof renderNotes === 'function') renderNotes();
+    const title = ($('noteTitle').value || '').trim();
+    const body = ($('noteBody').value || '').trim();
+    if(!title && !body){ showToast('عنوان یا متن را وارد کنید', true); return; }
+    const cat = getActiveNoteCat();
+    const tags = uniqTags(noteDraftTags);
+    const now = new Date().toISOString();
+    const id = ($('noteEditId').value || '').trim();
+    if(id){
+      const note = notes.find(x => String(x.id) === id);
+      if(!note){ showToast('یادداشت پیدا نشد', true); return; }
+      note.title = title; note.body = body; note.cat = cat; note.tags = tags;
+      note.updatedAt = now;
+    } else {
+      notes.push({
+        id: Date.now(), title, body, cat, tags,
+        pinned: false, createdAt: now, updatedAt: now
+      });
+    }
+    if(persist()){
+      showToast('ذخیره شد');
+      renderNotes();
+      const savedId = id || String(notes[notes.length-1] && notes[notes.length-1].id);
       const saved = notes.find(x => String(x.id) === String(savedId));
-      if(saved && typeof openNoteReader === 'function') openNoteReader(saved);
-      else if(typeof closeNoteModal === 'function') closeNoteModal();
-    }catch(err){
-      console.error('noteSave', err);
-      showToast('خطا در ذخیره یادداشت', true);
+      if(saved) openNoteReader(saved);
+      else closeNoteModal();
     }
   });
 }
@@ -5591,6 +5682,78 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
   );
 });
 
+/* ================= کارت قیمت لحظه‌ای طلا/نقره/دلار (فقط UI — منطق API در prices-api.js) ================= */
+function pwSetRow(elId, text, mode){
+  const el = $(elId);
+  if(!el) return;
+  el.textContent = text;
+  el.classList.remove('pw-err', 'pw-loading');
+  if(mode) el.classList.add(mode);
+}
+function renderPriceWidget(data){
+  if(!data){
+    pwSetRow('pwGoldVal', 'در حال دریافت…', 'pw-loading');
+    pwSetRow('pwSilverVal', 'در حال دریافت…', 'pw-loading');
+    pwSetRow('pwUsdVal', 'در حال دریافت…', 'pw-loading');
+    if($('pwUpdated')) $('pwUpdated').textContent = '';
+    return;
+  }
+  if(typeof data.gold18kToman === 'number' && isFinite(data.gold18kToman)){
+    pwSetRow('pwGoldVal', fmt(data.gold18kToman) + ' تومان');
+  } else {
+    pwSetRow('pwGoldVal', 'خطا در دریافت', 'pw-err');
+  }
+  if(typeof data.silverTomanPerGram === 'number' && isFinite(data.silverTomanPerGram)){
+    pwSetRow('pwSilverVal', fmt(data.silverTomanPerGram) + ' تومان');
+  } else {
+    pwSetRow('pwSilverVal', 'خطا در دریافت', 'pw-err');
+  }
+  if(typeof data.usdToman === 'number' && isFinite(data.usdToman)){
+    pwSetRow('pwUsdVal', fmt(data.usdToman) + ' تومان');
+  } else {
+    pwSetRow('pwUsdVal', 'خطا در دریافت', 'pw-err');
+  }
+  const updEl = $('pwUpdated');
+  if(updEl){
+    let t = '';
+    try{
+      if(data.time) t = new Date(data.time).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+    }catch(e){}
+    updEl.textContent = t ? ('آخرین بروزرسانی: ' + t) : '';
+  }
+}
+function initPriceWidget(){
+  if(typeof window.PricesAPI === 'undefined'){
+    pwSetRow('pwGoldVal', 'سرویس در دسترس نیست', 'pw-err');
+    pwSetRow('pwSilverVal', 'سرویس در دسترس نیست', 'pw-err');
+    pwSetRow('pwUsdVal', 'سرویس در دسترس نیست', 'pw-err');
+    return;
+  }
+  renderPriceWidget(window.PricesAPI.getCached());
+  window.PricesAPI.start(renderPriceWidget);
+}
+if($('pwRefreshBtn')){
+  $('pwRefreshBtn').addEventListener('click', ()=>{
+    if(!window.PricesAPI) return;
+    const btn = $('pwRefreshBtn');
+    btn.classList.add('spin');
+    window.PricesAPI.refresh(true).then(data=>{
+      renderPriceWidget(data);
+      btn.classList.remove('spin');
+    });
+  });
+}
+// اگر تب مرورگر مخفی/بازگردانده شود و کاربر همچنان روی صفحه دارایی غیرنقد باشد، Polling متناسب متوقف/از سر گرفته شود
+document.addEventListener('visibilitychange', ()=>{
+  const onNoncash = document.getElementById('page-noncash') && document.getElementById('page-noncash').classList.contains('active');
+  if(!window.PricesAPI) return;
+  if(document.hidden){
+    window.PricesAPI.stop();
+  } else if(onNoncash){
+    initPriceWidget();
+  }
+});
+
 // پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
 ['daftar-gh-owner','daftar-gh-repo','daftar-gh-token'].forEach(k=>{
   try{ localStorage.removeItem(k); }catch(e){}
@@ -5603,5 +5766,7 @@ ensureCoreAssets();
 scheduleDateRollover();
 updateTopbarDate();
 </script>
+<!-- فایل مستقل و ایزوله منطق API قیمت طلا/نقره/دلار — defer، بدون هیچ Fetch خودکار (کاملاً Lazy) -->
+<script src="prices-api.js" defer></script>
 </body>
 </html>
