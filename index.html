@@ -100,6 +100,310 @@
     -webkit-backdrop-filter:blur(12px) saturate(1.15);
   }
   
+  
+
+
+  /* ---- Notes (دفترچه یادداشت) — هم‌تراز با کارت‌ها و تم سایت ---- */
+  .notes-shell{
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .notes-toolbar{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  @media (min-width:560px){
+    .notes-toolbar{grid-template-columns:1fr auto auto auto; align-items:center;}
+  }
+  .notes-toolbar .notes-search{
+    width:100%; margin:0;
+    border-radius:12px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink);
+  }
+  .notes-sort{
+    margin:0; font-size:12px; border-radius:12px;
+    border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+    min-height:40px; padding:0 10px;
+  }
+  .notes-view-toggle{
+    display:inline-flex; border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; background:var(--bg-2);
+  }
+  .notes-view-toggle button{
+    border:none; background:transparent; color:var(--ink-dim);
+    padding:9px 12px; font-size:11.5px; font-weight:600; cursor:pointer;
+    font-family:var(--app-font); transition:background .15s, color .15s;
+  }
+  .notes-view-toggle button.active{
+    background:var(--blue-soft); color:var(--blue-light);
+  }
+  .notes-filters-row{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    margin-bottom:10px;
+  }
+  .notes-filters-row label.chk{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11.5px; color:var(--ink-dim); cursor:pointer;
+    padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+    background:var(--card-2);
+  }
+  .notes-cats, .notes-tags-bar{
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;
+  }
+  .notes-cat-chip, .notes-tag-chip{
+    border:1px solid var(--border); background:var(--card-2); color:var(--ink-dim);
+    border-radius:999px; padding:6px 11px; font-size:11px; font-weight:600;
+    cursor:pointer; font-family:var(--app-font);
+    transition:transform .15s ease, background .15s, border-color .15s, color .15s;
+  }
+  .notes-cat-chip:hover, .notes-tag-chip:hover{border-color:var(--border-strong);}
+  .notes-cat-chip:active, .notes-tag-chip:active{transform:scale(.97);}
+  .notes-cat-chip.active, .notes-tag-chip.active{
+    background:var(--blue-soft); color:var(--blue-light); border-color:var(--border-strong);
+  }
+  .notes-cat-chip .dotc{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    margin-left:5px; vertical-align:middle;
+  }
+  .notes-grid{
+    display:grid; grid-template-columns:1fr; gap:10px;
+  }
+  @media (min-width:640px){.notes-grid{grid-template-columns:1fr 1fr;}}
+  @media (min-width:960px){.notes-grid{grid-template-columns:1fr 1fr 1fr;}}
+  .note-card{
+    position:relative;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    padding:14px 14px 12px;
+    cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.04);
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    animation: noteIn .28s ease both;
+  }
+  html[data-anim="off"] .note-card{animation:none;}
+  @keyframes noteIn{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:none;}
+  }
+  .note-card:hover{
+    border-color:var(--border-strong);
+    transform:translateY(-1px);
+    box-shadow:0 6px 18px rgba(0,0,0,.07);
+  }
+  html[data-anim="off"] .note-card:hover{transform:none;}
+  .note-card.pinned{border-color:var(--border-strong);}
+  .note-card::before{
+    content:''; position:absolute; top:0; right:0; left:0; height:3px;
+    border-radius:14px 14px 0 0;
+    background:var(--note-accent, var(--blue-light)); opacity:.9;
+  }
+  .note-card-head{display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;}
+  .note-card-title{
+    flex:1; font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.55;
+  }
+  .note-pin{
+    background:none; border:none; color:var(--ink-dim); cursor:pointer;
+    padding:4px; border-radius:8px; display:inline-flex;
+    transition:color .15s, background .15s;
+  }
+  .note-pin:hover{background:var(--blue-soft);}
+  .note-pin.on{color:var(--blue-light);}
+  .note-card-body{
+    font-size:12px; color:var(--ink-dim); line-height:1.85;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+    overflow:hidden; word-break:break-word;
+  }
+  .note-card-tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;}
+  .note-mini-tag{
+    font-size:9.5px; padding:2px 7px; border-radius:999px;
+    background:var(--blue-soft); border:1px solid var(--border); color:var(--blue-light);
+  }
+  .note-card-foot{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);
+    font-size:10px; color:var(--ink-dim); flex-wrap:wrap;
+  }
+  .note-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700;
+    background:var(--blue-soft); color:var(--blue-light); border:1px solid var(--border);
+  }
+  .notes-empty{
+    text-align:center; padding:40px 16px; color:var(--ink-dim); font-size:13px; line-height:1.9;
+    border:1px dashed var(--border); border-radius:14px; background:var(--card-2);
+  }
+  .notes-empty svg{margin:0 auto 12px; color:var(--blue-light); opacity:.75; display:block;}
+  .note-editor{
+    display:none; margin-top:12px; padding:16px; border-radius:16px;
+    border:1px solid var(--border-strong);
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    box-shadow:0 4px 20px rgba(0,0,0,.06);
+    animation: noteIn .22s ease both;
+  }
+  .note-editor.open{display:block;}
+  .note-editor .field{margin-top:2px;}
+  .note-md-tabs{display:flex; gap:6px; margin:8px 0;}
+  .note-md-tabs button{
+    flex:1; border:1px solid var(--border); background:var(--bg-2); color:var(--ink-dim);
+    border-radius:10px; padding:9px; font-size:12px; font-weight:600; cursor:pointer;
+    font-family:var(--app-font); transition:background .15s, color .15s, border-color .15s;
+  }
+  .note-md-tabs button.active{
+    background:var(--blue-soft); color:var(--blue-light); border-color:var(--border-strong);
+  }
+  .note-md-preview{
+    display:none; min-height:120px; padding:12px; border-radius:12px;
+    border:1px solid var(--border); background:var(--bg-2);
+    font-size:13px; line-height:1.85; color:var(--ink); overflow-wrap:anywhere;
+  }
+  .note-md-preview.open{display:block;}
+  .note-md-preview h1,.note-md-preview h2,.note-md-preview h3{margin:0.55em 0 0.3em; font-weight:800;}
+  .note-md-preview h1{font-size:1.2em;} .note-md-preview h2{font-size:1.1em;} .note-md-preview h3{font-size:1.05em;}
+  .note-md-preview p{margin:0.35em 0;}
+  .note-md-preview ul,.note-md-preview ol{margin:0.35em 0; padding-right:1.15em;}
+  .note-md-preview code{
+    font-family:'Martian Mono',monospace; font-size:0.9em;
+    background:var(--card); padding:1px 5px; border-radius:4px; border:1px solid var(--border);
+  }
+  .note-md-preview pre{
+    background:var(--card); border:1px solid var(--border); padding:10px;
+    border-radius:10px; overflow-x:auto; direction:ltr; text-align:left;
+  }
+  .note-md-preview pre code{background:none; border:none; padding:0;}
+  .note-md-preview a{color:var(--blue-light);}
+  .note-md-preview blockquote{
+    margin:0.45em 0; padding:6px 12px; border-right:3px solid var(--blue-light); color:var(--ink-dim);
+  }
+  .note-editor textarea{
+    min-height:140px; resize:vertical; width:100%;
+    border-radius:12px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+    font-family:var(--app-font);
+  }
+  .note-editor input[type="text"]{
+    border-radius:12px; border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+  }
+  .note-editor-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+  .note-editor-actions .btn{margin-top:0; flex:1; min-width:100px;}
+  .note-cat-picks{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px;}
+  .note-cat-pick{
+    border:1px solid var(--border); background:var(--bg-2); color:var(--ink-dim);
+    border-radius:10px; padding:7px 10px; font-size:11px; cursor:pointer;
+    font-family:var(--app-font); display:inline-flex; align-items:center; gap:5px;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .note-cat-pick.active{
+    border-color:var(--border-strong); color:var(--blue-light); background:var(--blue-soft);
+  }
+  .note-tags-input-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;}
+  .note-tags-input-row input{flex:1; min-width:120px; margin:0;}
+  .note-tags-input-row .btn{margin-top:0;}
+  .note-tag-list{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .note-tag-item{
+    display:inline-flex; align-items:center; gap:4px;
+    padding:4px 9px; border-radius:999px; font-size:11px;
+    background:var(--blue-soft); color:var(--blue-light); border:1px solid var(--border);
+  }
+  .note-tag-item button{
+    border:none; background:none; color:var(--ink-dim); cursor:pointer; font-size:14px; line-height:1; padding:0 2px;
+  }
+  .note-meta-auto{
+    margin-top:10px; padding:10px 12px; border-radius:12px;
+    border:1px solid var(--border); background:var(--bg-2);
+    font-size:11.5px; color:var(--ink-dim); line-height:1.7;
+  }
+  .note-meta-auto b{color:var(--ink); font-weight:700;}
+  .notes-cal{
+    display:none; margin-bottom:12px; padding:14px; border-radius:16px;
+    border:1px solid var(--border);
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+  }
+  .notes-cal.open{display:block;}
+  .notes-cal-head{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+  }
+  .notes-cal-head button{
+    width:34px; height:34px; border-radius:10px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink); cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .notes-cal-head button:hover{border-color:var(--border-strong); background:var(--blue-soft);}
+  .notes-cal-title{font-size:13px; font-weight:700; color:var(--ink);}
+  .notes-cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center;}
+  .notes-cal-dow{font-size:10px; color:var(--ink-dim); padding:4px 0;}
+  .notes-cal-day{
+    aspect-ratio:1; max-height:44px; border-radius:10px; border:1px solid transparent;
+    background:transparent; color:var(--ink); font-size:11px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-family:var(--app-font); transition:background .15s, border-color .15s, color .15s;
+  }
+  .notes-cal-day.muted{opacity:.3; cursor:default;}
+  .notes-cal-day.has{border-color:var(--border); background:var(--bg-2);}
+  .notes-cal-day.selected{
+    border-color:var(--border-strong); background:var(--blue-soft); color:var(--blue-light);
+  }
+  .notes-cal-day .dot{width:4px; height:4px; border-radius:50%; background:var(--blue-light);}
+  .notes-cal-day.today .num{font-weight:800;}
+
+
+  /* Note reading modal */
+  .note-modal{
+    display:none; position:fixed; inset:0; z-index:1200;
+    align-items:center; justify-content:center; padding:16px;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(6px);
+  }
+  .note-modal.open{display:flex; animation: noteIn .22s ease both;}
+  html[data-anim="off"] .note-modal.open{animation:none;}
+  .note-modal-box{
+    width:100%; max-width:560px; max-height:min(88vh, 720px);
+    display:flex; flex-direction:column;
+    border-radius:18px; border:1px solid var(--border-strong);
+    background:linear-gradient(165deg, var(--card) 0%, var(--card-2) 100%);
+    box-shadow:0 20px 50px rgba(0,0,0,.28); overflow:hidden;
+  }
+  .note-modal-head{
+    display:flex; align-items:center; gap:8px; padding:12px 14px;
+    border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .note-modal-head .note-modal-title{
+    flex:1; font-size:14px; font-weight:800; color:var(--ink);
+    line-height:1.4; min-width:0;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .note-modal-head .icon-btn{
+    width:36px; height:36px; border-radius:10px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition:background .15s, border-color .15s, color .15s;
+  }
+  .note-modal-head .icon-btn:hover{border-color:var(--border-strong); background:var(--blue-soft); color:var(--blue-light);}
+  .note-modal-meta{
+    padding:8px 14px; font-size:11px; color:var(--ink-dim);
+    border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  }
+  .note-modal-body{
+    flex:1; overflow-y:auto; padding:16px 14px; -webkit-overflow-scrolling:touch;
+  }
+  .note-modal-body .note-md-preview{
+    display:block; min-height:auto; border:none; background:transparent; padding:0;
+  }
+  .note-modal-foot{
+    display:flex; flex-wrap:wrap; gap:8px; padding:12px 14px;
+    border-top:1px solid var(--border); flex-shrink:0; background:var(--card-2);
+  }
+  .note-modal-foot .btn{margin-top:0; flex:1; min-width:110px;}
+  .note-modal .note-edit-panel{display:none;}
+  .note-modal.mode-edit .note-read-panel{display:none;}
+  .note-modal.mode-edit .note-edit-panel{display:block;}
+  .note-modal.mode-edit .note-modal-foot-read{display:none;}
+  .note-modal.mode-read .note-modal-foot-edit{display:none;}
+  body.note-modal-open{overflow:hidden;}
+
   .theme-dn-btn{
     width:38px; height:38px; border-radius:11px; border:1px solid var(--border);
     background:var(--card); color:var(--ink); cursor:pointer; flex-shrink:0;
@@ -1027,6 +1331,7 @@
   <a href="#" class="menu-item" data-page="page-snapp"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-5 3 3 7-8"/><path d="M15 6h4v4"/></svg></span>سود اسنپ</a>
   <a href="#" class="menu-item" data-page="page-notebook"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h13"/><path d="M7 12h13"/><path d="M7 17h13"/><path d="M4 7h.01M4 12h.01M4 17h.01"/></svg></span>تراکنش‌ها</a>
   <a href="#" class="menu-item" data-page="page-history"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span>تاریخچه</a>
+  <a href="#" class="menu-item" data-page="page-notes"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>دفترچه یادداشت</a>
   <a href="#" class="menu-item" data-page="page-settings"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg></span>تنظیمات</a>
 </div>
 <div class="menu-backdrop" id="menuBackdrop"></div>
@@ -1360,6 +1665,50 @@
     </div>
     </div>
 
+    <div class="page" id="page-notes">
+    <div class="section reveal">
+      <div class="section-title"><span class="dot"></span>دفترچه یادداشت</div>
+      <div class="section-sub">یادداشت‌های روزمره با Markdown و تگ — تاریخ و ساعت به‌صورت خودکار از زمان سیستم ثبت می‌شود</div>
+
+      <div class="notes-shell">
+        <div class="notes-toolbar">
+          <input type="search" class="notes-search" id="notesSearch" placeholder="جستجو در عنوان، متن، تگ و دسته…" autocomplete="off">
+          <select class="notes-sort" id="notesSort" aria-label="مرتب‌سازی">
+            <option value="updated">آخرین ویرایش</option>
+            <option value="newest">جدیدترین</option>
+            <option value="oldest">قدیمی‌ترین</option>
+          </select>
+          <div class="notes-view-toggle" role="group" aria-label="نمایش">
+            <button type="button" class="active" id="notesViewList">لیست</button>
+            <button type="button" id="notesViewCal">تقویم</button>
+          </div>
+          <button type="button" class="btn icon-btn-svg" id="notesNewBtn" style="margin-top:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            جدید
+          </button>
+        </div>
+
+        <div class="notes-filters-row">
+          <label class="chk"><input type="checkbox" id="notesPinnedOnly"> فقط سنجاق‌شده</label>
+        </div>
+
+        <div class="notes-cats" id="notesCatBar"></div>
+        <div class="notes-tags-bar" id="notesTagBar"></div>
+      </div>
+
+      <div class="notes-cal" id="notesCal">
+        <div class="notes-cal-head">
+          <button type="button" id="notesCalPrev" aria-label="ماه قبل">‹</button>
+          <div class="notes-cal-title" id="notesCalTitle">—</div>
+          <button type="button" id="notesCalNext" aria-label="ماه بعد">›</button>
+        </div>
+        <div class="notes-cal-grid" id="notesCalGrid"></div>
+      </div>
+
+      <div class="notes-grid" id="notesGrid"></div>
+</div>
+    </div>
+
     <div class="page" id="page-settings">
     <div class="settings-stack">
     <div class="section reveal">
@@ -1464,6 +1813,56 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="note-modal" id="noteModal" aria-hidden="true">
+  <div class="note-modal-box" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
+    <div class="note-modal-head">
+      <button type="button" class="icon-btn" id="noteModalClose" aria-label="بستن">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="note-modal-title" id="noteModalTitle">یادداشت</div>
+      <button type="button" class="icon-btn" id="noteModalPin" aria-label="سنجاق" title="سنجاق">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
+      </button>
+    </div>
+    <div class="note-modal-meta" id="noteModalMeta"></div>
+    <div class="note-modal-body">
+      <div class="note-read-panel">
+        <div class="note-md-preview open" id="noteReadContent"></div>
+      </div>
+      <div class="note-edit-panel" id="noteEditPanel">
+        <input type="hidden" id="noteEditId" value="">
+        <label class="field">عنوان</label>
+        <input type="text" id="noteTitle" placeholder="عنوان یادداشت" maxlength="160">
+        <label class="field" style="margin-top:10px;">متن (Markdown)</label>
+        <div class="note-md-tabs">
+          <button type="button" class="active" id="noteMdWrite">نوشتن</button>
+          <button type="button" id="noteMdPreview">پیش‌نمایش</button>
+        </div>
+        <textarea id="noteBody" placeholder="**پررنگ** · *کج* · # عنوان · - لیست · `کد`"></textarea>
+        <div class="note-md-preview" id="noteMdPreviewBox"></div>
+        <label class="field" style="margin-top:10px;">دسته‌بندی</label>
+        <div class="note-cat-picks" id="noteCatPicks"></div>
+        <label class="field" style="margin-top:8px;">تگ‌ها</label>
+        <div class="note-tags-input-row">
+          <input type="text" id="noteTagInput" placeholder="تگ جدید و Enter" maxlength="32">
+          <button type="button" class="btn ghost" id="noteTagAddBtn">افزودن تگ</button>
+        </div>
+        <div class="note-tag-list" id="noteTagList"></div>
+        <div class="note-meta-auto" id="noteMetaAuto">تاریخ و ساعت هنگام ذخیره از زمان سیستم ثبت می‌شود.</div>
+      </div>
+    </div>
+    <div class="note-modal-foot note-modal-foot-read">
+      <button type="button" class="btn" id="noteModalEditBtn">ویرایش</button>
+      <button type="button" class="btn ghost" id="noteModalClose2">بستن</button>
+    </div>
+    <div class="note-modal-foot note-modal-foot-edit">
+      <button type="button" class="btn" id="noteSaveBtn">ذخیره</button>
+      <button type="button" class="btn ghost" id="noteCancelBtn">انصراف</button>
+      <button type="button" class="btn danger" id="noteDeleteBtn" style="display:none;">حذف</button>
+    </div>
+  </div>
+</div>
+
 <div class="ms-toast" id="msToast" aria-live="polite">
   <div class="ms-title" id="msTitle">هدف رسید</div>
   <div class="ms-sub"><span id="msName"></span> · <span class="ms-amt" id="msAmt"></span></div>
@@ -1714,6 +2113,7 @@ const PAGE_TITLES = {
   'page-snapp': 'سود اسنپ',
   'page-notebook': 'تراکنش‌ها',
   'page-history': 'تاریخچه',
+  'page-notes': 'دفترچه یادداشت',
   'page-settings': 'تنظیمات',
 };
 
@@ -2009,6 +2409,7 @@ let netSeries = []; // {ts, total} — ثبت خودکار با هر تغییر 
 let notebook = []; // {id, type, amount, person, date, time, desc} — تراکنش‌های مالی روزانه
 let fcEvents = []; // آرشیو دائمی پرداخت/دریافتی برای پیش‌بینی — Sync آن را پاک نمی‌کند
 let fcSnapshots = []; // {id, date, pressure, setKey, monthKey} — سوابق دائمی فشار مالی
+let notes = []; // {id,title,body,cat,pinned,createdAt,updatedAt}
 let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف ثبت‌شده
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 
@@ -2032,6 +2433,8 @@ function loadAll(){
         if(d.fcEvents) fcEvents = d.fcEvents;
         if(d.fcSnapshots) fcSnapshots = d.fcSnapshots;
         if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+  if(Array.isArray(d.notes)) notes = d.notes;
+        if(Array.isArray(d.notes)) notes = d.notes;
         if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
       }
@@ -2061,7 +2464,7 @@ function pushSeriesPoint(){
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function getStatePayload(){
-  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, assetDefs: ASSET_DEFS};
+  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, assetDefs: ASSET_DEFS};
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
@@ -2243,6 +2646,7 @@ function render(){
   renderNonCash();
   renderNotebook();
   renderForecast();
+  if(typeof renderNotes === 'function') renderNotes();
 }
 
 let selectedDonutKey = null;
@@ -3092,8 +3496,9 @@ function renderForecast(){
 
     const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
 
-    const currentBal = safeNum(assets.card, 0);
-    $('fcBalance').textContent = fmt(currentBal) + ' ت';
+    // هم‌تراز با موجودی محاسبه‌شده در بخش تراکنش‌ها (کارت + دلتای اعمال‌نشده)
+    const currentBal = safeNum(assets.card, 0) + (typeof nbDelta === 'function' ? nbDelta() : 0);
+    $('fcBalance').textContent = fmt(safeNum(currentBal, 0)) + ' ت';
 
     const remain = remainingDaysInJalaliMonth();
     $('fcRemain').textContent = String(remain);
@@ -3512,6 +3917,7 @@ $('importFile').addEventListener('change', (e)=>{
       fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents : [];
       fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
       milestonesClaimed = (d.milestonesClaimed && typeof d.milestonesClaimed === 'object') ? d.milestonesClaimed : {};
+      notes = Array.isArray(d.notes) ? d.notes : notes;
       initMilestonesBaseline();
       persist();
       render();
@@ -3594,6 +4000,595 @@ $('newAssetBtn').addEventListener('click', ()=>{
     render();
   }
 });
+
+
+
+/* ================= NOTES (دفترچه یادداشت) ================= */
+const NOTE_CATS = [
+  {id:'daily',   label:'روزمره',  color:'#60a5fa'},
+  {id:'idea',    label:'ایده',    color:'#a78bfa'},
+  {id:'plan',    label:'برنامه',  color:'#34d399'},
+  {id:'goal',    label:'هدف',     color:'#fbbf24'},
+  {id:'finance', label:'مالی',    color:'#f472b6'},
+  {id:'other',   label:'سایر',    color:'#94a3b8'},
+];
+let notesFilterCat = 'all';
+let notesFilterTags = []; // multi-tag AND filter
+let notesQuery = '';
+let notesSortMode = 'updated';
+let notesPinnedOnly = false;
+let notesViewMode = 'list'; // list | cal
+let notesCalCursor = null; // Date for calendar month
+let notesCalSelectedISO = null;
+let noteDraftTags = [];
+
+function noteCatMeta(id){
+  return NOTE_CATS.find(c => c.id === id) || NOTE_CATS[NOTE_CATS.length-1];
+}
+
+function normalizeTag(t){
+  return String(t||'').trim().replace(/\s+/g,' ').slice(0,32);
+}
+function tagsEqual(a,b){
+  return normalizeTag(a).toLowerCase() === normalizeTag(b).toLowerCase();
+}
+function uniqTags(list){
+  const out = [];
+  (list||[]).forEach(t=>{
+    const n = normalizeTag(t);
+    if(!n) return;
+    if(!out.some(x => tagsEqual(x,n))) out.push(n);
+  });
+  return out;
+}
+
+/** Minimal safe Markdown → HTML */
+function renderMarkdown(src){
+  let s = String(src||'');
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // fenced code
+  s = s.replace(/```([\s\S]*?)```/g, (_,code)=> '<pre><code>'+code.trim()+'</code></pre>');
+  // headings
+  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  // blockquote
+  s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  // lists
+  s = s.replace(/^(?:[-*] .+(\n|$))+?/gm, block=>{
+    const items = block.trim().split(/\n/).map(l=> l.replace(/^[-*] /,'')).filter(Boolean);
+    return '<ul>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ul>';
+  });
+  s = s.replace(/^(?:\d+\. .+(\n|$))+?/gm, block=>{
+    const items = block.trim().split(/\n/).map(l=> l.replace(/^\d+\. /,'')).filter(Boolean);
+    return '<ol>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ol>';
+  });
+  // inline
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  s = s.replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // paragraphs
+  s = s.split(/\n{2,}/).map(p=>{
+    if(/^<(h[123]|ul|ol|pre|blockquote)/.test(p.trim())) return p;
+    return '<p>'+p.replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+  return s;
+}
+
+function stripMd(s){
+  return String(s||'').replace(/[#>*_`\[\]]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function formatNoteDateTime(isoDate, time){
+  const d = isoDate ? toJalaliStr(isoDate) : '';
+  const t = time || '';
+  if(d && t) return d + ' · ' + t;
+  return d || t || '—';
+}
+
+function noteScheduleISO(note){
+  // تاریخ نمایش/تقویم از زمان سیستم ذخیره‌شده (ایجاد یا ویرایش)
+  if(!note) return '';
+  const src = note.updatedAt || note.createdAt || '';
+  if(!src) return '';
+  // ISO یا YYYY-MM-DD
+  if(src.length >= 10 && src[4]==='-' && src[7]==='-') return src.slice(0,10);
+  try{
+    const d = new Date(src);
+    if(!isNaN(d.getTime())) return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  }catch(e){}
+  return '';
+}
+function nowSystemTimeHM(){
+  const d = todayDate();
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function formatNoteStamp(note){
+  if(!note) return '—';
+  const iso = noteScheduleISO(note);
+  let time = '';
+  try{
+    const src = note.updatedAt || note.createdAt;
+    if(src){
+      const d = new Date(src);
+      if(!isNaN(d.getTime())) time = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+  }catch(e){}
+  return formatNoteDateTime(iso, time);
+}
+
+
+let noteModalMode = 'read'; // read | edit
+let noteModalCurrentId = null;
+
+function openNoteModal(){
+  const m = $('noteModal');
+  if(!m) return;
+  m.classList.add('open');
+  m.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('note-modal-open');
+}
+function closeNoteModal(){
+  const m = $('noteModal');
+  if(!m) return;
+  m.classList.remove('open', 'mode-read', 'mode-edit');
+  m.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('note-modal-open');
+  noteModalCurrentId = null;
+  noteModalMode = 'read';
+  $('noteEditId').value = '';
+  $('noteTitle').value = '';
+  $('noteBody').value = '';
+  noteDraftTags = [];
+  if(typeof renderNoteTagList === 'function') renderNoteTagList();
+}
+
+function setNoteModalMode(mode){
+  const m = $('noteModal');
+  if(!m) return;
+  noteModalMode = mode === 'edit' ? 'edit' : 'read';
+  m.classList.toggle('mode-edit', noteModalMode === 'edit');
+  m.classList.toggle('mode-read', noteModalMode === 'read');
+}
+
+function fillNoteReadView(note){
+  if(!note) return;
+  const cat = noteCatMeta(note.cat);
+  $('noteModalTitle').textContent = note.title || 'بدون عنوان';
+  const tags = uniqTags(note.tags||[]).map(t => '<span class="note-mini-tag">#'+escapeHtml(t)+'</span>').join(' ');
+  $('noteModalMeta').innerHTML =
+    '<span class="note-badge"><span style="background:'+cat.color+';width:6px;height:6px;border-radius:50%;display:inline-block;"></span>'+escapeHtml(cat.label)+'</span>' +
+    '<span>'+escapeHtml(formatNoteStamp(note))+'</span>' +
+    (tags ? '<span style="display:inline-flex;flex-wrap:wrap;gap:4px;">'+tags+'</span>' : '');
+  $('noteReadContent').innerHTML = renderMarkdown(note.body || '');
+  const pinBtn = $('noteModalPin');
+  if(pinBtn){
+    pinBtn.style.color = note.pinned ? 'var(--blue-light)' : '';
+    pinBtn.querySelector('svg') && pinBtn.querySelector('svg').setAttribute('fill', note.pinned ? 'currentColor' : 'none');
+  }
+}
+
+function openNoteReader(note){
+  if(!note) return;
+  noteModalCurrentId = String(note.id);
+  fillNoteReadView(note);
+  setNoteModalMode('read');
+  openNoteModal();
+}
+
+function openNoteEditor(note){
+  renderNoteCatPicks();
+  noteModalCurrentId = note ? String(note.id) : null;
+  $('noteEditId').value = note ? String(note.id) : '';
+  $('noteTitle').value = note ? (note.title || '') : '';
+  $('noteBody').value = note ? (note.body || '') : '';
+  noteDraftTags = uniqTags(note && note.tags ? note.tags : []);
+  renderNoteTagList();
+  const cat = note ? (note.cat || 'daily') : 'daily';
+  document.querySelectorAll('#noteCatPicks .note-cat-pick').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.cat === cat);
+  });
+  if($('noteDeleteBtn')) $('noteDeleteBtn').style.display = note ? 'block' : 'none';
+  if($('noteMetaAuto')){
+    $('noteMetaAuto').innerHTML = note
+      ? ('ایجاد: <b>' + escapeHtml(formatNoteStamp({createdAt: note.createdAt, updatedAt: note.createdAt})) + '</b> · آخرین ویرایش: <b>' + escapeHtml(formatNoteStamp(note)) + '</b>')
+      : ('تاریخ و ساعت هنگام ذخیره از زمان سیستم · امروز: <b>' + escapeHtml(formatNoteDateTime(todayISO(), nowSystemTimeHM())) + '</b>');
+  }
+  if(note){
+    $('noteModalTitle').textContent = 'ویرایش · ' + (note.title || 'بدون عنوان');
+  } else {
+    $('noteModalTitle').textContent = 'یادداشت جدید';
+    $('noteModalMeta').innerHTML = '<span class="note-badge">جدید</span>';
+    $('noteReadContent').innerHTML = '';
+  }
+  setNoteMdTab('write');
+  setNoteModalMode('edit');
+  openNoteModal();
+}
+
+function closeNoteEditor(){
+  // از حالت ویرایش: اگر یادداشت موجود بود به خواندن برگرد، وگرنه بستن
+  const id = ($('noteEditId').value || noteModalCurrentId || '').trim();
+  if(id){
+    const note = notes.find(x => String(x.id) === String(id));
+    if(note){ openNoteReader(note); return; }
+  }
+  closeNoteModal();
+}
+
+
+function setNoteMdTab(mode){
+  const writeBtn = $('noteMdWrite'), prevBtn = $('noteMdPreview');
+  const ta = $('noteBody'), box = $('noteMdPreviewBox');
+  if(writeBtn) writeBtn.classList.toggle('active', mode==='write');
+  if(prevBtn) prevBtn.classList.toggle('active', mode==='preview');
+  if(ta) ta.style.display = mode==='write' ? 'block' : 'none';
+  if(box){
+    box.classList.toggle('open', mode==='preview');
+    if(mode==='preview') box.innerHTML = renderMarkdown(ta ? ta.value : '');
+  }
+}
+
+function getActiveNoteCat(){
+  const a = document.querySelector('#noteCatPicks .note-cat-pick.active');
+  return a ? a.dataset.cat : 'daily';
+}
+
+function renderNoteCatPicks(){
+  const el = $('noteCatPicks');
+  if(!el) return;
+  el.innerHTML = NOTE_CATS.map(c =>
+    `<button type="button" class="note-cat-pick" data-cat="${c.id}"><span class="dotc" style="background:${c.color};width:8px;height:8px;border-radius:50%;display:inline-block;"></span>${c.label}</button>`
+  ).join('');
+  el.querySelectorAll('.note-cat-pick').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      el.querySelectorAll('.note-cat-pick').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  if(!el.querySelector('.note-cat-pick.active')){
+    const first = el.querySelector('.note-cat-pick');
+    if(first) first.classList.add('active');
+  }
+}
+
+function renderNoteTagList(){
+  const el = $('noteTagList');
+  if(!el) return;
+  if(!noteDraftTags.length){ el.innerHTML = ''; return; }
+  el.innerHTML = noteDraftTags.map((t,i)=>
+    `<span class="note-tag-item">${escapeHtml(t)}<button type="button" data-rm-tag="${i}" aria-label="حذف تگ">×</button></span>`
+  ).join('');
+  el.querySelectorAll('[data-rm-tag]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      noteDraftTags.splice(parseInt(btn.dataset.rmTag,10), 1);
+      renderNoteTagList();
+    });
+  });
+}
+
+function addDraftTag(raw){
+  const n = normalizeTag(raw);
+  if(!n) return;
+  if(noteDraftTags.some(t => tagsEqual(t,n))){ showToast('تگ تکراری است', true); return; }
+  noteDraftTags.push(n);
+  renderNoteTagList();
+  if($('noteTagInput')) $('noteTagInput').value = '';
+}
+
+function collectAllTags(){
+  const set = [];
+  (notes||[]).forEach(n=>{
+    (n.tags||[]).forEach(t=>{
+      const x = normalizeTag(t);
+      if(x && !set.some(s => tagsEqual(s,x))) set.push(x);
+    });
+  });
+  return set.sort((a,b)=> a.localeCompare(b, 'fa'));
+}
+
+function renderNotesCatBar(){
+  const el = $('notesCatBar');
+  if(!el) return;
+  const all = [{id:'all', label:'همه', color:'var(--blue-light)'}, ...NOTE_CATS];
+  el.innerHTML = all.map(c => {
+    const active = notesFilterCat === c.id ? ' active' : '';
+    const dot = c.id==='all' ? '' : `<span class="dotc" style="background:${c.color}"></span>`;
+    return `<button type="button" class="notes-cat-chip${active}" data-cat="${c.id}">${dot}${c.label}</button>`;
+  }).join('');
+  el.querySelectorAll('.notes-cat-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ notesFilterCat = btn.dataset.cat; renderNotes(); });
+  });
+}
+
+function renderNotesTagBar(){
+  const el = $('notesTagBar');
+  if(!el) return;
+  const tags = collectAllTags();
+  if(!tags.length){ el.innerHTML = ''; return; }
+  el.innerHTML = tags.map(t=>{
+    const on = notesFilterTags.some(x => tagsEqual(x,t)) ? ' active' : '';
+    return `<button type="button" class="notes-tag-chip${on}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`;
+  }).join('');
+  el.querySelectorAll('.notes-tag-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = btn.dataset.tag;
+      if(notesFilterTags.some(x => tagsEqual(x,t))){
+        notesFilterTags = notesFilterTags.filter(x => !tagsEqual(x,t));
+      } else {
+        notesFilterTags.push(t);
+      }
+      renderNotes();
+    });
+  });
+}
+
+function getFilteredNotes(){
+  let list = Array.isArray(notes) ? notes.slice() : [];
+  if(notesPinnedOnly) list = list.filter(n => n && n.pinned);
+  if(notesFilterCat && notesFilterCat !== 'all') list = list.filter(n => n && n.cat === notesFilterCat);
+  if(notesFilterTags.length){
+    list = list.filter(n => {
+      const nt = n.tags || [];
+      return notesFilterTags.every(ft => nt.some(t => tagsEqual(t, ft)));
+    });
+  }
+  if(notesViewMode === 'cal' && notesCalSelectedISO){
+    list = list.filter(n => noteScheduleISO(n) === notesCalSelectedISO);
+  }
+  const q = (notesQuery || '').trim().toLowerCase();
+  if(q){
+    list = list.filter(n => {
+      if(!n) return false;
+      const cat = noteCatMeta(n.cat).label;
+      const hay = [n.title, n.body, cat, ...(n.tags||[])].map(x => String(x||'').toLowerCase()).join(' ');
+      return hay.includes(q);
+    });
+  }
+  list.sort((a,b)=>{
+    const pin = (b.pinned?1:0) - (a.pinned?1:0);
+    if(pin) return pin;
+    if(notesSortMode === 'oldest') return String(a.createdAt||'') < String(b.createdAt||'') ? -1 : 1;
+    if(notesSortMode === 'newest') return String(a.createdAt||'') < String(b.createdAt||'') ? 1 : -1;
+    return String(a.updatedAt||'') < String(b.updatedAt||'') ? 1 : -1;
+  });
+  return list;
+}
+
+function renderNotesCalendar(){
+  const wrap = $('notesCal');
+  const grid = $('notesCalGrid');
+  const title = $('notesCalTitle');
+  if(!wrap || !grid) return;
+  wrap.classList.toggle('open', notesViewMode === 'cal');
+  if(notesViewMode !== 'cal') return;
+  if(!notesCalCursor) notesCalCursor = todayDate();
+  const y = notesCalCursor.getFullYear();
+  const m = notesCalCursor.getMonth();
+  const [jy, jm] = gregorianToJalali(y, m+1, 1);
+  if(title) title.textContent = (JMONTHS[jm-1]||'') + ' ' + jy;
+
+  const first = new Date(y, m, 1);
+  const startPad = first.getDay(); // 0 Sun
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayIso = todayISO();
+  const counts = {};
+  (notes||[]).forEach(n=>{
+    const d = noteScheduleISO(n);
+    if(d) counts[d] = (counts[d]||0)+1;
+  });
+
+  const dows = ['ی','د','س','چ','پ','ج','ش']; // approximate labels
+  let html = dows.map(d=>`<div class="notes-cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startPad;i++) html += `<button type="button" class="notes-cal-day muted" disabled></button>`;
+  for(let day=1; day<=daysInMonth; day++){
+    const iso = y + '-' + pad2(m+1) + '-' + pad2(day);
+    const has = counts[iso] ? ' has' : '';
+    const sel = notesCalSelectedISO === iso ? ' selected' : '';
+    const tod = iso === todayIso ? ' today' : '';
+    const dot = counts[iso] ? '<span class="dot"></span>' : '';
+    html += `<button type="button" class="notes-cal-day${has}${sel}${tod}" data-iso="${iso}"><span class="num">${day}</span>${dot}</button>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('[data-iso]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const iso = btn.dataset.iso;
+      notesCalSelectedISO = (notesCalSelectedISO === iso) ? null : iso;
+      renderNotes();
+    });
+  });
+}
+
+function renderNotes(){
+  const grid = $('notesGrid');
+  if(!grid) return;
+  renderNotesCatBar();
+  renderNotesTagBar();
+  renderNotesCalendar();
+  const list = getFilteredNotes();
+  if(!list.length){
+    grid.innerHTML = `<div class="notes-empty" style="grid-column:1/-1">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+      یادداشتی با این فیلتر پیدا نشد
+    </div>`;
+    return;
+  }
+  grid.innerHTML = list.map((n,i)=>{
+    const cat = noteCatMeta(n.cat);
+    const pinCls = n.pinned ? ' pinned' : '';
+    const pinOn = n.pinned ? ' on' : '';
+    const delay = Math.min(i, 8) * 30;
+    const tags = uniqTags(n.tags||[]).slice(0,5).map(t=>`<span class="note-mini-tag">#${escapeHtml(t)}</span>`).join('');
+    const when = formatNoteStamp(n);
+    return `<article class="note-card${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
+      <div class="note-card-head">
+        <div class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</div>
+        <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
+        </button>
+      </div>
+      <div class="note-card-body">${escapeHtml(stripMd(n.body||''))}</div>
+      ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
+      <div class="note-card-foot">
+        <span class="note-badge"><span style="background:${cat.color};width:6px;height:6px;border-radius:50%;display:inline-block;"></span>${cat.label}</span>
+        <span>${when}</span>
+      </div>
+    </article>`;
+  }).join('');
+
+  grid.querySelectorAll('.note-card').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest && e.target.closest('[data-pin]')) return;
+      const note = notes.find(x => String(x.id) === String(card.dataset.id));
+      if(note) openNoteReader(note);
+    });
+  });
+  grid.querySelectorAll('[data-pin]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const note = notes.find(x => String(x.id) === String(btn.dataset.pin));
+      if(!note) return;
+      note.pinned = !note.pinned;
+      note.updatedAt = new Date().toISOString();
+      if(persist()){ showToast(note.pinned ? 'سنجاق شد' : 'سنجاق برداشته شد'); renderNotes(); }
+    });
+  });
+}
+
+function escapeHtml(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+if($('notesNewBtn')){
+  $('notesNewBtn').addEventListener('click', ()=> openNoteEditor(null));
+}
+
+if($('noteModalClose')) $('noteModalClose').addEventListener('click', closeNoteModal);
+if($('noteModalClose2')) $('noteModalClose2').addEventListener('click', closeNoteModal);
+if($('noteModal')){
+  $('noteModal').addEventListener('click', (e)=>{ if(e.target === $('noteModal')) closeNoteModal(); });
+}
+if($('noteModalEditBtn')){
+  $('noteModalEditBtn').addEventListener('click', ()=>{
+    const id = noteModalCurrentId;
+    const note = notes.find(x => String(x.id) === String(id));
+    if(note) openNoteEditor(note);
+  });
+}
+if($('noteModalPin')){
+  $('noteModalPin').addEventListener('click', ()=>{
+    const id = noteModalCurrentId;
+    const note = notes.find(x => String(x.id) === String(id));
+    if(!note) return;
+    note.pinned = !note.pinned;
+    note.updatedAt = new Date().toISOString();
+    if(persist()){
+      showToast(note.pinned ? 'سنجاق شد' : 'سنجاق برداشته شد');
+      fillNoteReadView(note);
+      renderNotes();
+    }
+  });
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && $('noteModal') && $('noteModal').classList.contains('open')) closeNoteModal();
+});
+
+if($('noteCancelBtn')) $('noteCancelBtn').addEventListener('click', closeNoteEditor);
+if($('noteSaveBtn')){
+  $('noteSaveBtn').addEventListener('click', ()=>{
+    const title = ($('noteTitle').value || '').trim();
+    const body = ($('noteBody').value || '').trim();
+    if(!title && !body){ showToast('عنوان یا متن را وارد کنید', true); return; }
+    const cat = getActiveNoteCat();
+    const tags = uniqTags(noteDraftTags);
+    const now = new Date().toISOString();
+    const id = ($('noteEditId').value || '').trim();
+    if(id){
+      const note = notes.find(x => String(x.id) === id);
+      if(!note){ showToast('یادداشت پیدا نشد', true); return; }
+      note.title = title; note.body = body; note.cat = cat; note.tags = tags;
+      note.updatedAt = now;
+    } else {
+      notes.push({
+        id: Date.now(), title, body, cat, tags,
+        pinned: false, createdAt: now, updatedAt: now
+      });
+    }
+    if(persist()){
+      showToast('ذخیره شد');
+      renderNotes();
+      const savedId = id || String(notes[notes.length-1] && notes[notes.length-1].id);
+      const saved = notes.find(x => String(x.id) === String(savedId));
+      if(saved) openNoteReader(saved);
+      else closeNoteModal();
+    }
+  });
+}
+if($('noteDeleteBtn')){
+  $('noteDeleteBtn').addEventListener('click', ()=>{
+    const id = ($('noteEditId').value || '').trim();
+    if(!id) return;
+    const note = notes.find(x => String(x.id) === id);
+    showConfirmModal('حذف این یادداشت؟', note ? (note.title || 'بدون عنوان') : '', ()=>{
+      notes = notes.filter(x => String(x.id) !== id);
+      if(persist()){ showToast('حذف شد'); closeNoteModal(); renderNotes(); }
+    });
+  });
+}
+if($('notesSearch')){
+  let tmr = null;
+  $('notesSearch').addEventListener('input', ()=>{
+    clearTimeout(tmr);
+    tmr = setTimeout(()=>{ notesQuery = $('notesSearch').value || ''; renderNotes(); }, 140);
+  });
+}
+if($('notesSort')){
+  $('notesSort').addEventListener('change', ()=>{
+    notesSortMode = $('notesSort').value || 'updated';
+    renderNotes();
+  });
+}
+if($('notesPinnedOnly')){
+  $('notesPinnedOnly').addEventListener('change', ()=>{
+    notesPinnedOnly = !!$('notesPinnedOnly').checked;
+    renderNotes();
+  });
+}
+if($('noteMdWrite')) $('noteMdWrite').addEventListener('click', ()=> setNoteMdTab('write'));
+if($('noteMdPreview')) $('noteMdPreview').addEventListener('click', ()=> setNoteMdTab('preview'));
+if($('noteTagAddBtn')) $('noteTagAddBtn').addEventListener('click', ()=> addDraftTag($('noteTagInput') && $('noteTagInput').value));
+if($('noteTagInput')){
+  $('noteTagInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); addDraftTag($('noteTagInput').value); }
+  });
+}
+function setNotesView(mode){
+  notesViewMode = mode === 'cal' ? 'cal' : 'list';
+  if($('notesViewList')) $('notesViewList').classList.toggle('active', notesViewMode==='list');
+  if($('notesViewCal')) $('notesViewCal').classList.toggle('active', notesViewMode==='cal');
+  if(notesViewMode === 'list') notesCalSelectedISO = null;
+  renderNotes();
+}
+if($('notesViewList')) $('notesViewList').addEventListener('click', ()=> setNotesView('list'));
+if($('notesViewCal')) $('notesViewCal').addEventListener('click', ()=> setNotesView('cal'));
+if($('notesCalPrev')){
+  $('notesCalPrev').addEventListener('click', ()=>{
+    if(!notesCalCursor) notesCalCursor = todayDate();
+    notesCalCursor = new Date(notesCalCursor.getFullYear(), notesCalCursor.getMonth()-1, 1);
+    renderNotes();
+  });
+}
+if($('notesCalNext')){
+  $('notesCalNext').addEventListener('click', ()=>{
+    if(!notesCalCursor) notesCalCursor = todayDate();
+    notesCalCursor = new Date(notesCalCursor.getFullYear(), notesCalCursor.getMonth()+1, 1);
+    renderNotes();
+  });
+}
+if($('noteCatPicks')) renderNoteCatPicks();
 
 /* ================= PIN LOCK ================= */
 const USERNAME_KEY = 'daftar-login-username';
