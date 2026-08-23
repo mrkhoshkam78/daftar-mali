@@ -1806,7 +1806,7 @@
     </div>
 
     </div>
-    <div class="app-version" id="appVersion">مبحث درآمد · <b>v2.02</b></div>
+    <div class="app-version" id="appVersion">مبحث درآمد · <b>v2.03</b></div>
     </div>
 
   </div>
@@ -2032,7 +2032,7 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 /* ================= THEME ================= */
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
-const APP_VERSION = '2.02';
+const APP_VERSION = '2.03';
 const VALID_THEMES = ['dark','matte-green','black','gold','light'];
 function applyTheme(t){
   if(!VALID_THEMES.includes(t)) t = 'dark';
@@ -3325,12 +3325,20 @@ const NB_TYPES = {
   borrowed: {label:'قرض گرفته',     sign: 1, color:'var(--green)'},
   transfer: {label:'انتقال',        sign: 0, color:'var(--blue-light)'},
 };
+function nbEntryInCurrentMonth(e){
+  if(!e || !e.date) return false;
+  return isoToJalaliMonthKey(e.date) === currentNbMonthKey();
+}
+
 function nbDelta(){
-  // قرض تسویه‌شده اثرش صفر است؛ تراکنش‌های «اعمال‌شده روی کارت» دوباره حساب نمی‌شوند
+  // فقط تراکنش‌های اعمال‌نشدهٔ ماه جاری (+ قرض تسویه‌نشده در هر ماه)
+  // applied هرگز دوباره حساب نمی‌شود → Refresh امن است
   return notebook.reduce((s, e) => {
     if(!e) return s;
     if(e.applied) return s;
     if((e.type === 'lent' || e.type === 'borrowed') && e.settled) return s;
+    const isLoanOpen = (e.type === 'lent' || e.type === 'borrowed') && !e.settled;
+    if(!isLoanOpen && !nbEntryInCurrentMonth(e)) return s;
     const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || 0;
     return s + sign * safeNum(e.amount, 0);
   }, 0);
@@ -3372,20 +3380,77 @@ function currentNbMonthKey(){
 }
 
 function clearNotebookForNewMonth(){
-  // فقط لیست تراکنش‌ها؛ قرض تسویه‌نشده می‌ماند
+  // لیست ماه قبل پاک می‌شود؛ فقط قرض تسویه‌نشده می‌ماند
   const before = notebook.length;
   notebook = (notebook || []).filter(e => e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled);
   return before !== notebook.length;
 }
 
+function computeForecastForMonthKey(monthKey, balanceForResources){
+  const monthEvents = (fcEvents || []).filter(e => e && e.date && isoToJalaliMonthKey(e.date) === monthKey);
+  const payments = monthEvents.filter(e => e.type === 'payment' && safeNum(e.amount) > 0);
+  const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
+  let monthlyExpense = 0;
+  let daysWithData = 0;
+  if(payments.length){
+    const sumPay = payments.reduce((s,e)=> s + safeNum(e.amount), 0);
+    daysWithData = Math.max(1, new Set(payments.map(e => e.date)).size);
+    monthlyExpense = (sumPay / daysWithData) * 30;
+    if(!isFinite(monthlyExpense) || monthlyExpense < 0) monthlyExpense = 0;
+  }
+  // ماه بسته‌شده: روز باقی‌مانده صفر
+  let avgDailyReceipt = 0;
+  if(receipts.length){
+    const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
+    const rDays = Math.max(1, new Set(receipts.map(e=>e.date)).size);
+    avgDailyReceipt = sumR / rDays;
+  }
+  const bal = safeNum(balanceForResources, 0);
+  const resources = bal; // بدون درآمد مورد انتظار برای ماه تمام‌شده
+  const capacity = resources * 0.8;
+  let pressure = 0;
+  if(capacity > 1e-9) pressure = (monthlyExpense / capacity) * 100;
+  else if(monthlyExpense > 0) pressure = 999;
+  pressure = safeNum(pressure, 0);
+  if(pressure < 0) pressure = 0;
+  if(pressure > 9999) pressure = 9999;
+  return {
+    monthKey,
+    pressure: Math.round(pressure * 100) / 100,
+    expense: Math.round(monthlyExpense),
+    capacity: Math.round(capacity),
+    payments: payments.length,
+    daysWithData
+  };
+}
+
+function archiveMonthEndForecast(monthKey, cardBalance){
+  if(!monthKey) return;
+  if((fcSnapshots || []).some(s => s && s.kind === 'month-end' && s.monthKey === monthKey)) return;
+  const stats = computeForecastForMonthKey(monthKey, cardBalance);
+  const parts = String(monthKey).split('-');
+  const jy = parseInt(parts[0],10), jm = parseInt(parts[1],10);
+  const label = (JMONTHS[jm-1] || monthKey) + (jy ? ' ' + jy : '');
+  fcSnapshots.push({
+    id: Date.now(),
+    kind: 'month-end',
+    date: todayISO(),
+    monthKey,
+    monthLabel: label,
+    pressure: stats.pressure,
+    expense: stats.expense,
+    capacity: stats.capacity,
+    payments: stats.payments,
+    daysWithData: stats.daysWithData
+  });
+}
+
 function ensureNotebookMonth(){
   try{
-    // قبل از بارگذاری دادهٔ رمزشده هیچ‌کار ماهانه انجام نده
     if(window._pendingEncStore && !sessionCryptoKey) return false;
     const cur = currentNbMonthKey();
     let saved = null;
     try{ saved = localStorage.getItem(NB_MONTH_KEY); }catch(e){}
-    // نرمال‌سازی کلید ماه قدیمی بدون صفر پیشوند
     if(saved){
       const m = String(saved).match(/^(\d{4})-(\d{1,2})$/);
       if(m) saved = m[1] + '-' + String(parseInt(m[2],10)).padStart(2,'0');
@@ -3395,15 +3460,22 @@ function ensureNotebookMonth(){
       return false;
     }
     if(saved !== cur){
-      const changed = clearNotebookForNewMonth();
-      try{ localStorage.setItem(NB_MONTH_KEY, cur); }catch(e){}
-      if(changed){
-        if(persist()){
-          if(typeof renderNotebook === 'function') renderNotebook();
-          if(typeof renderForecast === 'function') renderForecast();
-        }
+      // ۱) ثبت پایدار موجودی کارت از دلتای ماه قبل (جلوگیری از محاسبه تکراری بعد از Refresh)
+      const pending = nbDelta();
+      if(pending){
+        assets.card = safeNum(assets.card, 0) + pending;
+        txs.push({date: todayISO(), key:'card', delta: pending, note:'بستن ماه — ثبت خودکار موجودی کارت'});
+        pushSeriesPoint();
       }
-      return changed;
+      // ۲) بایگانی نتیجهٔ نهایی پیش‌بینی ماه قبل (تغییرناپذیر)
+      archiveMonthEndForecast(saved, assets.card);
+      // ۳) پاک کردن لیست تراکنش‌های ماه قبل از UI
+      clearNotebookForNewMonth();
+      try{ localStorage.setItem(NB_MONTH_KEY, cur); }catch(e){}
+      persist();
+      if(typeof renderNotebook === 'function') renderNotebook();
+      if(typeof renderForecast === 'function') renderForecast();
+      return true;
     }
   }catch(e){ console.error(e); }
   return false;
@@ -3456,22 +3528,24 @@ function maybeCreateSnapshot(paymentSet, pressure){
 function renderForecastSnapshots(){
   const el = $('fcSnapList');
   if(!el) return;
-  if(!fcSnapshots || !fcSnapshots.length){
+  const list = (fcSnapshots || []).filter(s => s && (s.kind === 'month-end' || s.monthKey));
+  if(!list.length){
     el.innerHTML = '';
     return;
   }
-  const sorted = [...fcSnapshots].sort((a,b)=>{
-    const ka = String(a.date||'');
-    const kb = String(b.date||'');
+  const sorted = [...list].sort((a,b)=>{
+    const ka = String(a.monthKey || a.date || '');
+    const kb = String(b.monthKey || b.date || '');
     return ka < kb ? 1 : (ka > kb ? -1 : 0);
   });
   const needScroll = sorted.length > 7;
   const items = sorted.map(s=>{
     const p = safeNum(s.pressure, 0);
     const col = progressColor(p);
-    return `<div class="fc-snap-item"><span class="d">${toJalaliStr(s.date)||'—'}</span><span class="p" style="color:${col}">${p.toFixed(1)}٪</span></div>`;
+    const label = s.monthLabel || toJalaliStr(s.date) || s.monthKey || '—';
+    return `<div class="fc-snap-item"><span class="d">${label}</span><span class="p" style="color:${col}">${p.toFixed(1)}٪</span></div>`;
   }).join('');
-  el.innerHTML = '<div class="fc-snap-title">سوابق فشار مالی (Snapshot)</div>' +
+  el.innerHTML = '<div class="fc-snap-title">تاریخچه فشار مالی ماهانه</div>' +
     `<div id="fcSnapScroll" class="scroll-list${needScroll?' scrollable':''}">${items}</div>`;
 }
 
@@ -3484,6 +3558,7 @@ function renderForecast(){
 
     // فقط رویدادهای همین ماه شمسی
     const monthEvents = (fcEvents||[]).filter(e => e && e.date && eventInCurrentMonth(e));
+    // تمام پرداخت‌های همین ماه (بدون سقف ۱۵)
     const paymentsAll = monthEvents
       .filter(e => e.type === 'payment' && safeNum(e.amount) > 0)
       .slice()
@@ -3492,7 +3567,7 @@ function renderForecast(){
         const kb = b.date + (b.time||'00:00');
         return ka < kb ? -1 : (ka > kb ? 1 : 0);
       });
-    const last15 = paymentsAll.slice(-15);
+    const last15 = paymentsAll; // نام متغیر برای سازگاری با ادامهٔ تابع
 
     const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
 
@@ -3576,20 +3651,16 @@ function renderForecast(){
 
     // یادداشت
     if(last15.length === 0){
-      $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده — با ثبت پرداخت، بهترین تخمین موجود نمایش داده می‌شود.';
+      $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده.';
     } else if(last15.length < 15){
-      $('fcNote').textContent = `بهترین تخمین با ${last15.length} پرداخت (کمتر از ۱۵). با تکمیل ۱۵ پرداخت، Snapshot ثبت می‌شود.`;
+      $('fcNote').textContent = `تخمین با ${last15.length} پرداخت ثبت‌شده در این ماه.`;
     } else if(deficit > 0){
       $('fcNote').textContent = 'خرج پیش‌بینی‌شده از توان مالی بیشتر است — کسری بودجه را جدی بگیرید.';
     } else {
       $('fcNote').textContent = 'با ثبت پرداخت‌های جدید، این پیش‌بینی خودکار به‌روز می‌شود.';
     }
 
-    // Snapshot فقط وقتی دقیقاً مجموعه ۱۰تایی جدید تکمیل شده
-    if(last15.length >= 15){
-      maybeCreateSnapshot(last15, pressure);
-    }
-
+    // تاریخچه ماهانه فقط در پایان ماه (ensureNotebookMonth) ثبت می‌شود
     renderForecastSnapshots();
   }catch(err){
     console.error('renderForecast', err);
@@ -3620,10 +3691,29 @@ function renderLoans(){
     return ka < kb ? 1 : -1;
   });
 
-  const remain = loans
-    .filter(e => !e.settled)
-    .reduce((s,e) => s + safeNum(e.amount, 0), 0);
-  if(remainEl) remainEl.textContent = fmt(remain) + ' ت';
+  // رفع باگ محاسباتی: قبلاً «قرض داده» و «قرض گرفته» بدون در نظر گرفتن جهت بدهی جمع می‌شدند
+  // (یعنی طلب از دیگران و بدهی به دیگران با هم جمع می‌شد که عددی گمراه‌کننده تولید می‌کرد).
+  // این‌جا مبلغ خالص (طلب منهای بدهی) با همان علامتی که در nbDelta() استفاده می‌شود محاسبه می‌شود.
+  const openLoans = loans.filter(e => !e.settled);
+  const lentOpen = openLoans.filter(e => e.type === 'lent').reduce((s,e) => s + safeNum(e.amount, 0), 0);
+  const borrowedOpen = openLoans.filter(e => e.type === 'borrowed').reduce((s,e) => s + safeNum(e.amount, 0), 0);
+  const remain = lentOpen - borrowedOpen;
+  if(remainEl){
+    const remainLbl = document.querySelector('.loan-remain .lbl');
+    if(remain > 0){
+      remainEl.textContent = '+' + fmt(remain) + ' ت';
+      remainEl.style.color = 'var(--green)';
+      if(remainLbl) remainLbl.textContent = 'خالص طلب از دیگران (تسویه‌نشده)';
+    } else if(remain < 0){
+      remainEl.textContent = '−' + fmt(Math.abs(remain)) + ' ت';
+      remainEl.style.color = 'var(--red)';
+      if(remainLbl) remainLbl.textContent = 'خالص بدهی به دیگران (تسویه‌نشده)';
+    } else {
+      remainEl.textContent = '۰ ت';
+      remainEl.style.color = '';
+      if(remainLbl) remainLbl.textContent = 'قرض باقی‌مانده (تسویه‌نشده)';
+    }
+  }
 
   if(loans.length === 0){
     el.innerHTML = '<div class="empty">قرضی ثبت نشده</div>';
@@ -3676,10 +3766,16 @@ function renderLoans(){
 function renderNotebook(){
   renderLoans();
   const el = $('nbList');
-  if(notebook.length === 0){
-    el.innerHTML = '<div class="empty">هنوز تراکنشی ثبت نشده</div>';
+  const monthKey = currentNbMonthKey();
+  const visibleNb = (notebook || []).filter(e => {
+    if(!e) return false;
+    if((e.type === 'lent' || e.type === 'borrowed') && !e.settled) return true;
+    return isoToJalaliMonthKey(e.date) === monthKey;
+  });
+  if(visibleNb.length === 0){
+    el.innerHTML = '<div class="empty">در این ماه تراکنشی ثبت نشده</div>';
   } else {
-    const sorted = [...notebook].sort((a,b)=>{
+    const sorted = [...visibleNb].sort((a,b)=>{
       const ka = a.date + (a.time||'00:00'), kb = b.date + (b.time||'00:00');
       return ka < kb ? 1 : -1;
     });
@@ -3708,9 +3804,9 @@ function renderNotebook(){
     });
   }
 
-  // خلاصه دسته‌ها
+  // خلاصه دسته‌ها — فقط ماه جاری (+ قرض باز)
   const sums = {deposit:0, payment:0, lent:0, borrowed:0};
-  notebook.forEach(e=>{
+  visibleNb.forEach(e=>{
     if(!sums.hasOwnProperty(e.type)) return;
     if((e.type === 'lent' || e.type === 'borrowed') && e.settled) return;
     sums[e.type] += safeNum(e.amount, 0);
