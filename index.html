@@ -3602,20 +3602,21 @@ function renderForecast(){
 
     const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
 
-    // هم‌تراز با موجودی محاسبه‌شده در بخش تراکنش‌ها (کارت + دلتای اعمال‌نشده)
-    const currentBal = safeNum(assets.card, 0) + (typeof nbDelta === 'function' ? nbDelta() : 0);
-    $('fcBalance').textContent = fmt(safeNum(currentBal, 0)) + ' ت';
+    // موجودی کارت = فقط مقدار ثبت‌شده (assets.card) — بدون جمع دلتای تراکنش‌ها
+    // تا عددهایی مثل ۳٫۴M به‌اشتباه ۳۳M نشود
+    const currentBal = safeNum(assets.card, 0);
+    if($('fcBalance')) $('fcBalance').textContent = fmt(currentBal) + ' ت';
 
     const remain = remainingDaysInJalaliMonth();
-    $('fcRemain').textContent = String(remain);
+    if($('fcRemain')) $('fcRemain').textContent = String(remain);
 
-    // --- خرج ماهانه ---
+    // --- خرج ماهانه: (مجموع پرداخت‌های ماه ÷ روزهای دارای پرداخت) × ۳۰ ---
     let monthlyExpense = 0;
     let daysWithData = 0;
     if(last15.length === 0){
-      $('fcCount').textContent = '۰';
-      $('fcDays').textContent = '۰';
-      $('fcExpense').textContent = '۰ ت';
+      if($('fcCount')) $('fcCount').textContent = '۰';
+      if($('fcDays')) $('fcDays').textContent = '۰';
+      if($('fcExpense')) $('fcExpense').textContent = '۰ ت';
     } else {
       const sumPay = last15.reduce((s,e)=> s + safeNum(e.amount), 0);
       const uniqueDays = new Set(last15.map(e => e.date));
@@ -3623,15 +3624,15 @@ function renderForecast(){
       const dailyRate = sumPay / daysWithData;
       monthlyExpense = dailyRate * 30;
       if(!isFinite(monthlyExpense) || isNaN(monthlyExpense) || monthlyExpense < 0) monthlyExpense = 0;
-      $('fcCount').textContent = String(last15.length);
-      $('fcDays').textContent = String(daysWithData);
-      $('fcExpense').textContent = fmt(monthlyExpense) + ' ت';
+      if($('fcCount')) $('fcCount').textContent = String(last15.length);
+      if($('fcDays')) $('fcDays').textContent = String(daysWithData);
+      if($('fcExpense')) $('fcExpense').textContent = fmt(monthlyExpense) + ' ت';
     }
 
-    // --- درآمد مورد انتظار (نرخ پایدار بر اساس روزهای سپری‌شدهٔ ماه) ---
-    // موجودی مؤثر = کارت ثبت‌شده + تراکنش‌های اعمال‌نشده (هم‌تراز محاسبه‌گر تراکنش‌ها)
-    // درآمد مورد انتظار از میانگین روزانه دریافتی × روز باقی‌مانده؛
-    // تقسیم بر max(روزهای دارای دریافتی، روز سپری‌شده ماه) تا با یک دریافتی بزرگ عدد منفجر نشود
+    // --- درآمد مورد انتظار ---
+    // میانگین روزانه = مجموع دریافتی ماه ÷ max(روزهای دارای دریافتی، روز سپری‌شده)
+    // درآمد مورد انتظار = میانگین × روز باقی‌مانده
+    // منابع = موجودی کارت + درآمد مورد انتظار (بدون nbDelta)
     let avgDailyReceipt = 0;
     if(receipts.length > 0){
       const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
@@ -3641,8 +3642,8 @@ function renderForecast(){
       if(!isFinite(avgDailyReceipt) || isNaN(avgDailyReceipt) || avgDailyReceipt < 0) avgDailyReceipt = 0;
     }
     const expectedIncome = safeNum(avgDailyReceipt * remain, 0);
-    const resources = safeNum(currentBal, 0) + expectedIncome;
-    const capacity = safeNum(resources * 0.8, 0);
+    const resources = currentBal + expectedIncome;
+    const capacity = resources * 0.8;
 
     $('fcResources').textContent = fmt(safeNum(resources)) + ' ت';
     $('fcCapacity').textContent = fmt(safeNum(capacity)) + ' ت';
