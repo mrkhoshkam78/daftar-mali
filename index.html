@@ -833,10 +833,80 @@
   .section-sub{font-size:11px; color:var(--ink-dim); margin-bottom:12px;}
 
   .nc-item{
-    display:flex; align-items:center; gap:10px; padding:11px 6px;
-    border-bottom:1px dashed var(--border);
+    position:relative;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:14px 14px;
+    margin-bottom:10px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    overflow:hidden;
+    isolation:isolate;
+    transition:border-color .25s ease, box-shadow .25s ease;
   }
-  .nc-item:last-child{border-bottom:none;}
+  .nc-item:last-child{margin-bottom:0;}
+  /* لایه Abstract خطی — محو با gradient */
+  .nc-item .nc-abstract{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+    opacity:.22;
+    transition:opacity .35s ease;
+    background:
+      linear-gradient(125deg, transparent 0%, var(--blue-soft) 42%, transparent 70%),
+      repeating-linear-gradient(-18deg, transparent, transparent 11px, var(--border) 11px, var(--border) 12px);
+  }
+  .nc-item .nc-abstract::before{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 100% 0%, var(--blue-glow), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, var(--blue-soft), transparent 50%);
+    opacity:.9;
+  }
+  .nc-item .nc-abstract::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(105deg, var(--card) 0%, transparent 35%, transparent 65%, var(--card-2) 100%);
+    opacity:.85;
+  }
+  /* تنوع ملایم الگو */
+  .nc-item[data-abs="1"] .nc-abstract{
+    background:
+      linear-gradient(155deg, transparent 10%, var(--blue-soft) 50%, transparent 80%),
+      repeating-linear-gradient(12deg, transparent, transparent 13px, var(--border) 13px, var(--border) 14px);
+  }
+  .nc-item[data-abs="2"] .nc-abstract{
+    background:
+      linear-gradient(200deg, var(--blue-soft) 0%, transparent 45%),
+      repeating-linear-gradient(45deg, transparent, transparent 10px, var(--border) 10px, var(--border) 11px);
+  }
+  .nc-item[data-abs="3"] .nc-abstract{
+    background:
+      linear-gradient(90deg, transparent 20%, var(--blue-soft) 50%, transparent 80%),
+      repeating-linear-gradient(-32deg, transparent, transparent 14px, var(--border) 14px, var(--border) 15px);
+  }
+  .nc-item[data-abs="4"] .nc-abstract{
+    background:
+      radial-gradient(circle at 85% 20%, var(--blue-glow), transparent 40%),
+      repeating-linear-gradient(8deg, transparent, transparent 9px, var(--border) 9px, var(--border) 10px);
+  }
+  html[data-anim="on"] .nc-item:hover .nc-abstract,
+  html[data-anim="on"] .nc-item:active .nc-abstract{
+    opacity:.34;
+  }
+  html[data-anim="off"] .nc-item .nc-abstract{transition:none;}
+  @media (prefers-reduced-motion: reduce){
+    .nc-item .nc-abstract{transition:none;}
+  }
+  .nc-item:hover{
+    border-color:var(--border-strong);
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+  }
+  .nc-item > .nc-meta,
+  .nc-item > .nc-val,
+  .nc-item > .nc-actions,
+  .nc-item > .nc-edit-panel{
+    position:relative; z-index:1;
+  }
   .nc-item .nc-meta{flex:1; min-width:0;}
   .nc-item .nc-cat{
     display:inline-block; font-size:10px; font-weight:700; color:var(--blue-light);
@@ -880,6 +950,143 @@
   #assetCards.rendering .asset-card,
   #assetCards.rendering .asset-card:hover{
     transition:none !important; transform:none !important; will-change:auto !important;
+  }
+
+
+
+  /* ========== Abstract خطی — فقط Themeهای Dark (نه light) ========== */
+  html:not([data-theme="light"]) .abs-surface,
+  html:not([data-theme="light"]) .section,
+  html:not([data-theme="light"]) .asset-card,
+  html:not([data-theme="light"]) .forecast-card,
+  html:not([data-theme="light"]) .proj-card,
+  html:not([data-theme="light"]) .analysis-card,
+  html:not([data-theme="light"]) .notes-shell,
+  html:not([data-theme="light"]) .note-card,
+  html:not([data-theme="light"]) .loan-item,
+  html:not([data-theme="light"]) .transfer-box,
+  html:not([data-theme="light"]) .nb-stat,
+  html:not([data-theme="light"]) .note-editor,
+  html:not([data-theme="light"]) .note-modal-box,
+  html:not([data-theme="light"]) .lock-box{
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+  }
+  /* یک لایه مشترک CSS-only — بدون SVG تکراری */
+  html:not([data-theme="light"]) .section::before,
+  html:not([data-theme="light"]) .asset-card::before,
+  html:not([data-theme="light"]) .forecast-card::before,
+  html:not([data-theme="light"]) .proj-card::before,
+  html:not([data-theme="light"]) .notes-shell::before,
+  html:not([data-theme="light"]) .note-card::after,
+  html:not([data-theme="light"]) .loan-item::before,
+  html:not([data-theme="light"]) .transfer-box::before,
+  html:not([data-theme="light"]) .nb-stat::before,
+  html:not([data-theme="light"]) .note-editor::before,
+  html:not([data-theme="light"]) .note-modal-box::before,
+  html:not([data-theme="light"]) .lock-box::before{
+    content:'';
+    position:absolute; inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:.16;
+    transition:opacity .35s ease;
+    will-change:opacity;
+    background:
+      linear-gradient(125deg, transparent 0%, var(--blue-soft) 45%, transparent 72%),
+      repeating-linear-gradient(-18deg, transparent 0 11px, var(--border) 11px 12px);
+  }
+  /* محو خوانایی */
+  html:not([data-theme="light"]) .section::after,
+  html:not([data-theme="light"]) .asset-card::after,
+  html:not([data-theme="light"]) .forecast-card::after,
+  html:not([data-theme="light"]) .proj-card::after,
+  html:not([data-theme="light"]) .notes-shell::after,
+  html:not([data-theme="light"]) .loan-item::after,
+  html:not([data-theme="light"]) .transfer-box::after,
+  html:not([data-theme="light"]) .nb-stat::after,
+  html:not([data-theme="light"]) .note-editor::after,
+  html:not([data-theme="light"]) .note-modal-box::after,
+  html:not([data-theme="light"]) .lock-box::after{
+    content:'';
+    position:absolute; inset:0;
+    pointer-events:none;
+    z-index:0;
+    background:linear-gradient(105deg, var(--card) 0%, transparent 38%, transparent 62%, var(--card-2) 100%);
+    opacity:.72;
+  }
+  /* تنوع nth — بدون JS */
+  html:not([data-theme="light"]) .section:nth-child(2n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(2n)::before,
+  html:not([data-theme="light"]) .nb-stat:nth-child(2n)::before,
+  html:not([data-theme="light"]) .loan-item:nth-child(2n)::before,
+  html:not([data-theme="light"]) .note-card:nth-child(2n)::after{
+    background:
+      linear-gradient(155deg, transparent 8%, var(--blue-soft) 48%, transparent 78%),
+      repeating-linear-gradient(12deg, transparent 0 13px, var(--border) 13px 14px);
+  }
+  html:not([data-theme="light"]) .section:nth-child(3n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(3n)::before,
+  html:not([data-theme="light"]) .nb-stat:nth-child(3n)::before,
+  html:not([data-theme="light"]) .loan-item:nth-child(3n)::before,
+  html:not([data-theme="light"]) .note-card:nth-child(3n)::after{
+    background:
+      linear-gradient(200deg, var(--blue-soft) 0%, transparent 48%),
+      repeating-linear-gradient(45deg, transparent 0 10px, var(--border) 10px 11px);
+  }
+  html:not([data-theme="light"]) .section:nth-child(4n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(4n)::before{
+    background:
+      radial-gradient(ellipse 70% 50% at 100% 0%, var(--blue-glow), transparent 55%),
+      repeating-linear-gradient(-32deg, transparent 0 14px, var(--border) 14px 15px);
+  }
+  /* Hover فقط opacity — بدون layout shift */
+  html:not([data-theme="light"])[data-anim="on"] .section:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .asset-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .forecast-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .proj-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .notes-shell:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .note-card:hover::after,
+  html:not([data-theme="light"])[data-anim="on"] .loan-item:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .transfer-box:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .nb-stat:hover::before{
+    opacity:.28;
+  }
+  html:not([data-theme="light"]) .section > *,
+  html:not([data-theme="light"]) .asset-card > *,
+  html:not([data-theme="light"]) .forecast-card > *,
+  html:not([data-theme="light"]) .proj-card > *,
+  html:not([data-theme="light"]) .notes-shell > *,
+  html:not([data-theme="light"]) .loan-item > *,
+  html:not([data-theme="light"]) .transfer-box > *,
+  html:not([data-theme="light"]) .nb-stat > *,
+  html:not([data-theme="light"]) .note-editor > *,
+  html:not([data-theme="light"]) .note-modal-box > *,
+  html:not([data-theme="light"]) .lock-box > *{
+    position:relative;
+    z-index:1;
+  }
+  /* note-card قبلاً ::before برای accent دارد — لایه abstract روی ::after */
+  html:not([data-theme="light"]) .note-card::after{
+    /* override generic note stripe stays on ::before */
+  }
+  /* nc-abstract فقط Dark */
+  html[data-theme="light"] .nc-item .nc-abstract{display:none !important;}
+  html[data-theme="light"] .nc-item:hover .nc-abstract{opacity:0;}
+  /* analysis-card در light بدون لایه‌های تزئینی اضافه */
+  html[data-theme="light"] .analysis-card::before,
+  html[data-theme="light"] .analysis-card::after{display:none !important;}
+  @media (prefers-reduced-motion: reduce){
+    html:not([data-theme="light"]) .section::before,
+    html:not([data-theme="light"]) .asset-card::before,
+    html:not([data-theme="light"]) .forecast-card::before,
+    html:not([data-theme="light"]) .proj-card::before,
+    html:not([data-theme="light"]) .notes-shell::before,
+    html:not([data-theme="light"]) .note-card::after,
+    html:not([data-theme="light"]) .loan-item::before,
+    html:not([data-theme="light"]) .transfer-box::before,
+    html:not([data-theme="light"]) .nb-stat::before{transition:none;}
   }
 
 
@@ -1966,8 +2173,12 @@ const fmt = n => {
   if(!isFinite(v) || isNaN(v)) return '0';
   return Math.round(v).toLocaleString('en-US');
 };
+// اعداد فارسی/عربی (۰-۹ و ٠-٩) را به رقم لاتین تبدیل می‌کند تا با کیبورد فارسی سیستم، ورودی به‌اشتباه صفر/ناقص پارس نشود
+const FA_AR_DIGITS = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
+  '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+const normalizeDigits = str => String(str||'').replace(/[۰-۹٠-٩]/g, ch => FA_AR_DIGITS[ch] || ch);
 const parseMoney = str => {
-  const v = parseFloat(String(str||'').replace(/,/g,'').replace(/[^\d.]/g,''));
+  const v = parseFloat(normalizeDigits(str).replace(/,/g,'').replace(/[^\d.]/g,''));
   return (isFinite(v) && !isNaN(v)) ? v : NaN;
 };
 
@@ -2471,7 +2682,7 @@ const NC_CATS = {gold:'طلا', silver:'نقره', usd:'دلار', coin:'سکه'
 const GOLD_GRAM_PER_SOOT = 4.608 / 24;
 function parseDec(str){
   if(str == null || str === '') return 0;
-  const n = parseFloat(String(str).replace(/,/g, '').replace(/[^\d.\-]/g, ''));
+  const n = parseFloat(normalizeDigits(str).replace(/,/g, '').replace(/[^\d.\-]/g, ''));
   return isFinite(n) ? n : 0;
 }
 function goldTotalGrams(gram, soot){
@@ -3329,7 +3540,9 @@ function renderNonCash(){
       ? `<div class="nc-updated">آخرین به‌روزرسانی: ${toJalaliStr(item.updatedAt) || item.updatedAt}</div>`
       : '';
     const isGold = item.category === 'gold';
-    return `<div class="nc-item" data-id="${item.id}">
+    const absVar = (Math.abs(Number(item.id) || 0) % 5);
+    return `<div class="nc-item" data-id="${item.id}" data-abs="${absVar}">
+      <div class="nc-abstract" aria-hidden="true"></div>
       <div class="nc-meta">
         <span class="nc-cat">${cat}</span>
         ${name ? `<div class="nc-name">${name}</div>` : ''}
@@ -3500,7 +3713,17 @@ function computeForecastForMonthKey(monthKey, balanceForResources){
   if(payments.length){
     const sumPay = payments.reduce((s,e)=> s + safeNum(e.amount), 0);
     daysWithData = Math.max(1, new Set(payments.map(e => e.date)).size);
-    monthlyExpense = (sumPay / daysWithData) * 30;
+    // هم‌راستا با renderForecast: با کمتر از ۲ روز داده، تعمیم ×روزهای‌ماه نده (فقط مجموع واقعی)؛
+    // در غیر این‌صورت روزهای واقعی همان ماه شمسی (۲۹ تا ۳۱) را به‌جای عدد ثابت ۳۰ به‌کار ببر
+    // (قبلاً همیشه ×۳۰ بود که در ماه‌های کم‌داده مقدار را تا ۳۰ برابر بیش از نمایش زنده متورم می‌کرد)
+    if(daysWithData < 2){
+      monthlyExpense = sumPay;
+    } else {
+      const parts = String(monthKey).split('-');
+      const mJy = parseInt(parts[0], 10), mJm = parseInt(parts[1], 10);
+      const totalDaysInMonth = (isFinite(mJy) && isFinite(mJm)) ? daysInJalaliMonth(mJy, mJm) : 30;
+      monthlyExpense = (sumPay / daysWithData) * totalDaysInMonth;
+    }
     if(!isFinite(monthlyExpense) || monthlyExpense < 0) monthlyExpense = 0;
   }
   // ماه بسته‌شده: روز باقی‌مانده صفر
@@ -3962,10 +4185,10 @@ function renderLoans(){
       </label>
       <div class="loan-body">
         <div class="loan-top">
-          <span class="loan-title">${t.label} — ${person}</span>
+          <span class="loan-title">${t.label} — ${escapeHtml(person)}</span>
           <span class="loan-amt" style="color:${settled ? 'var(--ink-dim)' : t.color}">${fmt(safeNum(e.amount))} ت</span>
         </div>
-        <div class="loan-meta">${toJalaliStr(e.date)||''}${e.desc ? ' · ' + e.desc : ''}</div>
+        <div class="loan-meta">${toJalaliStr(e.date)||''}${e.desc ? ' · ' + escapeHtml(e.desc) : ''}</div>
         ${settleBadge}
       </div>
     </div>`;
@@ -4012,11 +4235,11 @@ function renderNotebook(){
     el.innerHTML = sorted.map(e=>{
       const t = NB_TYPES[e.type] || {label: e.type||'?', color: 'var(--ink-dim)', sign: 0};
       const sign = t.sign > 0 ? '+' : (t.sign < 0 ? '−' : '');
-      const personTxt = e.person ? ' — ' + e.person : '';
+      const personTxt = e.person ? ' — ' + escapeHtml(e.person) : '';
       const settledMark = (e.type === 'lent' || e.type === 'borrowed') && e.settled ? ' ✓' : '';
       return `<div class="log-item">
         <span class="d">${toJalaliStr(e.date)||'—'} ${e.time||''}</span>
-        <span class="n">${t.label}${personTxt}${e.desc ? ' — '+e.desc : ''}${settledMark}</span>
+        <span class="n">${t.label}${personTxt}${e.desc ? ' — '+escapeHtml(e.desc) : ''}${settledMark}</span>
         <span class="p" style="color:${t.color}">${sign}${fmt(e.amount)} ت</span>
         <button type="button" class="del" data-id="${e.id}">×</button>
       </div>`;
