@@ -415,18 +415,50 @@
 
   .analysis-card{
     border:1px solid var(--border);
-    border-radius:14px;
-    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
-    padding:14px 16px;
+    border-radius:16px;
+    background:
+      radial-gradient(600px 180px at 100% 0%, var(--blue-soft), transparent 55%),
+      linear-gradient(165deg, var(--card) 0%, var(--card-2) 100%);
+    padding:16px 16px 14px;
     font-size:13px;
     line-height:1.9;
     color:var(--ink);
+    box-shadow:0 4px 20px rgba(0,0,0,.06);
   }
   .analysis-card p{margin:0 0 10px;}
   .analysis-card p:last-child{margin-bottom:0;}
+  .analysis-card b{color:var(--blue-light); font-weight:700;}
+  .analysis-block{
+    margin:0 0 12px;
+    padding:12px 12px 10px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+  }
+  .analysis-block:last-of-type{margin-bottom:8px;}
+  .analysis-block .an-h{
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; font-weight:800; color:var(--ink);
+    margin-bottom:6px;
+  }
+  .analysis-block .an-h .an-pip{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:var(--blue-light); box-shadow:0 0 0 3px var(--blue-soft);
+  }
+  .analysis-block .an-h .an-pip.ok{background:var(--green); box-shadow:0 0 0 3px var(--green-soft);}
+  .analysis-block .an-h .an-pip.warn{background:var(--red); box-shadow:0 0 0 3px var(--red-soft);}
+  .analysis-block .an-h .an-pip.gold{background:#f2d675; box-shadow:0 0 0 3px rgba(212,175,55,.15);}
   .analysis-card .an-muted{color:var(--ink-dim); font-size:12px;}
   .analysis-card .an-warn{color:var(--red);}
   .analysis-card .an-ok{color:var(--green);}
+  .analysis-chip{
+    display:inline-flex; align-items:center; gap:4px;
+    margin:4px 0 0; padding:3px 9px; border-radius:999px;
+    font-size:11px; font-weight:600;
+    background:var(--blue-soft); color:var(--blue-light); border:1px solid var(--border);
+  }
+  .analysis-chip.warn{background:var(--red-soft); color:var(--red);}
+  .analysis-chip.ok{background:var(--green-soft); color:var(--green);}
 
   .theme-dn-btn{
     width:38px; height:38px; border-radius:11px; border:1px solid var(--border);
@@ -3387,14 +3419,13 @@ function nbEntryInCurrentMonth(e){
 }
 
 function nbDelta(){
-  // فقط تراکنش‌های اعمال‌نشدهٔ ماه جاری (+ قرض تسویه‌نشده در هر ماه)
-  // applied هرگز دوباره حساب نمی‌شود → Refresh امن است
-  return notebook.reduce((s, e) => {
+  // تمام تراکنش‌های «اعمال‌نشده» روی کارت اثر دارند (مستقل از ماه)
+  // فیلتر ماه فقط برای نمایش لیست است؛ وگرنه در مرز ماه شمسی دریافتی ثبت می‌شود ولی «ثبت موجودی کارت» صفر می‌ماند
+  // applied / قرض تسویه‌شده دوباره حساب نمی‌شوند
+  return (notebook || []).reduce((s, e) => {
     if(!e) return s;
     if(e.applied) return s;
     if((e.type === 'lent' || e.type === 'borrowed') && e.settled) return s;
-    const isLoanOpen = (e.type === 'lent' || e.type === 'borrowed') && !e.settled;
-    if(!isLoanOpen && !nbEntryInCurrentMonth(e)) return s;
     const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || 0;
     return s + sign * safeNum(e.amount, 0);
   }, 0);
@@ -3633,41 +3664,36 @@ function renderFinancialAnalysis(){
     const payDays = payments.length ? new Set(payments.map(e => String(e.date).slice(0,10))).size : 0;
     const depDays = deposits.length ? new Set(deposits.map(e => String(e.date).slice(0,10))).size : 0;
 
-    // وضعیت کلی
-    lines.push('<p><b>وضعیت کلی</b></p>');
     if(total <= 0 && !payments.length && !deposits.length){
-      lines.push('<p class="an-muted">دادهٔ کافی برای تحلیل ثبت نشده است. با ثبت تراکنش‌ها و موجودی‌ها، این بخش به‌روز می‌شود.</p>');
-      el.innerHTML = lines.join('');
+      el.innerHTML = '<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>وضعیت کلی</div><p class="an-muted">دادهٔ کافی برای تحلیل ثبت نشده است. با ثبت تراکنش‌ها و موجودی‌ها، این بخش به‌روز می‌شود.</p></div>';
       return;
     }
-    lines.push('<p>جمع دارایی‌ها حدود <b>' + fmt(total) + '</b> تومان است' +
-      (cash || invest ? ' (نقدی حدود ' + fmt(cash) + '، سرمایه‌گذاری حدود ' + fmt(invest) + ')' : '') +
-      '. موجودی ثبت‌شده کارت: <b>' + fmt(card) + '</b> تومان.</p>');
 
-    // روند درآمد و هزینه همین ماه
-    lines.push('<p><b>روند ' + monthName + '</b></p>');
+    lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>وضعیت کلی</div>');
+    lines.push('<p>جمع دارایی‌ها حدود <b>' + fmt(total) + '</b> تومان است' +
+      (cash || invest ? ' <span class="analysis-chip">نقد ' + fmt(cash) + '</span> <span class="analysis-chip">سرمایه ' + fmt(invest) + '</span>' : '') +
+      '</p><p>موجودی ثبت‌شده کارت: <b>' + fmt(card) + '</b> تومان.</p></div>');
+
+    lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip gold"></span>روند ' + monthName + '</div>');
     if(!payments.length && !deposits.length){
-      lines.push('<p class="an-muted">در این ماه هنوز دریافتی یا پرداختی در آرشیو تراکنش‌ها ثبت نشده؛ تحلیل روند ممکن نیست.</p>');
+      lines.push('<p class="an-muted">در این ماه هنوز دریافتی یا پرداختی ثبت نشده.</p></div>');
     } else {
-      let trend = 'تا امروز در این ماه ';
+      let trend = 'تا امروز ';
       if(deposits.length) trend += 'حدود <b>' + fmt(sumDep) + '</b> تومان دریافتی (' + deposits.length + ' مورد) ';
       if(deposits.length && payments.length) trend += 'و ';
       if(payments.length) trend += 'حدود <b>' + fmt(sumPay) + '</b> تومان پرداخت (' + payments.length + ' مورد) ';
       trend += 'ثبت شده است.';
       lines.push('<p>' + trend + '</p>');
       const net = sumDep - sumPay;
-      if(payments.length || deposits.length){
-        if(net > 0) lines.push('<p class="an-ok">خالص جریان نقدی ثبت‌شده این ماه مثبت است (حدود ' + fmt(net) + ' تومان).</p>');
-        else if(net < 0) lines.push('<p class="an-warn">خالص جریان نقدی ثبت‌شده این ماه منفی است (حدود ' + fmt(Math.abs(net)) + ' تومان خرج بیشتر از دریافتی).</p>');
-        else lines.push('<p>دریافتی و پرداخت ثبت‌شده این ماه تقریباً برابرند.</p>');
-      }
+      if(net > 0) lines.push('<p><span class="analysis-chip ok">خالص مثبت ≈ ' + fmt(net) + ' ت</span></p>');
+      else if(net < 0) lines.push('<p><span class="analysis-chip warn">خالص منفی ≈ ' + fmt(Math.abs(net)) + ' ت</span></p>');
+      else lines.push('<p class="an-muted">دریافتی و پرداخت تقریباً برابرند.</p>');
+      lines.push('</div>');
     }
 
-    // الگوی هزینه — از توضیحات پرداخت‌ها
     const catMap = {};
     payments.forEach(e => {
       const raw = String(e.desc || '').trim() || 'بدون توضیح';
-      // دسته ساده: اولین ۲–۳ کلمه یا کل توضیح کوتاه
       let key = raw.length > 24 ? raw.slice(0, 24) + '…' : raw;
       catMap[key] = (catMap[key] || 0) + safeNum(e.amount);
     });
@@ -3675,53 +3701,47 @@ function renderFinancialAnalysis(){
     if(cats.length && sumPay > 0){
       const top = cats[0];
       const share = (top.v / sumPay) * 100;
-      lines.push('<p><b>الگوی هزینه</b></p>');
-      lines.push('<p>بیشترین سهم پرداخت‌های دارای توضیح مربوط به «' + escapeHtml(top.k) + '» حدود <b>' + fmt(top.v) + '</b> تومان (' + share.toFixed(0) + '٪ از پرداخت‌های توضیح‌دار) است.</p>');
-      if(share >= 40 && cats.length >= 1){
-        lines.push('<p class="an-warn">این دسته سهم بالایی دارد؛ در صورت امکان خریدهای غیرضروری همین حوزه را کم کنید یا سقف هفتگی برایش بگذارید.</p>');
+      const pip = share >= 40 ? 'warn' : '';
+      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip ' + pip + '"></span>الگوی هزینه</div>');
+      lines.push('<p>بیشترین سهم: «' + escapeHtml(top.k) + '» حدود <b>' + fmt(top.v) + '</b> تومان (' + share.toFixed(0) + '٪).</p>');
+      if(share >= 40){
+        lines.push('<p class="an-warn">سهم بالاست؛ خریدهای غیرضروری این حوزه را کم کنید یا سقف هفتگی بگذارید.</p>');
       } else if(cats.length >= 2){
-        lines.push('<p class="an-muted">بعدی: «' + escapeHtml(cats[1].k) + '» حدود ' + fmt(cats[1].v) + ' تومان.</p>');
+        lines.push('<p class="an-muted">بعدی: «' + escapeHtml(cats[1].k) + '» ≈ ' + fmt(cats[1].v) + ' ت</p>');
       }
+      lines.push('</div>');
     } else if(payments.length){
-      lines.push('<p class="an-muted">برای تشخیص دسته هزینه، هنگام ثبت پرداخت توضیح کوتاه بنویسید.</p>');
+      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>الگوی هزینه</div><p class="an-muted">برای تشخیص دسته، هنگام پرداخت توضیح کوتاه بنویسید.</p></div>');
     }
 
-    // برآورد تا پایان ماه (محافظه‌کارانه، غیرقطعی)
-    lines.push('<p><b>برآورد تا پایان ماه</b> <span class="an-muted">(تقریبی و غیرقطعی)</span></p>');
+    lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip ok"></span>برآورد تا پایان ماه <span class="an-muted" style="font-weight:500">(تقریبی)</span></div>');
     if(payDays < 2 && depDays < 2){
-      lines.push('<p class="an-muted">با کمتر از دو روز داده برای درآمد یا هزینه، برآورد پایان ماه قابل اتکا نیست. فقط موجودی فعلی کارت (' + fmt(card) + ' تومان) مبنای مطمئن است.</p>');
+      lines.push('<p class="an-muted">داده کمتر از دو روز است؛ مبنای مطمئن فقط موجودی فعلی کارت (' + fmt(card) + ' ت) است.</p></div>');
     } else {
-      let projPay = sumPay;
-      let projDep = sumDep;
-      if(payDays >= 2){
-        const rate = sumPay / Math.max(1, jd);
-        projPay = sumPay + rate * remain;
-      }
+      let projPay = sumPay, projDep = sumDep;
+      if(payDays >= 2){ projPay = sumPay + (sumPay / Math.max(1, jd)) * remain; }
       if(depDays >= 2){
-        const rate = sumDep / Math.max(1, jd);
-        let extra = rate * remain;
-        if(extra > sumDep) extra = sumDep; // سقف
+        let extra = (sumDep / Math.max(1, jd)) * remain;
+        if(extra > sumDep) extra = sumDep;
         projDep = sumDep + extra;
       }
-      const estCard = card + (projDep - sumDep) - (projPay - sumPay);
-      // ساده‌تر: card - remaining projected net spend
       const est = card - (projPay - sumPay) + (projDep - sumDep);
-      lines.push('<p>اگر آهنگ ثبت‌شدهٔ همین ماه ادامه یابد، موجودی کارت تا پایان ماه می‌تواند حدود <b>' + fmt(Math.max(0, est)) + '</b> تومان باشد. این فقط یک برآورد روند است، نه عدد قطعی.</p>');
+      lines.push('<p>با ادامهٔ آهنگ فعلی، موجودی کارت تا پایان ماه حدود <b>' + fmt(Math.max(0, est)) + '</b> تومان برآورد می‌شود — غیرقطعی.</p>');
       if(est < card * 0.85 && payDays >= 2){
-        lines.push('<p class="an-warn">روند خرج نسبت به موجودی کارت تند به نظر می‌رسد؛ مرور پرداخت‌های تکرارشونده مفید است.</p>');
+        lines.push('<p class="an-warn">روند خرج نسبت به کارت تند است؛ پرداخت‌های تکرارشونده را مرور کنید.</p>');
       }
+      lines.push('</div>');
     }
 
-    // قرض
     const loans = (Array.isArray(notebook) ? notebook : []).filter(e => e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled);
     if(loans.length){
       const lent = loans.filter(e => e.type === 'lent').reduce((s,e)=>s+safeNum(e.amount),0);
       const borrowed = loans.filter(e => e.type === 'borrowed').reduce((s,e)=>s+safeNum(e.amount),0);
-      lines.push('<p><b>قرض‌های باز</b></p>');
-      lines.push('<p class="an-muted">طلب تسویه‌نشده حدود ' + fmt(lent) + ' و بدهی تسویه‌نشده حدود ' + fmt(borrowed) + ' تومان در دفتر ثبت شده است.</p>');
+      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip warn"></span>قرض‌های باز</div>');
+      lines.push('<p class="an-muted">طلب ≈ ' + fmt(lent) + ' ت · بدهی ≈ ' + fmt(borrowed) + ' ت</p></div>');
     }
 
-    lines.push('<p class="an-muted">منبع: فقط تراکنش‌ها و موجودی‌های ثبت‌شده در همین برنامه. با ثبت دادهٔ بیشتر، تحلیل دقیق‌تر می‌شود.</p>');
+    lines.push('<p class="an-muted">منبع: فقط داده‌های ثبت‌شده در همین برنامه.</p>');
     el.innerHTML = lines.join('');
   }catch(err){
     console.error('renderFinancialAnalysis', err);
@@ -4158,27 +4178,27 @@ if($('nbSyncBtn')) $('nbSyncBtn').addEventListener('click', ()=>{
   const btn = $('nbSyncBtn');
   if(btn){ btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'), 650); }
 
-  const delta = nbDelta();
-  if(!delta){ showToast('تغییری برای ثبت روی کارت نیست'); return; }
+  const delta = safeNum(nbDelta(), 0);
+  if(Math.abs(delta) < 0.5){ showToast('تغییری برای ثبت روی کارت نیست'); return; }
   const prev = safeNum(assets.card, 0);
   const newBase = prev + delta;
   showConfirmModal(
     'ثبت موجودی کارت؟',
-    `موجودی کارت از ${fmt(prev)} به ${fmt(newBase)} تومان ثبت می‌شود. لیست تراکنش‌ها پاک نمی‌شود.`,
+    'موجودی کارت از ' + fmt(prev) + ' به ' + fmt(newBase) + ' تومان ثبت می‌شود. لیست تراکنش‌ها پاک نمی‌شود.',
     ()=>{
       assets.card = newBase;
       txs.push({date: todayISO(), key:'card', delta, note:'ثبت موجودی کارت'});
-      // علامت‌گذاری تا دوباره در محاسبه تکرار نشوند — لیست تا آخر ماه می‌ماند
-      notebook.forEach(e => {
+      // همهٔ اقلام غیرقرضِ باز به‌عنوان اعمال‌شده علامت می‌خورند
+      (notebook || []).forEach(e => {
         if(!e) return;
         if((e.type === 'lent' || e.type === 'borrowed') && !e.settled) return;
         e.applied = true;
       });
       pushSeriesPoint();
-      if(persist()){
-        showToast('موجودی کارت ثبت شد');
-        render();
-      }
+      const saved = persist();
+      showToast(saved ? 'موجودی کارت ثبت شد' : 'موجودی کارت به‌روز شد (ذخیره پایدار بعداً)');
+      if(typeof render === 'function') render();
+      else if(typeof renderNotebook === 'function') renderNotebook();
     }
   );
 });
