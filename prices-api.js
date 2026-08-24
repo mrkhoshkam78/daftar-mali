@@ -1,22 +1,27 @@
 /**
- * prices-api.js — لایه مرکزی قیمت (بدون کلید API)
+ * prices-api.js — لایه مرکزی قیمت از TGJU
  *
- * منابع تست‌شده (مرورگر + CORS):
- *  1) طلا/نقره: https://api.gold-api.com/price/XAU|XAG  (USD/oz, Access-Control-Allow-Origin: *)
- *  2) USD→IRR:  https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json
+ * منبع: https://call5.tgju.org/ajax.json  (CORS: Access-Control-Allow-Origin: *)
  *
- * TGJU (call1.tgju.org/ajax.json) قیمت بازار آزاد ایران را دارد ولی هدر CORS ندارد
- * و از مرورگر مستقیم قابل‌خواندن نیست؛ در این لایه استفاده نشده تا UI خالی/خطا نماند.
+ * فیلدهای استخراج‌شده از Response واقعی (current):
+ *   - geram18        → طلای ۱۸ عیار — ریال / گرم
+ *   - price_dollar_rl → دلار آزاد — ریال / دلار
+ *   - silver_999     → نقره ۹۹۹ — ریال / گرم
  *
- * تبدیل: ۱ اونس تروا = ۳۱٫۱۰۳۴۷۶۸ گرم · تومان = ریال ÷ ۱۰
+ * تبدیل: تومان = ریال ÷ ۱۰
+ * هیچ Field فرضی ساخته نمی‌شود؛ در نبود قیمت، null برمی‌گردد.
  */
 (function (global) {
   'use strict';
 
-  var TROY_OZ_GRAMS = 31.1034768;
-  var GOLD_URL = 'https://api.gold-api.com/price/XAU';
-  var SILVER_URL = 'https://api.gold-api.com/price/XAG';
-  var USD_URL = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
+  var TGJU_URL = 'https://call5.tgju.org/ajax.json';
+
+  /** کلیدهای تأییدشده از Response واقعی — تغییر نده بدون بررسی JSON */
+  var SYM = {
+    gold18: 'geram18',
+    usd: 'price_dollar_rl',
+    silver: 'silver_999'
+  };
 
   function toLatinDigits(s) {
     return String(s == null ? '' : s)
@@ -33,9 +38,17 @@
     return isFinite(n) ? n : null;
   }
 
+  /** خواندن p از current[symbol]؛ فقط اگر آبجکت معتبر باشد */
+  function readCurrentPrice(current, symbol) {
+    if (!current || typeof current !== 'object') return null;
+    var row = current[symbol];
+    if (!row || typeof row !== 'object') return null;
+    return parsePrice(row.p);
+  }
+
   function fetchJson(url, timeoutMs) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeoutMs || 12000);
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeoutMs || 14000);
     return fetch(url, {
       method: 'GET',
       signal: ctrl ? ctrl.signal : undefined,
@@ -52,7 +65,7 @@
     retries = retries == null ? 1 : retries;
     return fetchJson(url, timeoutMs).catch(function (err) {
       if (retries <= 0) throw err;
-      return new Promise(function (r) { setTimeout(r, 400); }).then(function () {
+      return new Promise(function (r) { setTimeout(r, 500); }).then(function () {
         return fetchWithRetry(url, timeoutMs, retries - 1);
       });
     });
@@ -63,52 +76,42 @@
    */
   function fetchMarketPrices(opts) {
     opts = opts || {};
-    var timeoutMs = opts.timeoutMs || 12000;
+    var timeoutMs = opts.timeoutMs || 14000;
 
-    return Promise.all([
-      fetchWithRetry(GOLD_URL, timeoutMs, 1).then(function (j) { return { ok: true, data: j }; }).catch(function (e) { return { ok: false, err: String(e && e.message || e) }; }),
-      fetchWithRetry(SILVER_URL, timeoutMs, 1).then(function (j) { return { ok: true, data: j }; }).catch(function (e) { return { ok: false, err: String(e && e.message || e) }; }),
-      fetchWithRetry(USD_URL, timeoutMs, 1).then(function (j) { return { ok: true, data: j }; }).catch(function (e) { return { ok: false, err: String(e && e.message || e) }; })
-    ]).then(function (parts) {
-      var gold = parts[0];
-      var silver = parts[1];
-      var fx = parts[2];
+    return fetchWithRetry(TGJU_URL, timeoutMs, 1).then(function (raw) {
+      if (!raw || typeof raw !== 'object' || !raw.current || typeof raw.current !== 'object') {
+        throw new Error('JSON نامعتبر از TGJU');
+      }
+      var current = raw.current;
 
-      var goldOzUsd = gold.ok ? parsePrice(gold.data && gold.data.price) : null;
-      var silverOzUsd = silver.ok ? parsePrice(silver.data && silver.data.price) : null;
-      var irr = null;
-      if (fx.ok && fx.data && fx.data.usd) irr = parsePrice(fx.data.usd.irr);
+      var gold18Rial = readCurrentPrice(current, SYM.gold18);
+      var usdRial = readCurrentPrice(current, SYM.usd);
+      var silver999Rial = readCurrentPrice(current, SYM.silver);
 
-      var usdToman = irr != null ? irr / 10 : null;
-      var goldPerGramToman = (goldOzUsd != null && usdToman != null)
-        ? (goldOzUsd * usdToman) / TROY_OZ_GRAMS
-        : null;
-      var silverPerGramToman = (silverOzUsd != null && usdToman != null)
-        ? (silverOzUsd * usdToman) / TROY_OZ_GRAMS
-        : null;
+      // ریال → تومان (÷۱۰). فقط وقتی قیمت معتبر است.
+      var goldPerGramToman = gold18Rial != null ? gold18Rial / 10 : null;
+      var usdToman = usdRial != null ? usdRial / 10 : null;
+      var silverPerGramToman = silver999Rial != null ? silver999Rial / 10 : null;
 
       if (goldPerGramToman == null && silverPerGramToman == null && usdToman == null) {
-        var errs = [];
-        if (!gold.ok) errs.push('طلا: ' + gold.err);
-        if (!silver.ok) errs.push('نقره: ' + silver.err);
-        if (!fx.ok) errs.push('ارز: ' + fx.err);
-        throw new Error(errs.join(' | ') || 'دریافت قیمت ناموفق');
+        throw new Error('هیچ قیمت معتبری در پاسخ TGJU نبود');
       }
 
       return {
-        goldOzUsd: goldOzUsd,
-        silverOzUsd: silverOzUsd,
-        usdIrr: irr,
-        usdToman: usdToman,
         goldPerGramToman: goldPerGramToman,
         silverPerGramToman: silverPerGramToman,
-        coinEmamiToman: null,
+        usdToman: usdToman,
+        // خام برای دیباگ
+        gold18Rial: gold18Rial,
+        usdRial: usdRial,
+        silver999Rial: silver999Rial,
         updatedAt: Date.now(),
-        source: 'gold-api.com + fawazahmed0/currency-api',
+        source: 'call5.tgju.org',
+        symbols: { gold: SYM.gold18, usd: SYM.usd, silver: SYM.silver },
         errors: {
-          gold: gold.ok ? null : gold.err,
-          silver: silver.ok ? null : silver.err,
-          fx: fx.ok ? null : fx.err
+          gold: gold18Rial == null ? 'missing:' + SYM.gold18 : null,
+          silver: silver999Rial == null ? 'missing:' + SYM.silver : null,
+          fx: usdRial == null ? 'missing:' + SYM.usd : null
         }
       };
     });
@@ -118,7 +121,7 @@
     fetchMarketPrices: fetchMarketPrices,
     parsePrice: parsePrice,
     toLatinDigits: toLatinDigits,
-    TROY_OZ_GRAMS: TROY_OZ_GRAMS,
-    endpoints: { GOLD_URL: GOLD_URL, SILVER_URL: SILVER_URL, USD_URL: USD_URL }
+    endpoints: { TGJU_URL: TGJU_URL },
+    symbols: SYM
   };
 })(typeof window !== 'undefined' ? window : globalThis);
