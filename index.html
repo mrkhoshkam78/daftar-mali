@@ -1596,13 +1596,11 @@
     border:1px solid var(--border);
     background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
   }
-  .nc-prices-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  .nc-prices-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
   .nc-prices-title{font-size:12.5px; font-weight:700; color:var(--ink);}
   .nc-prices-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
   @media (max-width:420px){.nc-prices-grid{grid-template-columns:1fr;}}
-  .nc-price-item{
-    border:1px solid var(--border); border-radius:10px; padding:8px; background:var(--bg-2);
-  }
+  .nc-price-item{border:1px solid var(--border); border-radius:10px; padding:8px; background:var(--bg-2);}
   .nc-price-item .lb{display:block; font-size:10px; color:var(--ink-dim); margin-bottom:4px;}
   .nc-price-item .vl{font-size:12px; font-weight:700; font-family:'Martian Mono',monospace; direction:ltr; text-align:right; color:var(--blue-light);}
   .nc-prices-meta{margin-top:8px; font-size:10.5px; color:var(--ink-dim); line-height:1.6;}
@@ -2043,7 +2041,7 @@
           <div class="nc-price-item"><span class="lb">نقره / گرم</span><span class="vl" id="ncPriceSilver">—</span></div>
           <div class="nc-price-item"><span class="lb">دلار</span><span class="vl" id="ncPriceUsd">—</span></div>
         </div>
-        <div class="nc-prices-meta" id="ncPricesMeta">برای دریافت قیمت، وارد این صفحه شوید یا بروزرسانی را بزنید</div>
+        <div class="nc-prices-meta" id="ncPricesMeta">با ورود به این صفحه قیمت‌ها بارگذاری می‌شوند</div>
       </div>
 
       <div id="ncList" class="nc-list"></div>
@@ -2790,7 +2788,6 @@ function showPage(pageId){
   });
   window.scrollTo(0, 0);
   closeMenu();
-  // Lazy: فقط صفحه دارایی غیرنقد
   if(pageId === 'page-noncash' && typeof ensureMarketPrices === 'function'){
     ensureMarketPrices(false);
   }
@@ -3848,7 +3845,7 @@ function renderNonCash(){
         ${goldW ? `<div class="nc-updated">${goldW}</div>` : ''}
         ${upd}
       </div>
-      <span class="nc-val">${fmt(val)} ت${(function(){ const lv=typeof liveValueForNoncash==='function'?liveValueForNoncash(item):null; return (lv!=null && isFinite(lv)) ? `<div class="nc-live-val">بازار: ${fmt(Math.round(lv))} ت</div>` : ''; })()}</span>
+      <span class="nc-val">${fmt(val)} ت${(function(){try{const lv=typeof liveValueForNoncash==='function'?liveValueForNoncash(item):null;return (lv!=null&&isFinite(lv))?`<div class="nc-live-val">بازار: ${fmt(Math.round(lv))} ت</div>`:'';}catch(e){return '';}})()}</span>
       <div class="nc-actions">
         <button type="button" class="nc-edit-btn" data-edit-id="${item.id}" title="ویرایش" aria-label="ویرایش">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -4511,27 +4508,24 @@ function renderLoans(){
       const entry = notebook.find(x => String(x.id) === String(id));
       if(!entry) return;
       applyLoanSettlement(entry, !!chk.checked);
-      const saved = persist();
-      showToast(saved ? (entry.settled ? 'تسویه ثبت شد' : 'وضعیت باز شد') : 'ذخیره شد');
+      persist();
       renderNotebook();
       if(typeof render === 'function') render();
     });
   });
 }
 
-/** تسویه/بازگشایی: اثر روی کارت حداکثر یک‌بار (settledApplied + settleCardDelta) */
 function applyLoanSettlement(entry, settling){
   if(!entry || (entry.type !== 'lent' && entry.type !== 'borrowed')) return;
   if(settling){
     if(entry.settled) return;
-    // اگر قبلاً روی کارت apply شده و هنوز settleCard اعمال نشده → یک‌بار معکوس اثر قرض
     if(entry.applied && !entry.settledApplied){
       const total = safeNum(entry.amount, 0);
       const paid = Math.min(total, Math.max(0, safeNum(entry.paidAmount, 0)));
       const rem = Math.max(0, total - paid);
       let d = 0;
-      if(entry.type === 'lent') d = rem;           // برگشت طلب → کارت +
-      else if(entry.type === 'borrowed') d = -rem; // بازپرداخت بدهی → کارت −
+      if(entry.type === 'lent') d = rem;
+      else if(entry.type === 'borrowed') d = -rem;
       if(Math.abs(d) > 0.5){
         assets.card = safeNum(assets.card, 0) + d;
         entry.settleCardDelta = d;
@@ -4542,7 +4536,6 @@ function applyLoanSettlement(entry, settling){
     entry.settledDate = todayISO();
   } else {
     if(!entry.settled) return;
-    // برگشت از تسویه: فقط اگر قبلاً روی کارت اثر گذاشته بودیم، دقیقاً همان دلتا را خنثی کن
     if(entry.settledApplied && entry.settleCardDelta){
       assets.card = safeNum(assets.card, 0) - safeNum(entry.settleCardDelta, 0);
       entry.settledApplied = false;
@@ -5475,12 +5468,22 @@ if($('noteSaveBtn')){
 }
 if($('noteDeleteBtn')){
   $('noteDeleteBtn').addEventListener('click', ()=>{
-    const id = ($('noteEditId').value || '').trim();
-    if(!id) return;
+    const id = String(($('noteEditId') && $('noteEditId').value) || noteModalCurrentId || '').trim();
+    if(!id){ showToast('یادداشت مشخص نیست', true); return; }
+    if(!Array.isArray(notes)) notes = [];
     const note = notes.find(x => String(x.id) === id);
     showConfirmModal('حذف این یادداشت؟', note ? (note.title || 'بدون عنوان') : '', ()=>{
+      const before = notes.length;
       notes = notes.filter(x => String(x.id) !== id);
-      if(persist()){ showToast('حذف شد'); closeNoteModal(); renderNotes(); }
+      if(notes.length === before){ showToast('یادداشت پیدا نشد', true); return; }
+      let ok = persist();
+      if(!ok){
+        try{ localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload())); ok = true; }catch(err){ console.error(err); }
+      }
+      showToast(ok ? 'حذف شد' : 'حذف از حافظه انجام شد؛ ذخیره پایدار ناموفق', !ok);
+      if(typeof closeNoteModal === 'function') closeNoteModal();
+      if(typeof closeNoteEditor === 'function') { try{ /* editor closed via modal */ }catch(e){} }
+      if(typeof renderNotes === 'function') renderNotes();
     });
   });
 }
@@ -5537,8 +5540,8 @@ if($('notesCalNext')){
 if($('noteCatPicks')) renderNoteCatPicks();
 
 
-/* ================= MARKET PRICES (lazy, only noncash page) ================= */
-let _marketPrices = null; // {goldPerGramToman, silverPerGramToman, usdToman, updatedAt, source}
+/* ================= MARKET PRICES (lazy only on noncash) ================= */
+let _marketPrices = null;
 let _pricesApiLoading = null;
 
 function loadPricesApiScript(){
@@ -5548,13 +5551,10 @@ function loadPricesApiScript(){
     const s = document.createElement('script');
     s.src = 'prices-api.js';
     s.async = true;
-    s.onload = ()=>{
-      if(window.PricesAPI) resolve(window.PricesAPI);
-      else reject(new Error('PricesAPI missing'));
-    };
-    s.onerror = ()=> reject(new Error('خطا در بارگذاری prices-api.js'));
+    s.onload = ()=> window.PricesAPI ? resolve(window.PricesAPI) : reject(new Error('PricesAPI load failed'));
+    s.onerror = ()=> reject(new Error('بارگذاری prices-api.js ناموفق — فایل را کنار index.html بگذارید'));
     document.head.appendChild(s);
-  }).finally(()=>{ /* keep resolved module */ });
+  });
   return _pricesApiLoading;
 }
 
@@ -5568,7 +5568,7 @@ async function ensureMarketPrices(force){
   if(meta) meta.textContent = 'در حال دریافت قیمت…';
   try{
     const api = await loadPricesApiScript();
-    const data = await api.fetchMarketPrices({ timeoutMs: 12000 });
+    const data = await api.fetchMarketPrices({ timeoutMs: 14000 });
     _marketPrices = data;
     try{ sessionStorage.setItem('daftar-market-prices', JSON.stringify(data)); }catch(e){}
     renderMarketPricesUI();
@@ -5576,8 +5576,7 @@ async function ensureMarketPrices(force){
     return data;
   }catch(err){
     console.error('market prices', err);
-    if(meta) meta.textContent = 'دریافت قیمت ناموفق: ' + (err && err.message ? err.message : 'خطا');
-    // fallback cache
+    if(meta) meta.textContent = 'خطا: ' + (err && err.message ? err.message : 'نامشخص');
     try{
       const raw = sessionStorage.getItem('daftar-market-prices');
       if(raw){ _marketPrices = JSON.parse(raw); renderMarketPricesUI(); }
@@ -5593,9 +5592,8 @@ function renderMarketPricesUI(){
   if($('ncPriceSilver')) $('ncPriceSilver').textContent = p.silverPerGramToman != null ? (fmt(Math.round(p.silverPerGramToman)) + ' ت') : '—';
   if($('ncPriceUsd')) $('ncPriceUsd').textContent = p.usdToman != null ? (fmt(Math.round(p.usdToman)) + ' ت') : '—';
   if($('ncPricesMeta')){
-    const t = p.updatedAt ? new Date(p.updatedAt) : null;
-    const ts = t ? (t.toLocaleString('fa-IR')) : '—';
-    $('ncPricesMeta').textContent = 'آخرین بروزرسانی: ' + ts + (p.source ? (' · ' + p.source) : '');
+    const t = p.updatedAt ? new Date(p.updatedAt).toLocaleString('fa-IR') : '—';
+    $('ncPricesMeta').textContent = 'آخرین بروزرسانی: ' + t + (p.source ? ' · ' + p.source : '');
   }
 }
 
@@ -5604,28 +5602,21 @@ function liveValueForNoncash(item){
   const cat = item.category;
   if(cat === 'gold'){
     const g = safeNum(item.totalGrams, 0) || safeNum(item.grams, 0);
-    if(g <= 0 || _marketPrices.goldPerGramToman == null) return null;
-    return g * _marketPrices.goldPerGramToman;
+    if(g > 0 && _marketPrices.goldPerGramToman != null) return g * _marketPrices.goldPerGramToman;
   }
   if(cat === 'silver'){
     const g = safeNum(item.totalGrams, 0) || safeNum(item.grams, 0);
-    if(g <= 0 || _marketPrices.silverPerGramToman == null) return null;
-    return g * _marketPrices.silverPerGramToman;
+    if(g > 0 && _marketPrices.silverPerGramToman != null) return g * _marketPrices.silverPerGramToman;
   }
   if(cat === 'usd'){
-    // مقدار دلاری در label یا مقدار جدا — اگر grams استفاده نشده، از manualValue/قیمت تقریبی نمی‌شود
-    // اگر کاربر مقدار دلار را در label عدد گذاشته باشد پشتیبانی نمی‌کنیم؛ از field amountUsd اگر باشد
     const usdAmt = safeNum(item.usdAmount, 0);
     if(usdAmt > 0 && _marketPrices.usdToman != null) return usdAmt * _marketPrices.usdToman;
-    return null;
   }
   return null;
 }
 
 if($('ncPricesRefreshBtn')){
-  $('ncPricesRefreshBtn').addEventListener('click', ()=>{
-    ensureMarketPrices(true);
-  });
+  $('ncPricesRefreshBtn').addEventListener('click', ()=> ensureMarketPrices(true));
 }
 
 
