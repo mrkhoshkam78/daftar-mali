@@ -75,18 +75,18 @@
     --blue-soft:rgba(58,139,136,.12); --blue-glow:rgba(58,139,136,.18);
     --shadow: 0 8px 30px rgba(12,24,40,.5);
   }
-  /* Finverse Finance Blue — داشبورد مالی حرفه‌ای روشن */
-  html[data-theme="finverse"]{
-    --bg:#F5F7FA; --bg-2:#E8ECF2;
-    --card:#FFFFFF; --card-2:#F8FAFC;
-    --border:rgba(16,55,102,.12); --border-strong:rgba(40,140,250,.32);
-    --ink:#103766; --ink-dim:#5B6B7C;
-    --blue:#288CFA; --blue-light:#7EBCF9; --blue-deep:#103766;
-    --blue-soft:rgba(40,140,250,.10); --blue-glow:rgba(40,140,250,.14);
-    --green:#2E865F; --green-soft:rgba(46,134,95,.12);
-    --red:#DC3545; --red-soft:rgba(220,53,69,.10);
-    --orange:#F59E0B; --orange-soft:rgba(245,158,11,.12);
-    --shadow: 0 8px 24px rgba(16,55,102,.08);
+  /* Finverse Violet — داشبورد مالی مدرن تیره */
+  html[data-theme="finverse-violet"]{
+    --bg:#0D0B14; --bg-2:#120F1A;
+    --card:#171321; --card-2:#1C1728;
+    --border:rgba(42,36,56,.95); --border-strong:rgba(139,92,246,.38);
+    --ink:#F8FAFC; --ink-dim:#A1A1AA;
+    --blue:#8B5CF6; --blue-light:#A78BFA; --blue-deep:#5B21B6;
+    --blue-soft:rgba(139,92,246,.12); --blue-glow:rgba(139,92,246,.18);
+    --green:#22C55E; --green-soft:rgba(34,197,94,.14);
+    --red:#EF4444; --red-soft:rgba(239,68,68,.14);
+    --orange:#F59E0B; --orange-soft:rgba(245,158,11,.14);
+    --shadow: 0 10px 32px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box;}
   body{
@@ -147,17 +147,67 @@
       radial-gradient(900px 400px at 15% -5%, rgba(58,139,136,.16), transparent 60%),
       var(--bg);
   }
-  html[data-theme="finverse"] .topbar{
-    background:rgba(255,255,255,.78);
-    backdrop-filter:blur(12px) saturate(1.12);
-    -webkit-backdrop-filter:blur(12px) saturate(1.12);
-    border-bottom-color:rgba(16,55,102,.10);
+  html[data-theme="finverse-violet"] .topbar{
+    background:rgba(23,19,33,.72);
+    backdrop-filter:blur(14px) saturate(1.15);
+    -webkit-backdrop-filter:blur(14px) saturate(1.15);
+    border-bottom:1px solid rgba(42,36,56,.9);
   }
-  html[data-theme="finverse"] body{
+  html[data-theme="finverse-violet"] body{
     background:
-      radial-gradient(900px 420px at 12% -8%, rgba(40,140,250,.10), transparent 58%),
-      radial-gradient(700px 320px at 95% 0%, rgba(126,188,249,.08), transparent 55%),
-      var(--bg);
+      radial-gradient(880px 380px at 10% -6%, rgba(139,92,246,.14), transparent 58%),
+      radial-gradient(640px 300px at 100% 0%, rgba(91,33,182,.10), transparent 55%),
+      linear-gradient(180deg, #0D0B14 0%, #0F0C16 100%);
+    background-attachment: fixed;
+  }
+  /* الگوی خطی بسیار ظریف — عمق بصری بدون شلوغی */
+  html[data-theme="finverse-violet"] body::before{
+    content:'';
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035;
+    background-image:
+      linear-gradient(rgba(167,139,250,.55) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(167,139,250,.55) 1px, transparent 1px);
+    background-size:48px 48px;
+  }
+  html[data-theme="finverse-violet"] .layout,
+  html[data-theme="finverse-violet"] .topbar,
+  html[data-theme="finverse-violet"] .side-drawer,
+  html[data-theme="finverse-violet"] .menu-backdrop{
+    position:relative; z-index:1;
+  }
+  html[data-theme="finverse-violet"] .side-drawer{
+    z-index:70;
+  }
+  html[data-theme="finverse-violet"] .menu-backdrop{ z-index:60; }
+  html[data-theme="finverse-violet"] .topbar{ z-index:39; }
+  /* کارت‌ها: border نرم + سایه کنترل‌شده */
+  html[data-theme="finverse-violet"] .section,
+  html[data-theme="finverse-violet"] .hero,
+  html[data-theme="finverse-violet"] .asset-card,
+  html[data-theme="finverse-violet"] .nc-hero,
+  html[data-theme="finverse-violet"] .notes-shell,
+  html[data-theme="finverse-violet"] .note-card,
+  html[data-theme="finverse-violet"] .analysis-card{
+    border-color:rgba(42,36,56,.95);
+    box-shadow:0 8px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(167,139,250,.06);
+  }
+  html[data-theme="finverse-violet"] .btn:not(.ghost){
+    background:linear-gradient(165deg, #8B5CF6 0%, #5B21B6 100%);
+    border-color:rgba(167,139,250,.35);
+    color:#F8FAFC;
+  }
+  html[data-theme="finverse-violet"] .btn:not(.ghost):hover{
+    box-shadow:0 6px 18px rgba(139,92,246,.28);
+  }
+  html[data-theme="finverse-violet"] .btn.ghost{
+    border-color:rgba(42,36,56,.95);
+    color:var(--ink-dim);
+  }
+  html[data-theme="finverse-violet"] .btn.ghost:hover{
+    background:rgba(139,92,246,.10);
+    border-color:rgba(139,92,246,.35);
+    color:var(--ink);
   }
   
   
@@ -560,8 +610,6 @@
   .theme-dn-btn .ic-moon{opacity:1; transform:rotate(0) scale(1);}
   html[data-theme="light"] .theme-dn-btn .ic-sun{opacity:1; transform:rotate(0) scale(1);}
   html[data-theme="light"] .theme-dn-btn .ic-moon{opacity:0; transform:rotate(40deg) scale(.6);}
-  html[data-theme="finverse"] .theme-dn-btn .ic-sun{opacity:1; transform:rotate(0) scale(1);}
-  html[data-theme="finverse"] .theme-dn-btn .ic-moon{opacity:0; transform:rotate(40deg) scale(.6);}
   .transfer-flow{
     display:flex; flex-direction:column; gap:8px;
   }
@@ -611,7 +659,7 @@
     50%{ opacity:.45; transform:scale(.85); }
   }
   html[data-theme="light"] .live-dot{background:#16a34a;}
-  html[data-theme="finverse"] .live-dot{background:#2E865F;}
+  html[data-theme="finverse-violet"] .live-dot{background:#22C55E;}
   @media (prefers-reduced-motion: reduce){
     html[data-anim="on"] .live-dot{animation:none;}
   }
@@ -741,8 +789,8 @@
   html[data-theme="light"] body.menu-open .menu-backdrop{
     background:rgba(15,27,48,.18);
   }
-  html[data-theme="finverse"] body.menu-open .menu-backdrop{
-    background:rgba(16,55,102,.16);
+  html[data-theme="finverse-violet"] body.menu-open .menu-backdrop{
+    background:rgba(8,6,14,.55);
   }
 
   .side-drawer{
@@ -795,11 +843,16 @@
   html[data-theme="teal-navy"] .side-drawer::after{ opacity:.78; }
   /* Light — ظریف‌تر تا خوانایی حفظ شود */
   html[data-theme="light"] .side-drawer::before,
-  html[data-theme="warm-sand"] .side-drawer::before,
-  html[data-theme="finverse"] .side-drawer::before{ opacity:.10; }
+  html[data-theme="warm-sand"] .side-drawer::before{ opacity:.10; }
   html[data-theme="light"] .side-drawer::after,
-  html[data-theme="warm-sand"] .side-drawer::after,
-  html[data-theme="finverse"] .side-drawer::after{ opacity:.88; }
+  html[data-theme="warm-sand"] .side-drawer::after{ opacity:.88; }
+  /* Finverse Violet — drawer تیره با گرادیان بنفش ملایم */
+  html[data-theme="finverse-violet"] .side-drawer::before{ opacity:.28; }
+  html[data-theme="finverse-violet"] .side-drawer::after{ opacity:.75; }
+  html[data-theme="finverse-violet"] .side-drawer{
+    border-right-color:rgba(139,92,246,.22);
+    box-shadow:8px 0 28px rgba(0,0,0,.35);
+  }
   .side-drawer-head,
   .side-drawer-nav{
     position:relative; z-index:1;
@@ -1197,37 +1250,37 @@
 
 
   /* ========== Abstract خطی — فقط Themeهای Dark (نه light) ========== */
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .abs-surface,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .analysis-card,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box{
+  html:not([data-theme="light"]) .abs-surface,
+  html:not([data-theme="light"]) .section,
+  html:not([data-theme="light"]) .asset-card,
+  html:not([data-theme="light"]) .forecast-card,
+  html:not([data-theme="light"]) .proj-card,
+  html:not([data-theme="light"]) .analysis-card,
+  html:not([data-theme="light"]) .notes-shell,
+  html:not([data-theme="light"]) .note-card,
+  html:not([data-theme="light"]) .loan-item,
+  html:not([data-theme="light"]) .transfer-box,
+  html:not([data-theme="light"]) .nb-stat,
+  html:not([data-theme="light"]) .note-editor,
+  html:not([data-theme="light"]) .note-modal-box,
+  html:not([data-theme="light"]) .lock-box{
     position:relative;
     isolation:isolate;
     overflow:hidden;
   }
   /* یک لایه مشترک CSS-only — بدون SVG تکراری */
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box::before{
+  html:not([data-theme="light"]) .section::before,
+  html:not([data-theme="light"]) .asset-card::before,
+  html:not([data-theme="light"]) .forecast-card::before,
+  html:not([data-theme="light"]) .proj-card::before,
+  html:not([data-theme="light"]) .notes-shell::before,
+  html:not([data-theme="light"]) .note-card::after,
+  html:not([data-theme="light"]) .loan-item::before,
+  html:not([data-theme="light"]) .transfer-box::before,
+  html:not([data-theme="light"]) .nb-stat::before,
+  html:not([data-theme="light"]) .note-editor::before,
+  html:not([data-theme="light"]) .note-modal-box::before,
+  html:not([data-theme="light"]) .lock-box::before{
     content:'';
     position:absolute; inset:0;
     pointer-events:none;
@@ -1240,17 +1293,17 @@
       repeating-linear-gradient(-18deg, transparent 0 11px, var(--border) 11px 12px);
   }
   /* محو خوانایی */
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box::after{
+  html:not([data-theme="light"]) .section::after,
+  html:not([data-theme="light"]) .asset-card::after,
+  html:not([data-theme="light"]) .forecast-card::after,
+  html:not([data-theme="light"]) .proj-card::after,
+  html:not([data-theme="light"]) .notes-shell::after,
+  html:not([data-theme="light"]) .loan-item::after,
+  html:not([data-theme="light"]) .transfer-box::after,
+  html:not([data-theme="light"]) .nb-stat::after,
+  html:not([data-theme="light"]) .note-editor::after,
+  html:not([data-theme="light"]) .note-modal-box::after,
+  html:not([data-theme="light"]) .lock-box::after{
     content:'';
     position:absolute; inset:0;
     pointer-events:none;
@@ -1259,58 +1312,58 @@
     opacity:.72;
   }
   /* تنوع nth — بدون JS */
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(2n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(2n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat:nth-child(2n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item:nth-child(2n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card:nth-child(2n)::after{
+  html:not([data-theme="light"]) .section:nth-child(2n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(2n)::before,
+  html:not([data-theme="light"]) .nb-stat:nth-child(2n)::before,
+  html:not([data-theme="light"]) .loan-item:nth-child(2n)::before,
+  html:not([data-theme="light"]) .note-card:nth-child(2n)::after{
     background:
       linear-gradient(155deg, transparent 8%, var(--blue-soft) 48%, transparent 78%),
       repeating-linear-gradient(12deg, transparent 0 13px, var(--border) 13px 14px);
   }
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(3n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(3n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat:nth-child(3n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item:nth-child(3n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card:nth-child(3n)::after{
+  html:not([data-theme="light"]) .section:nth-child(3n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(3n)::before,
+  html:not([data-theme="light"]) .nb-stat:nth-child(3n)::before,
+  html:not([data-theme="light"]) .loan-item:nth-child(3n)::before,
+  html:not([data-theme="light"]) .note-card:nth-child(3n)::after{
     background:
       linear-gradient(200deg, var(--blue-soft) 0%, transparent 48%),
       repeating-linear-gradient(45deg, transparent 0 10px, var(--border) 10px 11px);
   }
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(4n)::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(4n)::before{
+  html:not([data-theme="light"]) .section:nth-child(4n)::before,
+  html:not([data-theme="light"]) .asset-card:nth-child(4n)::before{
     background:
       radial-gradient(ellipse 70% 50% at 100% 0%, var(--blue-glow), transparent 55%),
       repeating-linear-gradient(-32deg, transparent 0 14px, var(--border) 14px 15px);
   }
   /* Hover فقط opacity — بدون layout shift */
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .section:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .asset-card:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .forecast-card:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .proj-card:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .notes-shell:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .note-card:hover::after,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .loan-item:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .transfer-box:hover::before,
-  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .nb-stat:hover::before{
+  html:not([data-theme="light"])[data-anim="on"] .section:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .asset-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .forecast-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .proj-card:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .notes-shell:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .note-card:hover::after,
+  html:not([data-theme="light"])[data-anim="on"] .loan-item:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .transfer-box:hover::before,
+  html:not([data-theme="light"])[data-anim="on"] .nb-stat:hover::before{
     opacity:.28;
   }
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .section > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box > *,
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box > *{
+  html:not([data-theme="light"]) .section > *,
+  html:not([data-theme="light"]) .asset-card > *,
+  html:not([data-theme="light"]) .forecast-card > *,
+  html:not([data-theme="light"]) .proj-card > *,
+  html:not([data-theme="light"]) .notes-shell > *,
+  html:not([data-theme="light"]) .loan-item > *,
+  html:not([data-theme="light"]) .transfer-box > *,
+  html:not([data-theme="light"]) .nb-stat > *,
+  html:not([data-theme="light"]) .note-editor > *,
+  html:not([data-theme="light"]) .note-modal-box > *,
+  html:not([data-theme="light"]) .lock-box > *{
     position:relative;
     z-index:1;
   }
   /* note-card قبلاً ::before برای accent دارد — لایه abstract روی ::after */
-  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after{
+  html:not([data-theme="light"]) .note-card::after{
     /* override generic note stripe stays on ::before */
   }
   /* nc-abstract فقط Dark */
@@ -1323,15 +1376,15 @@
   html[data-theme="warm-sand"] .analysis-card::before,
   html[data-theme="warm-sand"] .analysis-card::after{display:none !important;}
   @media (prefers-reduced-motion: reduce){
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .section::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::before,
-    html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::before{transition:none;}
+    html:not([data-theme="light"]) .section::before,
+    html:not([data-theme="light"]) .asset-card::before,
+    html:not([data-theme="light"]) .forecast-card::before,
+    html:not([data-theme="light"]) .proj-card::before,
+    html:not([data-theme="light"]) .notes-shell::before,
+    html:not([data-theme="light"]) .note-card::after,
+    html:not([data-theme="light"]) .loan-item::before,
+    html:not([data-theme="light"]) .transfer-box::before,
+    html:not([data-theme="light"]) .nb-stat::before{transition:none;}
   }
 
 
@@ -1527,8 +1580,13 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
   .toast.err{background:var(--red); color:#2a0b0b;}
-  html[data-theme="finverse"] .toast.err{color:#fff;}
-  html[data-theme="finverse"] .toast{box-shadow:0 8px 24px rgba(16,55,102,.12);}
+  html[data-theme="finverse-violet"] .toast.err{color:#F8FAFC;}
+  html[data-theme="finverse-violet"] .toast{
+    background:rgba(23,19,33,.92);
+    border:1px solid rgba(139,92,246,.28);
+    box-shadow:0 10px 28px rgba(0,0,0,.4);
+    color:var(--ink);
+  }
 
   .ms-toast{
     position:fixed; top:72px; left:50%; transform:translateX(-50%) translateY(-8px);
@@ -2356,10 +2414,10 @@
           <span class="theme-preview" style="background:linear-gradient(135deg,#F7F4EF 0%,#B8956C 50%,#8B7355 100%)"></span>
           <span class="theme-name">Warm Sand</span>
         </button>
-        <button type="button" class="theme-card" data-theme-val="finverse" title="Finverse Finance Blue">
+        <button type="button" class="theme-card" data-theme-val="finverse-violet" title="Finverse Violet">
           <span class="theme-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
-          <span class="theme-preview" style="background:linear-gradient(135deg,#F5F7FA 0%,#7EBCF9 42%,#288CFA 72%,#103766 100%)"></span>
-          <span class="theme-name">Finverse</span>
+          <span class="theme-preview" style="background:linear-gradient(135deg,#0D0B14 0%,#5B21B6 45%,#8B5CF6 72%,#A78BFA 100%)"></span>
+          <span class="theme-name">Finverse Violet</span>
         </button>
       </div>
     </div>
