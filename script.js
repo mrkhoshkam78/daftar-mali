@@ -167,21 +167,38 @@ const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
 const APP_VERSION = '2.03';
 const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet'];
+/** نرمال‌سازی نام تم — نام‌های قدیمی/غلط را اصلاح می‌کند */
+function normalizeThemeId(t){
+  t = String(t || '').trim().toLowerCase();
+  if(t === 'finverse' || t === 'finance-blue' || t === 'finverse-blue' || t === 'finverse_blue') return 'finverse-violet';
+  if(t === 'finverse_violet' || t === 'finverseviolet') return 'finverse-violet';
+  return t;
+}
 function applyTheme(t){
+  t = normalizeThemeId(t);
   if(!VALID_THEMES.includes(t)) t = 'dark';
-  document.documentElement.setAttribute('data-theme', t);
+  const root = document.documentElement;
+  // attribute اصلی سیستم Theme
+  root.setAttribute('data-theme', t);
+  // کلاس کمکی برای selectorهای پشتیبان CSS
+  VALID_THEMES.forEach(name => root.classList.remove('theme-' + name));
+  root.classList.add('theme-' + t);
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
   document.querySelectorAll('.theme-card').forEach(c=>{
-    c.classList.toggle('active', c.dataset.themeVal === t);
+    const val = (c.getAttribute('data-theme-val') || c.dataset.themeVal || '').trim();
+    c.classList.toggle('active', normalizeThemeId(val) === t);
   });
 }
-document.querySelectorAll('.theme-card').forEach(card=>{
-  card.addEventListener('click', ()=> applyTheme(card.dataset.themeVal));
+// Event delegation — کلیک روی فرزند (preview/name) هم کار می‌کند
+document.addEventListener('click', (e)=>{
+  const card = e.target && e.target.closest && e.target.closest('.theme-card');
+  if(!card) return;
+  const val = card.getAttribute('data-theme-val') || card.dataset.themeVal;
+  if(val) applyTheme(val);
 });
 if($('themeDayNight')){
   $('themeDayNight').addEventListener('click', ()=>{
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-    // تم‌های روشن (light / warm-sand) ↔ سرمه‌ای تیره
     const lightLike = (cur === 'light' || cur === 'warm-sand');
     applyTheme(lightLike ? 'dark' : 'light');
   });
@@ -189,8 +206,6 @@ if($('themeDayNight')){
 (function initTheme(){
   let saved = 'dark';
   try{ saved = localStorage.getItem(THEME_KEY) || 'dark'; }catch(e){}
-  // مهاجرت از Finance Blue حذف‌شده
-  if(saved === 'finverse') saved = 'finverse-violet';
   applyTheme(saved);
 })();
 
