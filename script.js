@@ -166,7 +166,7 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
 const APP_VERSION = '2.03';
-const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand'];
+const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse'];
 function applyTheme(t){
   if(!VALID_THEMES.includes(t)) t = 'dark';
   document.documentElement.setAttribute('data-theme', t);
@@ -181,8 +181,9 @@ document.querySelectorAll('.theme-card').forEach(card=>{
 if($('themeDayNight')){
   $('themeDayNight').addEventListener('click', ()=>{
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-    // فقط روشن (روز) و سرمه‌ای تیره (شب)
-    applyTheme(cur === 'light' ? 'dark' : 'light');
+    // تم‌های روشن (light / finverse / warm-sand) ↔ سرمه‌ای تیره
+    const lightLike = (cur === 'light' || cur === 'finverse' || cur === 'warm-sand');
+    applyTheme(lightLike ? 'dark' : 'light');
   });
 }
 (function initTheme(){

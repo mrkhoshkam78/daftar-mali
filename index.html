@@ -75,6 +75,19 @@
     --blue-soft:rgba(58,139,136,.12); --blue-glow:rgba(58,139,136,.18);
     --shadow: 0 8px 30px rgba(12,24,40,.5);
   }
+  /* Finverse Finance Blue — داشبورد مالی حرفه‌ای روشن */
+  html[data-theme="finverse"]{
+    --bg:#F5F7FA; --bg-2:#E8ECF2;
+    --card:#FFFFFF; --card-2:#F8FAFC;
+    --border:rgba(16,55,102,.12); --border-strong:rgba(40,140,250,.32);
+    --ink:#103766; --ink-dim:#5B6B7C;
+    --blue:#288CFA; --blue-light:#7EBCF9; --blue-deep:#103766;
+    --blue-soft:rgba(40,140,250,.10); --blue-glow:rgba(40,140,250,.14);
+    --green:#2E865F; --green-soft:rgba(46,134,95,.12);
+    --red:#DC3545; --red-soft:rgba(220,53,69,.10);
+    --orange:#F59E0B; --orange-soft:rgba(245,158,11,.12);
+    --shadow: 0 8px 24px rgba(16,55,102,.08);
+  }
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -132,6 +145,18 @@
   html[data-theme="teal-navy"] body{
     background:
       radial-gradient(900px 400px at 15% -5%, rgba(58,139,136,.16), transparent 60%),
+      var(--bg);
+  }
+  html[data-theme="finverse"] .topbar{
+    background:rgba(255,255,255,.78);
+    backdrop-filter:blur(12px) saturate(1.12);
+    -webkit-backdrop-filter:blur(12px) saturate(1.12);
+    border-bottom-color:rgba(16,55,102,.10);
+  }
+  html[data-theme="finverse"] body{
+    background:
+      radial-gradient(900px 420px at 12% -8%, rgba(40,140,250,.10), transparent 58%),
+      radial-gradient(700px 320px at 95% 0%, rgba(126,188,249,.08), transparent 55%),
       var(--bg);
   }
   
@@ -535,6 +560,8 @@
   .theme-dn-btn .ic-moon{opacity:1; transform:rotate(0) scale(1);}
   html[data-theme="light"] .theme-dn-btn .ic-sun{opacity:1; transform:rotate(0) scale(1);}
   html[data-theme="light"] .theme-dn-btn .ic-moon{opacity:0; transform:rotate(40deg) scale(.6);}
+  html[data-theme="finverse"] .theme-dn-btn .ic-sun{opacity:1; transform:rotate(0) scale(1);}
+  html[data-theme="finverse"] .theme-dn-btn .ic-moon{opacity:0; transform:rotate(40deg) scale(.6);}
   .transfer-flow{
     display:flex; flex-direction:column; gap:8px;
   }
@@ -584,6 +611,7 @@
     50%{ opacity:.45; transform:scale(.85); }
   }
   html[data-theme="light"] .live-dot{background:#16a34a;}
+  html[data-theme="finverse"] .live-dot{background:#2E865F;}
   @media (prefers-reduced-motion: reduce){
     html[data-anim="on"] .live-dot{animation:none;}
   }
@@ -713,6 +741,9 @@
   html[data-theme="light"] body.menu-open .menu-backdrop{
     background:rgba(15,27,48,.18);
   }
+  html[data-theme="finverse"] body.menu-open .menu-backdrop{
+    background:rgba(16,55,102,.16);
+  }
 
   .side-drawer{
     position:fixed; top:0; bottom:0; left:0; z-index:70;
@@ -764,9 +795,11 @@
   html[data-theme="teal-navy"] .side-drawer::after{ opacity:.78; }
   /* Light — ظریف‌تر تا خوانایی حفظ شود */
   html[data-theme="light"] .side-drawer::before,
-  html[data-theme="warm-sand"] .side-drawer::before{ opacity:.10; }
+  html[data-theme="warm-sand"] .side-drawer::before,
+  html[data-theme="finverse"] .side-drawer::before{ opacity:.10; }
   html[data-theme="light"] .side-drawer::after,
-  html[data-theme="warm-sand"] .side-drawer::after{ opacity:.88; }
+  html[data-theme="warm-sand"] .side-drawer::after,
+  html[data-theme="finverse"] .side-drawer::after{ opacity:.88; }
   .side-drawer-head,
   .side-drawer-nav{
     position:relative; z-index:1;
@@ -1164,37 +1197,37 @@
 
 
   /* ========== Abstract خطی — فقط Themeهای Dark (نه light) ========== */
-  html:not([data-theme="light"]) .abs-surface,
-  html:not([data-theme="light"]) .section,
-  html:not([data-theme="light"]) .asset-card,
-  html:not([data-theme="light"]) .forecast-card,
-  html:not([data-theme="light"]) .proj-card,
-  html:not([data-theme="light"]) .analysis-card,
-  html:not([data-theme="light"]) .notes-shell,
-  html:not([data-theme="light"]) .note-card,
-  html:not([data-theme="light"]) .loan-item,
-  html:not([data-theme="light"]) .transfer-box,
-  html:not([data-theme="light"]) .nb-stat,
-  html:not([data-theme="light"]) .note-editor,
-  html:not([data-theme="light"]) .note-modal-box,
-  html:not([data-theme="light"]) .lock-box{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .abs-surface,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .analysis-card,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box{
     position:relative;
     isolation:isolate;
     overflow:hidden;
   }
   /* یک لایه مشترک CSS-only — بدون SVG تکراری */
-  html:not([data-theme="light"]) .section::before,
-  html:not([data-theme="light"]) .asset-card::before,
-  html:not([data-theme="light"]) .forecast-card::before,
-  html:not([data-theme="light"]) .proj-card::before,
-  html:not([data-theme="light"]) .notes-shell::before,
-  html:not([data-theme="light"]) .note-card::after,
-  html:not([data-theme="light"]) .loan-item::before,
-  html:not([data-theme="light"]) .transfer-box::before,
-  html:not([data-theme="light"]) .nb-stat::before,
-  html:not([data-theme="light"]) .note-editor::before,
-  html:not([data-theme="light"]) .note-modal-box::before,
-  html:not([data-theme="light"]) .lock-box::before{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box::before{
     content:'';
     position:absolute; inset:0;
     pointer-events:none;
@@ -1207,17 +1240,17 @@
       repeating-linear-gradient(-18deg, transparent 0 11px, var(--border) 11px 12px);
   }
   /* محو خوانایی */
-  html:not([data-theme="light"]) .section::after,
-  html:not([data-theme="light"]) .asset-card::after,
-  html:not([data-theme="light"]) .forecast-card::after,
-  html:not([data-theme="light"]) .proj-card::after,
-  html:not([data-theme="light"]) .notes-shell::after,
-  html:not([data-theme="light"]) .loan-item::after,
-  html:not([data-theme="light"]) .transfer-box::after,
-  html:not([data-theme="light"]) .nb-stat::after,
-  html:not([data-theme="light"]) .note-editor::after,
-  html:not([data-theme="light"]) .note-modal-box::after,
-  html:not([data-theme="light"]) .lock-box::after{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box::after{
     content:'';
     position:absolute; inset:0;
     pointer-events:none;
@@ -1226,58 +1259,58 @@
     opacity:.72;
   }
   /* تنوع nth — بدون JS */
-  html:not([data-theme="light"]) .section:nth-child(2n)::before,
-  html:not([data-theme="light"]) .asset-card:nth-child(2n)::before,
-  html:not([data-theme="light"]) .nb-stat:nth-child(2n)::before,
-  html:not([data-theme="light"]) .loan-item:nth-child(2n)::before,
-  html:not([data-theme="light"]) .note-card:nth-child(2n)::after{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(2n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(2n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat:nth-child(2n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item:nth-child(2n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card:nth-child(2n)::after{
     background:
       linear-gradient(155deg, transparent 8%, var(--blue-soft) 48%, transparent 78%),
       repeating-linear-gradient(12deg, transparent 0 13px, var(--border) 13px 14px);
   }
-  html:not([data-theme="light"]) .section:nth-child(3n)::before,
-  html:not([data-theme="light"]) .asset-card:nth-child(3n)::before,
-  html:not([data-theme="light"]) .nb-stat:nth-child(3n)::before,
-  html:not([data-theme="light"]) .loan-item:nth-child(3n)::before,
-  html:not([data-theme="light"]) .note-card:nth-child(3n)::after{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(3n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(3n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat:nth-child(3n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item:nth-child(3n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card:nth-child(3n)::after{
     background:
       linear-gradient(200deg, var(--blue-soft) 0%, transparent 48%),
       repeating-linear-gradient(45deg, transparent 0 10px, var(--border) 10px 11px);
   }
-  html:not([data-theme="light"]) .section:nth-child(4n)::before,
-  html:not([data-theme="light"]) .asset-card:nth-child(4n)::before{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section:nth-child(4n)::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card:nth-child(4n)::before{
     background:
       radial-gradient(ellipse 70% 50% at 100% 0%, var(--blue-glow), transparent 55%),
       repeating-linear-gradient(-32deg, transparent 0 14px, var(--border) 14px 15px);
   }
   /* Hover فقط opacity — بدون layout shift */
-  html:not([data-theme="light"])[data-anim="on"] .section:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .asset-card:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .forecast-card:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .proj-card:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .notes-shell:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .note-card:hover::after,
-  html:not([data-theme="light"])[data-anim="on"] .loan-item:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .transfer-box:hover::before,
-  html:not([data-theme="light"])[data-anim="on"] .nb-stat:hover::before{
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .section:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .asset-card:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .forecast-card:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .proj-card:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .notes-shell:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .note-card:hover::after,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .loan-item:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .transfer-box:hover::before,
+  html:not([data-theme="light"]):not([data-theme="finverse"])[data-anim="on"] .nb-stat:hover::before{
     opacity:.28;
   }
-  html:not([data-theme="light"]) .section > *,
-  html:not([data-theme="light"]) .asset-card > *,
-  html:not([data-theme="light"]) .forecast-card > *,
-  html:not([data-theme="light"]) .proj-card > *,
-  html:not([data-theme="light"]) .notes-shell > *,
-  html:not([data-theme="light"]) .loan-item > *,
-  html:not([data-theme="light"]) .transfer-box > *,
-  html:not([data-theme="light"]) .nb-stat > *,
-  html:not([data-theme="light"]) .note-editor > *,
-  html:not([data-theme="light"]) .note-modal-box > *,
-  html:not([data-theme="light"]) .lock-box > *{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .section > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-editor > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-modal-box > *,
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .lock-box > *{
     position:relative;
     z-index:1;
   }
   /* note-card قبلاً ::before برای accent دارد — لایه abstract روی ::after */
-  html:not([data-theme="light"]) .note-card::after{
+  html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after{
     /* override generic note stripe stays on ::before */
   }
   /* nc-abstract فقط Dark */
@@ -1290,15 +1323,15 @@
   html[data-theme="warm-sand"] .analysis-card::before,
   html[data-theme="warm-sand"] .analysis-card::after{display:none !important;}
   @media (prefers-reduced-motion: reduce){
-    html:not([data-theme="light"]) .section::before,
-    html:not([data-theme="light"]) .asset-card::before,
-    html:not([data-theme="light"]) .forecast-card::before,
-    html:not([data-theme="light"]) .proj-card::before,
-    html:not([data-theme="light"]) .notes-shell::before,
-    html:not([data-theme="light"]) .note-card::after,
-    html:not([data-theme="light"]) .loan-item::before,
-    html:not([data-theme="light"]) .transfer-box::before,
-    html:not([data-theme="light"]) .nb-stat::before{transition:none;}
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .section::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .asset-card::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .forecast-card::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .proj-card::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .notes-shell::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .note-card::after,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .loan-item::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .transfer-box::before,
+    html:not([data-theme="light"]):not([data-theme="finverse"]) .nb-stat::before{transition:none;}
   }
 
 
@@ -1494,6 +1527,8 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
   .toast.err{background:var(--red); color:#2a0b0b;}
+  html[data-theme="finverse"] .toast.err{color:#fff;}
+  html[data-theme="finverse"] .toast{box-shadow:0 8px 24px rgba(16,55,102,.12);}
 
   .ms-toast{
     position:fixed; top:72px; left:50%; transform:translateX(-50%) translateY(-8px);
@@ -2320,6 +2355,11 @@
           <span class="theme-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
           <span class="theme-preview" style="background:linear-gradient(135deg,#F7F4EF 0%,#B8956C 50%,#8B7355 100%)"></span>
           <span class="theme-name">Warm Sand</span>
+        </button>
+        <button type="button" class="theme-card" data-theme-val="finverse" title="Finverse Finance Blue">
+          <span class="theme-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+          <span class="theme-preview" style="background:linear-gradient(135deg,#F5F7FA 0%,#7EBCF9 42%,#288CFA 72%,#103766 100%)"></span>
+          <span class="theme-name">Finverse</span>
         </button>
       </div>
     </div>
