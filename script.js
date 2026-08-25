@@ -564,16 +564,63 @@ function formatGoldWeight(item){
   return parts.length ? parts.join(' + ') : '';
 }
 function updateGoldSumUI(){
-  const box = $('ncGoldFields');
-  if(!box) return;
-  const isGold = $('ncCategory') && $('ncCategory').value === 'gold';
-  box.classList.toggle('show', isGold);
-  if(!isGold) return;
-  const g = parseDec($('ncGoldGram') && $('ncGoldGram').value);
-  const s = parseDec($('ncGoldSoot') && $('ncGoldSoot').value);
-  const tot = goldTotalGrams(g, s);
-  const sootEq = goldTotalSoot(g, s);
-  if($('ncGoldSum')) $('ncGoldSum').textContent = 'مجموع وزن: ' + tot + ' گرم (' + sootEq + ' سوت)';
+  const cat = $('ncCategory') ? $('ncCategory').value : '';
+  const goldBox = $('ncGoldFields');
+  const silBox = $('ncSilverFields');
+  const usdBox = $('ncUsdFields');
+  if(goldBox) goldBox.classList.toggle('show', cat === 'gold');
+  if(silBox) silBox.classList.toggle('show', cat === 'silver');
+  if(usdBox) usdBox.classList.toggle('show', cat === 'usd');
+  if(cat === 'gold'){
+    const g = parseDec($('ncGoldGram') && $('ncGoldGram').value);
+    const s = parseDec($('ncGoldSoot') && $('ncGoldSoot').value);
+    const tot = goldTotalGrams(g, s);
+    const sootEq = goldTotalSoot(g, s);
+    if($('ncGoldSum')) $('ncGoldSum').textContent = 'مجموع وزن: ' + tot + ' گرم (' + sootEq + ' سوت)';
+  }
+}
+
+/** مقدار قابل‌قیمت‌گذاری دارایی غیرنقد (بدون تغییر موجودی ذخیره‌شده) */
+function noncashQuantityInfo(item){
+  if(!item) return null;
+  const cat = item.category;
+  if(cat === 'gold'){
+    let g = goldTotalGrams(item.grams, item.soot);
+    if(!(g > 0)) g = safeNum(item.totalGrams, 0);
+    if(!(g > 0)) return null;
+    return { cat, qty: g, unit: 'گرم', label: g + ' گرم' };
+  }
+  if(cat === 'silver'){
+    const g = safeNum(item.totalGrams, 0) || safeNum(item.grams, 0);
+    if(!(g > 0)) return null;
+    return { cat, qty: g, unit: 'گرم', label: g + ' گرم' };
+  }
+  if(cat === 'usd'){
+    const u = safeNum(item.usdAmount, 0);
+    if(!(u > 0)) return null;
+    return { cat, qty: u, unit: 'دلار', label: u + ' دلار' };
+  }
+  return null;
+}
+
+/**
+ * ارزش فعلی یک دارایی غیرنقد:
+ * - طلا/نقره/دلار با مقدار واحد + قیمت API → مقدار × قیمت
+ * - در نبود قیمت یا واحد → manualValue (دفتری)
+ * موجودی ثبت‌شده کاربر تغییر نمی‌کند.
+ */
+function currentValueForNoncash(item){
+  if(!item) return 0;
+  try{
+    const live = typeof liveValueForNoncash === 'function' ? liveValueForNoncash(item) : null;
+    if(live != null && isFinite(live) && live >= 0) return live;
+  }catch(e){}
+  return safeNum(item.manualValue, 0);
+}
+
+function sumNoncashCurrentValues(){
+  const list = Array.isArray(noncash) ? noncash : [];
+  return list.reduce((s, item) => s + currentValueForNoncash(item), 0);
 }
 
 let assets = { snapp: 4607188, hami: 5155000, farabi: 148690, card: 2100000, wallet: 570000 };
@@ -1385,9 +1432,12 @@ function renderNonCash(){
   const totalEl = $('ncTotal');
   const chip = $('ncCountChip');
   const list = Array.isArray(noncash) ? noncash : [];
-  const total = list.reduce((s, item) => s + safeNum(item.manualValue, 0), 0);
+  // جمع ارزش فعلی: قیمت API × مقدار واحد (در صورت وجود)، وگرنه ارزش دفتری
+  const total = typeof sumNoncashCurrentValues === 'function'
+    ? sumNoncashCurrentValues()
+    : list.reduce((s, item) => s + safeNum(item.manualValue, 0), 0);
 
-  if(totalEl) totalEl.innerHTML = fmt(total) + ' <small>تومان</small>';
+  if(totalEl) totalEl.innerHTML = fmt(Math.round(total)) + ' <small>تومان</small>';
   if(chip) chip.textContent = list.length + ' مورد';
   if(!el) return;
 
@@ -1399,22 +1449,35 @@ function renderNonCash(){
   el.innerHTML = list.map(item => {
     const cat = NC_CATS[item.category] || 'سایر';
     const name = (item.label && String(item.label).trim()) ? item.label : '';
-    const val = safeNum(item.manualValue, 0);
+    const bookVal = safeNum(item.manualValue, 0);
+    const curVal = currentValueForNoncash(item);
+    let live = null;
+    try{ live = liveValueForNoncash(item); }catch(e){}
+    const hasLive = live != null && isFinite(live);
+    const qInfo = noncashQuantityInfo(item);
     const goldW = formatGoldWeight(item);
+    const qtyLine = goldW || (qInfo ? qInfo.label : '');
     const upd = item.updatedAt
       ? `<div class="nc-updated">آخرین به‌روزرسانی: ${toJalaliStr(item.updatedAt) || item.updatedAt}</div>`
       : '';
     const isGold = item.category === 'gold';
+    const isSilver = item.category === 'silver';
+    const isUsd = item.category === 'usd';
     const absVar = (Math.abs(Number(item.id) || 0) % 5);
+    const subVal = hasLive
+      ? (bookVal > 0 && Math.round(bookVal) !== Math.round(live)
+          ? `<div class="nc-live-val">دفتری: ${fmt(Math.round(bookVal))} ت</div>`
+          : `<div class="nc-live-val">بر اساس قیمت بازار</div>`)
+      : '';
     return `<div class="nc-item" data-id="${item.id}" data-abs="${absVar}">
       <div class="nc-abstract" aria-hidden="true"></div>
       <div class="nc-meta">
         <span class="nc-cat">${cat}</span>
         ${name ? `<div class="nc-name">${name}</div>` : ''}
-        ${goldW ? `<div class="nc-updated">${goldW}</div>` : ''}
+        ${qtyLine ? `<div class="nc-updated">${qtyLine}</div>` : ''}
         ${upd}
       </div>
-      <span class="nc-val">${fmt(val)} ت${(function(){try{const lv=typeof liveValueForNoncash==='function'?liveValueForNoncash(item):null;return (lv!=null&&isFinite(lv))?`<div class="nc-live-val">بازار: ${fmt(Math.round(lv))} ت</div>`:'';}catch(e){return '';}})()}</span>
+      <span class="nc-val">${fmt(Math.round(curVal))} ت${subVal}</span>
       <div class="nc-actions">
         <button type="button" class="nc-edit-btn" data-edit-id="${item.id}" title="ویرایش" aria-label="ویرایش">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -1426,8 +1489,10 @@ function renderNonCash(){
           <div><label class="field">گرم</label><input type="text" inputmode="decimal" data-eg="${item.id}" value="${safeNum(item.grams,0)}"></div>
           <div><label class="field">سوت</label><input type="text" inputmode="decimal" data-es="${item.id}" value="${safeNum(item.soot,0)}"></div>
         </div>` : ''}
-        <label class="field">قیمت / ارزش (تومان)</label>
-        <input type="text" inputmode="numeric" data-ev="${item.id}" class="money-input" value="${fmt(val).replace(/,/g,'')}">
+        ${isSilver ? `<div><label class="field">گرم نقره</label><input type="text" inputmode="decimal" data-esg="${item.id}" value="${safeNum(item.grams,0) || safeNum(item.totalGrams,0)}"></div>` : ''}
+        ${isUsd ? `<div><label class="field">مقدار دلار</label><input type="text" inputmode="decimal" data-eua="${item.id}" value="${safeNum(item.usdAmount,0)}"></div>` : ''}
+        <label class="field">ارزش دفتری (تومان)</label>
+        <input type="text" inputmode="numeric" data-ev="${item.id}" class="money-input" value="${fmt(bookVal).replace(/,/g,'')}">
         <label class="field" style="margin-top:6px;">توضیح</label>
         <input type="text" data-el="${item.id}" value="${(name||'').replace(/"/g,'&quot;')}">
         <button type="button" class="btn" data-save-nc="${item.id}" style="margin-top:8px;">ذخیره تغییرات</button>
@@ -1441,10 +1506,10 @@ function renderNonCash(){
       const id = btn.dataset.id;
       const item = noncash.find(x => String(x.id) === String(id));
       const cat = item ? (NC_CATS[item.category] || item.category) : '';
-      const val = item ? safeNum(item.manualValue, 0) : 0;
+      const val = item ? currentValueForNoncash(item) : 0;
       showConfirmModal(
         'حذف این دارایی غیرنقد؟',
-        (cat ? cat + ' — ' : '') + fmt(val) + ' تومان',
+        (cat ? cat + ' — ' : '') + fmt(Math.round(val)) + ' تومان',
         () => {
           noncash = noncash.filter(x => String(x.id) !== String(id));
           if(persist()) renderNonCash();
@@ -1477,7 +1542,7 @@ function renderNonCash(){
       const labInp = el.querySelector('input[data-el="'+id+'"]');
       const newVal = parseMoney(valInp ? valInp.value : '');
       if(isNaN(newVal) || newVal < 0){ showToast('قیمت معتبر نیست', true); return; }
-      // فقط همان رکورد به‌روز می‌شود — دارایی جدید ساخته نمی‌شود
+      // فقط همان رکورد — موجودی واحد جدا ذخیره می‌شود؛ ارزش فعلی از API
       item.manualValue = newVal;
       if(labInp) item.label = labInp.value.trim();
       if(item.category === 'gold'){
@@ -1486,6 +1551,13 @@ function renderNonCash(){
         item.grams = parseDec(gInp && gInp.value);
         item.soot = parseDec(sInp && sInp.value);
         item.totalGrams = goldTotalGrams(item.grams, item.soot);
+      } else if(item.category === 'silver'){
+        const gInp = el.querySelector('input[data-esg="'+id+'"]');
+        item.grams = parseDec(gInp && gInp.value);
+        item.totalGrams = item.grams;
+      } else if(item.category === 'usd'){
+        const uInp = el.querySelector('input[data-eua="'+id+'"]');
+        item.usdAmount = parseDec(uInp && uInp.value);
       }
       item.updatedAt = todayISO();
       noncash[idx] = item;
@@ -1496,6 +1568,7 @@ function renderNonCash(){
     });
   });
 }
+
 
 /* ================= تراکنش‌ها ================= */
 const NB_TYPES = {
@@ -2198,6 +2271,8 @@ function clearNcForm(){
   if($('ncManualValue')) $('ncManualValue').value = '';
   if($('ncGoldGram')) $('ncGoldGram').value = '';
   if($('ncGoldSoot')) $('ncGoldSoot').value = '';
+  if($('ncSilverGram')) $('ncSilverGram').value = '';
+  if($('ncUsdAmount')) $('ncUsdAmount').value = '';
   if(typeof updateGoldSumUI === 'function') updateGoldSumUI();
 }
 
@@ -2206,17 +2281,37 @@ if($('ncAddBtn')){
     const category = $('ncCategory').value;
     const label = ($('ncLabel').value || '').trim();
     const manualValue = parseMoney($('ncManualValue').value);
-    if(isNaN(manualValue) || manualValue <= 0){ showToast('ارزش تومانی رو وارد کن', true); return; }
+    if(isNaN(manualValue) || manualValue < 0){ showToast('ارزش دفتری معتبر نیست', true); return; }
     const addGram = category === 'gold' ? parseDec($('ncGoldGram') && $('ncGoldGram').value) : 0;
     const addSoot = category === 'gold' ? parseDec($('ncGoldSoot') && $('ncGoldSoot').value) : 0;
+    const addSilverG = category === 'silver' ? parseDec($('ncSilverGram') && $('ncSilverGram').value) : 0;
+    const addUsd = category === 'usd' ? parseDec($('ncUsdAmount') && $('ncUsdAmount').value) : 0;
+    // برای طلا/نقره/دلار یا مقدار واحد یا ارزش دفتری لازم است
+    if(category === 'gold' && !(goldTotalGrams(addGram, addSoot) > 0) && !(manualValue > 0)){
+      showToast('وزن طلا (گرم/سوت) یا ارزش دفتری را وارد کن', true); return;
+    }
+    if(category === 'silver' && !(addSilverG > 0) && !(manualValue > 0)){
+      showToast('گرم نقره یا ارزش دفتری را وارد کن', true); return;
+    }
+    if(category === 'usd' && !(addUsd > 0) && !(manualValue > 0)){
+      showToast('مقدار دلار یا ارزش دفتری را وارد کن', true); return;
+    }
+    if(category !== 'gold' && category !== 'silver' && category !== 'usd' && !(manualValue > 0)){
+      showToast('ارزش تومانی رو وارد کن', true); return;
+    }
     const existing = noncash.find(x => x && x.category === category);
     if(existing){
-      existing.manualValue = safeNum(existing.manualValue, 0) + manualValue;
+      existing.manualValue = safeNum(existing.manualValue, 0) + (manualValue > 0 ? manualValue : 0);
       if(label) existing.label = label;
       if(category === 'gold'){
         existing.grams = safeNum(existing.grams, 0) + addGram;
         existing.soot = safeNum(existing.soot, 0) + addSoot;
         existing.totalGrams = goldTotalGrams(existing.grams, existing.soot);
+      } else if(category === 'silver'){
+        existing.grams = safeNum(existing.grams, 0) + addSilverG;
+        existing.totalGrams = existing.grams;
+      } else if(category === 'usd'){
+        existing.usdAmount = safeNum(existing.usdAmount, 0) + addUsd;
       }
       existing.updatedAt = todayISO();
       if(persist()){
@@ -2225,11 +2320,16 @@ if($('ncAddBtn')){
         renderNonCash();
       }
     } else {
-      const row = { id: Date.now(), category, label, manualValue, updatedAt: todayISO() };
+      const row = { id: Date.now(), category, label, manualValue: manualValue > 0 ? manualValue : 0, updatedAt: todayISO() };
       if(category === 'gold'){
         row.grams = addGram;
         row.soot = addSoot;
         row.totalGrams = goldTotalGrams(addGram, addSoot);
+      } else if(category === 'silver'){
+        row.grams = addSilverG;
+        row.totalGrams = addSilverG;
+      } else if(category === 'usd'){
+        row.usdAmount = addUsd;
       }
       noncash.push(row);
       if(persist()){

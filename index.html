@@ -2080,7 +2080,21 @@
           </div>
           <div class="nc-gold-sum" id="ncGoldSum">مجموع وزن: ۰ گرم</div>
         </div>
-        <label class="field" style="margin-top:8px;">ارزش تقریبی (تومان)</label>
+        <div class="nc-gold-fields" id="ncSilverFields">
+          <div class="gold-hint">مقدار نقره به گرم (۹۹۹) — ارزش فعلی با قیمت لحظه‌ای بازار محاسبه می‌شود</div>
+          <div>
+            <label class="field">گرم نقره</label>
+            <input type="text" inputmode="decimal" id="ncSilverGram" placeholder="مثلاً 50">
+          </div>
+        </div>
+        <div class="nc-gold-fields" id="ncUsdFields">
+          <div class="gold-hint">مقدار دلار — ارزش فعلی با نرخ لحظه‌ای دلار آزاد محاسبه می‌شود</div>
+          <div>
+            <label class="field">مقدار دلار</label>
+            <input type="text" inputmode="decimal" id="ncUsdAmount" placeholder="مثلاً 100">
+          </div>
+        </div>
+        <label class="field" style="margin-top:8px;">ارزش تقریبی / دفتری (تومان)</label>
         <input type="text" inputmode="numeric" id="ncManualValue" placeholder="مثلاً 40,000,000" class="money-input">
         <button class="btn icon-btn-svg" id="ncAddBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
