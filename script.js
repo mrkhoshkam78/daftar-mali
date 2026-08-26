@@ -1,4 +1,4 @@
-/* APP_BUILD 20260826v5 — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260827navy — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -170,34 +170,53 @@ const APP_VERSION = '2.03';
 const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet','navy-crimson'];
 /** نرمال‌سازی نام تم — نام‌های قدیمی/غلط را اصلاح می‌کند */
 function normalizeThemeId(t){
-  t = String(t || '').trim().toLowerCase();
-  if(t === 'finverse' || t === 'finance-blue' || t === 'finverse-blue' || t === 'finverse_blue') return 'finverse-violet';
-  if(t === 'finverse_violet' || t === 'finverseviolet') return 'finverse-violet';
-  if(t === 'navy_crimson' || t === 'navycrimson' || t === 'navy-crimson') return 'navy-crimson';
+  t = String(t || '').trim().toLowerCase().replace(/_/g, '-');
+  if(t === 'finverse' || t === 'finance-blue' || t === 'finverse-blue') return 'finverse-violet';
+  if(t === 'finverseviolet') return 'finverse-violet';
+  if(t === 'navycrimson') return 'navy-crimson';
   return t;
 }
 function applyTheme(t){
   t = normalizeThemeId(t);
+  // اگر نام ناشناخته بود dark — ولی navy-crimson حتماً در لیست است
   if(!VALID_THEMES.includes(t)) t = 'dark';
   const root = document.documentElement;
-  // attribute اصلی سیستم Theme
   root.setAttribute('data-theme', t);
-  // کلاس کمکی برای selectorهای پشتیبان CSS
-  VALID_THEMES.forEach(name => root.classList.remove('theme-' + name));
+  // حذف همهٔ کلاس‌های theme-* سپس افزودن فعلی
+  try{
+    const toRemove = [];
+    root.classList.forEach(c => { if(c.indexOf('theme-') === 0) toRemove.push(c); });
+    toRemove.forEach(c => root.classList.remove(c));
+  }catch(_e){
+    VALID_THEMES.forEach(name => root.classList.remove('theme-' + name));
+  }
   root.classList.add('theme-' + t);
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
   document.querySelectorAll('.theme-card').forEach(c=>{
-    const val = (c.getAttribute('data-theme-val') || c.dataset.themeVal || '').trim();
-    c.classList.toggle('active', normalizeThemeId(val) === t);
+    const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
+    c.classList.toggle('active', val === t);
   });
+  // اجبار به‌روزرسانی پس‌زمینه body (بعضی مرورگرهای موبایل var را دیر اعمال می‌کنند)
+  try{
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#070b16';
+    const glow = getComputedStyle(root).getPropertyValue('--blue-glow').trim() || 'transparent';
+    if(document.body){
+      document.body.style.background =
+        'radial-gradient(900px 400px at 15% -5%, ' + glow + ', transparent 60%), ' + bg;
+      document.body.style.color = getComputedStyle(root).getPropertyValue('--ink').trim() || '';
+    }
+  }catch(_e){}
 }
-// Event delegation — کلیک روی فرزند (preview/name) هم کار می‌کند
-document.addEventListener('click', (e)=>{
+function onThemeCardActivate(e){
   const card = e.target && e.target.closest && e.target.closest('.theme-card');
   if(!card) return;
   const val = card.getAttribute('data-theme-val') || card.dataset.themeVal;
-  if(val) applyTheme(val);
-});
+  if(!val) return;
+  e.preventDefault();
+  applyTheme(val);
+}
+document.addEventListener('click', onThemeCardActivate);
+document.addEventListener('touchend', onThemeCardActivate, {passive:false});
 if($('themeDayNight')){
   $('themeDayNight').addEventListener('click', ()=>{
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
