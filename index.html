@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="app-build" content="20260827navy">
-<!-- BUILD_STAMP 20260827navy goals-checkbox-donut-copy -->
+<meta name="app-build" content="20260827premium">
+<!-- BUILD_STAMP 20260827premium goals-checkbox-donut-copy -->
 <title>مبحث درآمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -94,19 +94,21 @@
     --orange:#F59E0B; --orange-soft:rgba(245,158,11,.14);
     --shadow: 0 10px 32px rgba(0,0,0,.45);
   }
-  /* Navy Crimson — تم جدید (فقط رنگ‌بندی) */
+  /* Premium Theme (Navy Crimson) — Design Language: Cut-Corner Layered + Border Glow */
   html[data-theme="navy-crimson"],
   html.theme-navy-crimson{
     --bg:#0B1220; --bg-2:#0E1624;
     --card:#111A2B; --card-2:#152033;
-    --border:rgba(255,255,255,.08); --border-strong:rgba(185,28,44,.42);
-    --ink:#F1F5F9; --ink-dim:#94A3B8;
+    --border:rgba(148,163,184,.14); --border-strong:rgba(185,28,44,.45);
+    /* متن/اعداد: نقره‌ای روشن مستقل از قرمز Accent */
+    --ink:#E8EEF7; --ink-dim:#9AA8BC;
     --blue:#B91C2C; --blue-light:#E0313F; --blue-deep:#8F1522;
-    --blue-soft:rgba(185,28,44,.14); --blue-glow:rgba(224,49,63,.18);
+    --blue-soft:rgba(185,28,44,.14); --blue-glow:rgba(224,49,63,.16);
     --green:#22C55E; --green-soft:rgba(34,197,94,.14);
     --red:#EF4444; --red-soft:rgba(239,68,68,.14);
     --orange:#F59E0B; --orange-soft:rgba(245,158,11,.14);
-    --shadow: 0 10px 32px rgba(0,0,0,.5);
+    --shadow: 0 12px 36px rgba(0,0,0,.48);
+    --premium-glow: 0 0 0 1px rgba(185,28,44,.22), 0 10px 28px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box;}
   body{
@@ -239,7 +241,7 @@
   html[data-theme="finverse-violet"] .btn.ghost:hover,
   html.theme-finverse-violet .btn.ghost:hover{
     background:rgba(139,92,246,.12);
-    border-color:rgba(139,92,246,.4);
+    border-color:var(--border-strong);
     color:var(--ink);
   }
   html[data-theme="finverse-violet"] .section-title .dot,
@@ -329,6 +331,91 @@
   html.theme-navy-crimson .nc-hero > *{
     position:relative;
     z-index:1;
+  }
+
+  /* Premium Design System — Layered cards + Border Glow (غیر از hero/nc-hero که Cut-Corner دارند) */
+  html[data-theme="navy-crimson"] .section,
+  html[data-theme="navy-crimson"] .asset-card,
+  html[data-theme="navy-crimson"] .goal-card,
+  html[data-theme="navy-crimson"] .note-card,
+  html[data-theme="navy-crimson"] .notes-shell,
+  html[data-theme="navy-crimson"] .analysis-card,
+  html[data-theme="navy-crimson"] .goals-cap-card,
+  html.theme-navy-crimson .section,
+  html.theme-navy-crimson .asset-card,
+  html.theme-navy-crimson .goal-card,
+  html.theme-navy-crimson .note-card,
+  html.theme-navy-crimson .notes-shell,
+  html.theme-navy-crimson .analysis-card,
+  html.theme-navy-crimson .goals-cap-card{
+    background:linear-gradient(165deg, var(--card) 0%, var(--card-2) 100%);
+    border-color:rgba(148,163,184,.14);
+    box-shadow:var(--premium-glow);
+  }
+  html[data-theme="navy-crimson"] .goal-card.expanded,
+  html.theme-navy-crimson .goal-card.expanded{
+    border-color:rgba(185,28,44,.4);
+    box-shadow:0 0 0 1px rgba(185,28,44,.28), 0 12px 32px rgba(0,0,0,.4);
+  }
+  html[data-theme="navy-crimson"] .btn:not(.ghost),
+  html.theme-navy-crimson .btn:not(.ghost){
+    background:linear-gradient(165deg, #E0313F 0%, #B91C2C 55%, #8F1522 100%);
+    border-color:rgba(224,49,63,.4);
+    color:#E8EEF7;
+  }
+  html[data-theme="navy-crimson"] .btn:not(.ghost):hover,
+  html.theme-navy-crimson .btn:not(.ghost):hover{
+    box-shadow:0 6px 18px rgba(185,28,44,.35);
+  }
+  html[data-theme="navy-crimson"] .section-title .dot,
+  html.theme-navy-crimson .section-title .dot{
+    background:#E0313F;
+    box-shadow:0 0 0 3px rgba(185,28,44,.2);
+  }
+  /* Collapse chevron اهداف — بدون بنفش */
+  html[data-theme="navy-crimson"] .goal-card.expanded .gc-chev,
+  html.theme-navy-crimson .goal-card.expanded .gc-chev{
+    color:#E0313F;
+    border-color:rgba(185,28,44,.45);
+    background:rgba(185,28,44,.14);
+  }
+  html[data-theme="navy-crimson"] .goal-card .gc-summary:hover .gc-chev,
+  html.theme-navy-crimson .goal-card .gc-summary:hover .gc-chev{
+    border-color:rgba(185,28,44,.35);
+    color:#E0313F;
+  }
+  /* دکمه هدف جدید — هماهنگ با Premium (بدون بنفش) */
+  html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn,
+  html[data-theme="navy-crimson"] button#goalAddBtn,
+  html.theme-navy-crimson #goalAddBtn.goal-add-btn,
+  html.theme-navy-crimson button#goalAddBtn{
+    border:1px solid rgba(224,49,63,.4) !important;
+    background:
+      linear-gradient(145deg, rgba(255,255,255,.1) 0%, transparent 40%),
+      linear-gradient(135deg, #E0313F 0%, #B91C2C 55%, #8F1522 100%) !important;
+    color:#E8EEF7 !important;
+    box-shadow:
+      0 8px 22px rgba(185,28,44,.38),
+      inset 0 1px 0 rgba(255,255,255,.15) !important;
+  }
+  html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn:hover,
+  html.theme-navy-crimson #goalAddBtn.goal-add-btn:hover{
+    box-shadow:0 12px 28px rgba(185,28,44,.48), inset 0 1px 0 rgba(255,255,255,.2) !important;
+  }
+  html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn:focus-visible,
+  html.theme-navy-crimson #goalAddBtn.goal-add-btn:focus-visible{
+    outline:2px solid #E0313F;
+    outline-offset:3px;
+  }
+  html[data-theme="navy-crimson"] .goal-progress .gp-fill,
+  html.theme-navy-crimson .goal-progress .gp-fill{
+    background:linear-gradient(90deg, #B91C2C, #E0313F);
+  }
+  html[data-theme="navy-crimson"] .goal-card .gc-badge,
+  html.theme-navy-crimson .goal-card .gc-badge{
+    background:rgba(185,28,44,.14);
+    color:#E8EEF7;
+    border:1px solid rgba(185,28,44,.3);
   }
 
 
@@ -2078,7 +2165,7 @@
   .goal-form input:focus,
   .goal-form select:focus{
     outline:none; border-color:var(--border-strong);
-    box-shadow:0 0 0 3px rgba(139,92,246,.12);
+    box-shadow:0 0 0 3px var(--blue-soft);
   }
   .goal-form .gf-actions{
     display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
@@ -2124,7 +2211,7 @@
   }
   label.chk.goal-dl-none:focus-within{
     border-color:var(--blue-light);
-    box-shadow:0 0 0 3px rgba(139,92,246,.18);
+    box-shadow:0 0 0 3px var(--blue-soft);
   }
   label.chk.goal-dl-none input[type="checkbox"]{
     -webkit-appearance:none !important;
@@ -2170,7 +2257,7 @@
     opacity:.45; cursor:not-allowed;
   }
   label.chk.goal-dl-none:has(input:checked){
-    border-color:rgba(139,92,246,.4);
+    border-color:var(--border-strong);
     background:var(--blue-soft);
     color:var(--ink);
   }
@@ -2194,8 +2281,8 @@
     transition:border-color .2s ease, box-shadow .2s ease;
   }
   .goal-card.expanded{
-    border-color:rgba(139,92,246,.38);
-    box-shadow:0 8px 24px rgba(0,0,0,.28), 0 0 0 1px rgba(139,92,246,.10);
+    border-color:var(--border-strong);
+    box-shadow:0 8px 24px rgba(0,0,0,.28), 0 0 0 1px var(--blue-soft);
   }
   .goal-card.achieved{border-color:rgba(34,197,94,.35);}
 
@@ -2234,7 +2321,7 @@
   .goal-card.expanded .gc-chev{
     transform:rotate(180deg);
     color:var(--blue-light);
-    border-color:rgba(139,92,246,.4);
+    border-color:var(--border-strong);
     background:var(--blue-soft);
   }
   .goal-card .gc-summary-metrics{
@@ -2321,7 +2408,7 @@
     flex:1 1 100px; min-height:40px; min-width:0; margin-top:0;
   }
 
-  /* دکمه هدف جدید — هماهنگ با Finverse Violet */
+  /* دکمه هدف جدید — هماهنگ با رنگ Accent تم فعلی (var) */
   #goalAddBtn.goal-add-btn,
   button#goalAddBtn{
     position:relative;
@@ -2330,19 +2417,19 @@
     margin:0 !important;
     padding:11px 18px !important;
     min-height:42px;
-    border:1px solid rgba(167,139,250,.35) !important;
+    border:1px solid var(--border-strong) !important;
     border-radius:12px !important;
     background:
       linear-gradient(145deg, rgba(255,255,255,.12) 0%, transparent 40%),
-      linear-gradient(135deg, #8B5CF6 0%, #7C3AED 55%, #5B21B6 100%) !important;
-    color:#F8FAFC !important;
+      linear-gradient(135deg, var(--blue-light) 0%, var(--blue) 55%, var(--blue-deep) 100%) !important;
+    color:var(--ink) !important;
     font-family:inherit;
     font-size:13px !important;
     font-weight:800 !important;
     letter-spacing:.01em;
     cursor:pointer;
     box-shadow:
-      0 8px 22px rgba(91,33,182,.35),
+      0 8px 22px var(--blue-glow),
       inset 0 1px 0 rgba(255,255,255,.2) !important;
     transition:transform .18s ease, box-shadow .18s ease, filter .15s ease !important;
     overflow:hidden;
@@ -2364,6 +2451,7 @@
   #goalAddBtn.goal-add-btn:focus-visible{
     outline:2px solid var(--blue-light); outline-offset:3px;
   }
+
   #goalAddBtn.goal-add-btn .gab-ic{
     display:inline-flex; width:20px; height:20px; border-radius:50%;
     background:rgba(255,255,255,.16);
@@ -3056,10 +3144,10 @@
           <span class="theme-preview" style="background:linear-gradient(135deg,#0D0B14 0%,#5B21B6 45%,#8B5CF6 72%,#A78BFA 100%)"></span>
           <span class="theme-name">Finverse Violet</span>
         </button>
-        <button type="button" class="theme-card" data-theme-val="navy-crimson" title="Navy Crimson">
+        <button type="button" class="theme-card" data-theme-val="navy-crimson" title="Premium Theme">
           <span class="theme-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
           <span class="theme-preview" style="background:linear-gradient(135deg,#0B1220 0%,#B91C2C 55%,#E0313F 100%)"></span>
-          <span class="theme-name">Navy Crimson</span>
+          <span class="theme-name">Premium Theme</span>
         </button>
       </div>
     </div>
@@ -3195,7 +3283,7 @@
   <div class="ms-sub"><span id="msName"></span> · <span class="ms-amt" id="msAmt"></span></div>
 </div>
 
-<script src="prices-api.js?v=20260827navy2"></script>
-<script src="script.js?v=20260827navy2"></script>
+<script src="prices-api.js?v=20260827premium"></script>
+<script src="script.js?v=20260827premium"></script>
 </body>
 </html>

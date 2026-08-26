@@ -1,4 +1,4 @@
-/* APP_BUILD 20260827navy — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260827premium — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -173,7 +173,7 @@ function normalizeThemeId(t){
   t = String(t || '').trim().toLowerCase().replace(/_/g, '-');
   if(t === 'finverse' || t === 'finance-blue' || t === 'finverse-blue') return 'finverse-violet';
   if(t === 'finverseviolet') return 'finverse-violet';
-  if(t === 'navycrimson') return 'navy-crimson';
+  if(t === 'navycrimson' || t === 'premium' || t === 'premium-theme' || t === 'premiumtheme') return 'navy-crimson';
   return t;
 }
 function applyTheme(t){
