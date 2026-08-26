@@ -1,4 +1,4 @@
-/* APP_BUILD 20260826v4 — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260826v5 — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -930,19 +930,30 @@ function selectDonutAsset(key){
 }
 
 function renderDonut(){
-  const total = computeTotal();
   const donut = $('donutChart');
   const legend = $('legendList');
   const tip = $('donutTip');
   const centerLbl = $('donutCenterLabel');
   const centerVal = $('donutTotal');
 
-  if(total <= 0){
-    if(donut){
-      donut.style.background = 'var(--card-2)';
-      const svg = donut.querySelector('.donut-seg-svg');
-      if(svg) svg.innerHTML = '';
-    }
+  // فقط دارایی‌های واقعی با مقدار معتبر و مثبت
+  const items = [];
+  (Array.isArray(ASSET_DEFS) ? ASSET_DEFS : []).forEach(d => {
+    if(!d || !d.key) return;
+    const v = safeNum(assets && assets[d.key], 0);
+    if(!(v > 0) || !isFinite(v)) return;
+    items.push({ key: d.key, name: d.name, color: d.color, value: v });
+  });
+  const displayTotal = items.reduce((s, it) => s + it.value, 0);
+
+  // حذف لایهٔ SVG معیوب قبلی در صورت وجود
+  if(donut){
+    const oldSvg = donut.querySelector('.donut-seg-svg');
+    if(oldSvg) oldSvg.remove();
+  }
+
+  if(!(displayTotal > 0)){
+    if(donut) donut.style.background = 'var(--card-2)';
     if(legend) legend.innerHTML = '<div class="empty">دارایی‌ای ثبت نشده</div>';
     if(centerLbl) centerLbl.textContent = 'جمع کل';
     if(centerVal) centerVal.textContent = '۰';
@@ -951,70 +962,50 @@ function renderDonut(){
     return;
   }
 
-  // ساخت گرادیان دونات
+  // درصدها با روش Largest Remainder تا مجموع دقیقاً ۱۰۰٫۰٪ شود
+  const raw = items.map(it => (it.value / displayTotal) * 100);
+  const floors = raw.map(p => Math.floor(p * 10) / 10);
+  let rest = Math.round((100 - floors.reduce((a,b)=>a+b, 0)) * 10); // دهم‌درصد باقی
+  const order = raw.map((p,i) => ({ i, frac: p * 10 - Math.floor(p * 10) }))
+    .sort((a,b) => b.frac - a.frac);
+  const pcts = floors.slice();
+  for(let k = 0; k < order.length && rest > 0; k++, rest--){
+    pcts[order[k].i] = Math.round((pcts[order[k].i] + 0.1) * 10) / 10;
+  }
+  // اطمینان نهایی از جمع ۱۰۰
+  const pctSum = pcts.reduce((a,b)=>a+b, 0);
+  if(Math.abs(pctSum - 100) > 0.01 && pcts.length){
+    pcts[pcts.length - 1] = Math.round((pcts[pcts.length - 1] + (100 - pctSum)) * 10) / 10;
+  }
+
   let acc = 0;
   const stops = [];
-  const segments = []; // {key, startPct, endPct}
-  ASSET_DEFS.forEach(d=>{
-    const v = safeNum(assets[d.key], 0);
-    if(v <= 0) return;
-    const pct = v / total * 100;
-    stops.push(`${d.color} ${acc}% ${acc + pct}%`);
-    segments.push({key: d.key, start: acc, end: acc + pct, color: d.color, name: d.name, value: v});
-    acc += pct;
+  const segments = [];
+  items.forEach((it, i) => {
+    const pct = Math.max(0, safeNum(pcts[i], 0));
+    const start = acc;
+    const end = acc + pct;
+    stops.push(it.color + ' ' + start + '% ' + end + '%');
+    segments.push({ key: it.key, start, end, color: it.color, name: it.name, value: it.value, pct });
+    acc = end;
   });
+
   if(donut){
-    donut.style.background = stops.length ? `conic-gradient(${stops.join(',')})` : 'var(--card-2)';
-    // لایه SVG برای انیمیشن ظریف هر segment
-    let svg = donut.querySelector('.donut-seg-svg');
-    if(!svg){
-      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('class', 'donut-seg-svg');
-      svg.setAttribute('viewBox', '0 0 100 100');
-      svg.setAttribute('aria-hidden', 'true');
-      donut.appendChild(svg);
-    }
-    // شعاع حلقه روی لبهٔ دونات (بین outer و hole)
-    const R = 38, CX = 50, CY = 50;
-    const circ = 2 * Math.PI * R;
-    let arcs = '';
-    segments.forEach((seg, i) => {
-      const span = Math.max(0, seg.end - seg.start);
-      if(span < 0.15) return; // خیلی کوچک — انیمیشن لازم نیست
-      const len = circ * (span / 100);
-      // شروع از بالای دایره، ساعت‌گرد — مثل conic-gradient
-      const startAngle = (seg.start / 100) * 360 - 90;
-      const delay = (i * 0.08).toFixed(2) + 's';
-      // stroke کامل با dash برای طول segment
-      arcs += '<circle class="donut-seg-glow" cx="'+CX+'" cy="'+CY+'" r="'+R+'"' +
-        ' stroke="'+seg.color+'" stroke-width="5"' +
-        ' stroke-dasharray="'+len.toFixed(2)+' '+(circ - len).toFixed(2)+'"' +
-        ' stroke-dashoffset="0"' +
-        ' transform="rotate('+startAngle+' '+CX+' '+CY+')"' +
-        ' style="animation-delay:'+delay+'"></circle>';
-      arcs += '<circle class="donut-seg-arc" cx="'+CX+'" cy="'+CY+'" r="'+R+'"' +
-        ' stroke="'+seg.color+'" stroke-width="3.2"' +
-        ' stroke-dasharray="'+len.toFixed(2)+' '+(circ - len).toFixed(2)+'"' +
-        ' style="--seg-len:'+len.toFixed(2)+';animation-delay:'+delay+'"' +
-        ' transform="rotate('+startAngle+' '+CX+' '+CY+')"></circle>';
-    });
-    svg.innerHTML = arcs;
+    donut.style.background = stops.length ? ('conic-gradient(' + stops.join(',') + ')') : 'var(--card-2)';
   }
 
   if(legend){
-    legend.innerHTML = ASSET_DEFS.map(d=>{
-      const v = safeNum(assets[d.key], 0);
-      const pct = total ? (v / total * 100) : 0;
-      const active = selectedDonutKey === d.key ? ' active' : '';
-      return `<div class="legend-item${active}" data-key="${d.key}">
-        <span class="legend-dot" style="background:${d.color}"></span>
-        <span class="legend-name">${d.name}</span>
-        <span class="legend-pct">${pct.toFixed(1)}%</span>
-      </div>`;
+    legend.innerHTML = items.map((it, i) => {
+      const pct = safeNum(pcts[i], 0);
+      const active = selectedDonutKey === it.key ? ' active' : '';
+      return '<div class="legend-item' + active + '" data-key="' + it.key + '">' +
+        '<span class="legend-dot" style="background:' + it.color + '"></span>' +
+        '<span class="legend-name">' + it.name + '</span>' +
+        '<span class="legend-pct">' + pct.toFixed(1) + '%</span></div>';
     }).join('');
 
-    legend.querySelectorAll('.legend-item').forEach(el=>{
-      el.addEventListener('click', ()=>{
+    legend.querySelectorAll('.legend-item').forEach(el => {
+      el.addEventListener('click', () => {
         const key = el.dataset.key;
         if(selectedDonutKey === key){
           selectedDonutKey = null;
@@ -1026,29 +1017,31 @@ function renderDonut(){
     });
   }
 
-  // کلیک روی دونات: تشخیص زاویه
   if(donut && !donut._donutBound){
     donut._donutBound = true;
     donut.style.cursor = 'pointer';
-    donut.addEventListener('click', (e)=>{
+    donut.addEventListener('click', (e) => {
       const rect = donut.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const x = e.clientX - cx;
       const y = e.clientY - cy;
-      // conic-gradient از بالا (12 o'clock) شروع می‌شود و ساعت‌گرد می‌رود
-      let ang = Math.atan2(x, -y) * 180 / Math.PI; // 0 بالا، مثبت ساعت‌گرد
+      let ang = Math.atan2(x, -y) * 180 / Math.PI;
       if(ang < 0) ang += 360;
-      const pct = ang / 360 * 100;
-      const tot = computeTotal();
-      if(tot <= 0) return;
+      const pctAng = ang / 360 * 100;
+      // بازسازی segmentها از دارایی‌های مثبت فعلی
       let a = 0;
       let found = null;
-      for(const d of ASSET_DEFS){
-        const v = safeNum(assets[d.key], 0);
-        if(v <= 0) continue;
-        const p = v / tot * 100;
-        if(pct >= a && pct < a + p){ found = d.key; break; }
+      let sum = 0;
+      const live = [];
+      (Array.isArray(ASSET_DEFS) ? ASSET_DEFS : []).forEach(d => {
+        const v = safeNum(assets && assets[d.key], 0);
+        if(v > 0){ live.push({ key: d.key, value: v }); sum += v; }
+      });
+      if(!(sum > 0)) return;
+      for(const it of live){
+        const p = (it.value / sum) * 100;
+        if(pctAng >= a && pctAng < a + p){ found = it.key; break; }
         a += p;
       }
       if(found){
@@ -1058,13 +1051,12 @@ function renderDonut(){
     });
   }
 
-  // بازگردانی انتخاب قبلی یا جمع کل
-  if(selectedDonutKey && ASSET_DEFS.some(d => d.key === selectedDonutKey)){
+  if(selectedDonutKey && items.some(it => it.key === selectedDonutKey)){
     selectDonutAsset(selectedDonutKey);
   } else {
     selectedDonutKey = null;
     if(centerLbl) centerLbl.textContent = 'جمع کل';
-    if(centerVal) centerVal.textContent = fmt(total);
+    if(centerVal) centerVal.textContent = fmt(displayTotal);
     if(tip) tip.innerHTML = 'روی هر دارایی بزن تا جزئیاتش را ببینی';
   }
 }
@@ -1814,37 +1806,67 @@ function computeMonthSpendStats(monthKey, opts){
   const elapsedDays = asOfDay;
   const remainingDays = closed ? 0 : Math.max(0, totalDays - asOfDay);
 
+  // فقط پرداختی‌های واقعی (payment) — درآمد/انتقال وارد هزینه نمی‌شوند
   const monthEvents = (Array.isArray(fcEvents) ? fcEvents : []).filter(e =>
     e && e.date && isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey
   );
-  const payments = monthEvents.filter(e => e.type === 'payment' && safeNum(e.amount) > 0);
-  const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
+  // حذف تکراری بر اساس id برای جلوگیری از دوباره‌شماری
+  const seenPay = new Set();
+  const payments = [];
+  monthEvents.forEach(e => {
+    if(e.type !== 'payment') return;
+    const amt = safeNum(e.amount, 0);
+    if(!(amt > 0)) return;
+    const id = e.id != null ? String(e.id) : '';
+    if(id){
+      if(seenPay.has(id)) return;
+      seenPay.add(id);
+    }
+    payments.push(e);
+  });
+  const seenRec = new Set();
+  const receipts = [];
+  monthEvents.forEach(e => {
+    if(e.type !== 'deposit') return;
+    const amt = safeNum(e.amount, 0);
+    if(!(amt > 0)) return;
+    const id = e.id != null ? String(e.id) : '';
+    if(id){
+      if(seenRec.has(id)) return;
+      seenRec.add(id);
+    }
+    receipts.push(e);
+  });
 
   const series = buildDailySpendSeries(payments, elapsedDays);
   const sumPay = series.reduce((a,b)=>a+b, 0);
-  const daysWithSpend = series.filter(v => v > 0).length;
-  const daysZero = elapsedDays - daysWithSpend;
+  const daysWithSpend = series.filter(v => v > 0).length; // روزهای دارای دادهٔ هزینه
+  const daysZero = Math.max(0, elapsedDays - daysWithSpend);
   const paymentCount = payments.length;
 
-  // میانگین روزانه با احتساب صفرها
-  const avgDaily = elapsedDays > 0 ? (sumPay / elapsedDays) : 0;
-  // میانگین شدت در روزهای دارای خرج (شاخص جدا — برای میانگین پیش‌بینی استفاده نمی‌شود)
+  // میانگین روزانه = مجموع هزینه ÷ تعداد روزهای دارای داده (نه روزهای تقویمی ماه)
   const avgOnSpendDays = daysWithSpend > 0 ? (sumPay / daysWithSpend) : 0;
+  const avgDaily = avgOnSpendDays; // نرخ پیش‌بینی بر پایه روزهای دارای داده
 
-  const stdev = sampleStdev(series);
-  const cv = avgDaily > 1e-9 ? (stdev / avgDaily) : 0; // ضریب تغییرات
-  const slope = linearTrendSlope(series); // تومان/روز
+  const stdev = sampleStdev(series.filter(v => v > 0).length >= 2
+    ? series.filter(v => v > 0)
+    : series);
+  const cv = avgDaily > 1e-9 ? (stdev / avgDaily) : 0;
+  const slope = linearTrendSlope(series);
 
   // پیش‌بینی خرج ماه
-  // داده کم: فقط مجموع واقعی — بدون تعمیم
-  // داده کافی (≥۲ روز سپری‌شده): مجموع تا امروز + میانگین‌روزانه × باقی‌مانده
+  // — ماه بسته‌شده: فقط مجموع واقعی
+  // — با حداقل ۱ روز دارای داده: نرخ روزانهٔ دارای‌داده × تعداد روزهای ماه
+  // — بدون پرداخت: صفر
   let projectedMonth = sumPay;
   let extrapolate = false;
-  if(!closed && elapsedDays >= 2 && remainingDays > 0){
-    projectedMonth = sumPay + avgDaily * remainingDays;
+  if(closed){
+    projectedMonth = sumPay;
+  } else if(daysWithSpend >= 1){
+    projectedMonth = avgDaily * totalDays;
     extrapolate = true;
-  } else if(closed){
-    projectedMonth = sumPay; // ماه تمام‌شده = واقعیت
+  } else {
+    projectedMonth = 0;
   }
   if(!isFinite(projectedMonth) || projectedMonth < 0) projectedMonth = 0;
 
@@ -1881,10 +1903,11 @@ function computeMonthSpendStats(monthKey, opts){
   const capacity = resources * 0.8; // توان مالی تعریف‌شده محصول (۸۰٪ منابع)
   let pressure = 0;
   if(capacity > 1e-9) pressure = (projectedMonth / capacity) * 100;
-  else if(projectedMonth > 0) pressure = 999;
+  else if(projectedMonth > 0) pressure = 100; // بدون توان مالی ولی با هزینه → فشار حداکثر نمایشی
   pressure = safeNum(pressure, 0);
   if(pressure < 0) pressure = 0;
-  if(pressure > 9999) pressure = 9999;
+  // برای Progress همیشه ۰–۱۰۰؛ مقدار خام بالاتر فقط در note قابل ذکر است
+  if(pressure > 100) pressure = 100;
 
   const incomeRatio = sumReceipt > 1e-9 ? (sumPay / sumReceipt) : (sumPay > 0 ? Infinity : 0);
 
@@ -2864,36 +2887,36 @@ function renderForecast(){
 
     if($('fcRemain')) $('fcRemain').textContent = String(st.remainingDays);
     if($('fcCount')) $('fcCount').textContent = String(st.paymentCount);
-    // «روز داده» = روزهای سپری‌شده تقویمی (شامل صفرها)، نه فقط روزهای دارای خرج
-    if($('fcDays')) $('fcDays').textContent = String(st.elapsedDays);
+    // روزهای دارای داده = روزهایی که حداقل یک پرداخت ثبت شده
+    if($('fcDays')) $('fcDays').textContent = String(st.daysWithSpend);
     if($('fcExpense')) $('fcExpense').textContent = fmt(st.projectedMonth) + ' ت';
 
-    // منابع = موجودی کارت (+ درآمد مورد انتظار فقط وقتی داده کافی و تعمیم مجاز)
+    // منابع = موجودی کارت (+ درآمد مورد انتظار در صورت تعمیم)
     let expectedIncome = 0;
-    if(st.extrapolate && st.elapsedDays >= 2){
-      expectedIncome = Math.max(0, st.projectedReceipt - st.sumReceipt);
+    if(st.extrapolate && st.daysWithSpend >= 1){
+      expectedIncome = Math.max(0, safeNum(st.projectedReceipt, 0) - safeNum(st.sumReceipt, 0));
     }
     const resources = currentBal + expectedIncome;
     const capacity = resources * 0.8;
     let pressure = 0;
     if(capacity > 1e-9) pressure = (st.projectedMonth / capacity) * 100;
-    else if(st.projectedMonth > 0) pressure = 999;
+    else if(st.projectedMonth > 0) pressure = 100;
     pressure = safeNum(pressure, 0);
     if(pressure < 0) pressure = 0;
-    if(pressure > 9999) pressure = 9999;
+    if(pressure > 100) pressure = 100;
 
     if($('fcResources')) $('fcResources').textContent = fmt(Math.round(resources)) + ' ت';
     if($('fcCapacity')) $('fcCapacity').textContent = fmt(Math.round(capacity)) + ' ت';
     if($('fcPressure')) $('fcPressure').textContent = pressure.toFixed(1) + '٪';
 
     const barPct = Math.min(100, Math.max(0, pressure));
-    const color = progressColor(pressure > 100 ? 101 : pressure);
+    const color = progressColor(barPct);
     if($('fcProgress')){
       $('fcProgress').style.width = barPct + '%';
       $('fcProgress').style.background = color;
     }
     if($('fcPctLabel')){
-      $('fcPctLabel').textContent = (pressure > 100 ? pressure.toFixed(0) : pressure.toFixed(1)) + '٪';
+      $('fcPctLabel').textContent = pressure.toFixed(1) + '٪';
       $('fcPctLabel').style.color = color;
     }
 
@@ -2911,21 +2934,17 @@ function renderForecast(){
     // یادداشت وضعیت — تفکیک صفر واقعی / داده کم / تعمیم
     if($('fcNote')){
       if(st.paymentCount === 0){
-        $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده. روزهای سپری‌شده بدون خرج به‌عنوان صفر لحاظ می‌شوند.';
-      } else if(st.elapsedDays < 2){
-        $('fcNote').textContent = 'با کمتر از ۲ روز سپری‌شده، خرج ماهانه برابر مجموع واقعی است (بدون تعمیم به کل ماه).';
+        $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده. پیش‌بینی هزینه صفر است.';
       } else if(!st.extrapolate){
-        $('fcNote').textContent = 'پیش‌بینی بر پایه میانگین روزانه با احتساب روزهای بدون خرج.';
+        $('fcNote').textContent = 'خرج ماه = مجموع پرداختی‌های ثبت‌شده (' + st.paymentCount + ' تراکنش).';
       } else {
-        const zeroHint = st.daysZero > 0
-          ? (' · ' + st.daysZero + ' روز بدون خرج در میانگین لحاظ شد')
-          : '';
         const trendHint = st.trend === 'up' ? ' · روند افزایشی' : (st.trend === 'down' ? ' · روند کاهشی' : '');
+        const base = 'میانگین روزانه بر پایه ' + st.daysWithSpend +
+          ' روز دارای داده × ' + st.totalDays + ' روز ماه' + trendHint;
         if(deficit > 0){
-          $('fcNote').textContent = 'خرج پیش‌بینی‌شده از توان مالی بیشتر است' + zeroHint + trendHint + '.';
+          $('fcNote').textContent = 'خرج پیش‌بینی‌شده از توان مالی بیشتر است. ' + base + '.';
         } else {
-          $('fcNote').textContent = 'میانگین روزانه با احتساب روزهای صفر · پوشش ماه ' +
-            Math.round(st.coverage * 100) + '٪' + zeroHint + trendHint + '.';
+          $('fcNote').textContent = base + '.';
         }
       }
     }

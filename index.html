@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="app-build" content="20260826v4">
-<!-- BUILD_STAMP 20260826v4 goals-checkbox-donut-copy -->
+<meta name="app-build" content="20260826v5">
+<!-- BUILD_STAMP 20260826v5 goals-checkbox-donut-copy -->
 <title>مبحث درآمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2326,52 +2326,6 @@
     #goalAddBtn.goal-add-btn::before{display:none;}
   }
 
-  /* Donut segment pulse (SVG overlay) */
-  .donut{ position:relative; }
-  .donut-seg-svg{
-    position:absolute; inset:0; width:100%; height:100%;
-    pointer-events:none; z-index:1;
-    overflow:visible;
-  }
-  .donut-center{ z-index:2; }
-  .donut-seg-arc{
-    fill:none;
-    stroke-linecap:butt;
-    opacity:0;
-    transform-origin:center;
-    animation: donutSegIn .75s cubic-bezier(.22,.61,.36,1) forwards;
-  }
-  .donut-seg-glow{
-    fill:none;
-    stroke-linecap:round;
-    opacity:0;
-    filter:blur(2px);
-    animation: donutSegGlow 2.4s ease-in-out infinite;
-  }
-  @keyframes donutSegIn{
-    0%{ opacity:0; stroke-dashoffset: var(--seg-len); }
-    50%{ opacity:1; }
-    100%{ opacity:.75; stroke-dashoffset:0; }
-  }
-  @keyframes donutSegGlow{
-    0%,100%{ opacity:.2; }
-    50%{ opacity:.55; }
-  }
-  html[data-anim="off"] .donut-seg-arc,
-  html[data-anim="off"] .donut-seg-glow{
-    animation:none !important;
-    opacity:.35;
-    stroke-dashoffset:0;
-  }
-  @media (prefers-reduced-motion: reduce){
-    .donut-seg-arc, .donut-seg-glow{ animation:none !important; opacity:.3; stroke-dashoffset:0; }
-    #goalAddBtn.goal-add-btn::before{ display:none; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .goal-body, .goal-body-inner, .goal-card .gc-chev, .goal-card{transition:none !important;}
-    .goal-body-inner{opacity:1; transform:none;}
-  }
-
   /* Note copy button */
   .note-card-head{display:flex; align-items:flex-start; gap:6px;}
   .note-card-head .note-card-title{flex:1; min-width:0;}
@@ -2538,7 +2492,7 @@
           <span>ماه: <b id="fcMonth">—</b></span>
           <span>موجودی: <b id="fcBalance">—</b></span>
           <span>تراکنش: <b id="fcCount">—</b></span>
-          <span>روز سپری‌شده: <b id="fcDays">—</b></span>
+          <span>روز دارای داده: <b id="fcDays">—</b></span>
           <span>روز باقی‌مانده: <b id="fcRemain">—</b></span>
         </div>
         <div class="forecast-row"><span>خرج ماهانه پیش‌بینی‌شده</span><span class="val" id="fcExpense">—</span></div>
@@ -3146,7 +3100,7 @@
   <div class="ms-sub"><span id="msName"></span> · <span class="ms-amt" id="msAmt"></span></div>
 </div>
 
-<script src="prices-api.js?v=20260826v4"></script>
-<script src="script.js?v=20260826v4"></script>
+<script src="prices-api.js?v=20260826v5"></script>
+<script src="script.js?v=20260826v5"></script>
 </body>
 </html>
