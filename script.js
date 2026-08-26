@@ -2889,26 +2889,26 @@ function renderForecast(){
 
     $('fcMonth').textContent = monthLabel;
 
+    // موجودی کارت فقط برای ردیف «موجودی» (UI جدا)
     const currentBal = safeNum(assets && assets.card, 0);
     if($('fcBalance')) $('fcBalance').textContent = fmt(currentBal) + ' ت';
 
+    // منابع مالی = جمع کل دارایی معتبر (همان computeTotal / جمع کل صفحه خانه)
+    const totalAssets = Math.max(0, safeNum(typeof computeTotal === 'function' ? computeTotal() : 0, 0));
+
     const st = computeMonthSpendStats(monthKey, {
       closedMonth: false,
-      balanceForResources: currentBal
+      balanceForResources: totalAssets
     });
 
     if($('fcRemain')) $('fcRemain').textContent = String(st.remainingDays);
     if($('fcCount')) $('fcCount').textContent = String(st.paymentCount);
-    // روزهای دارای داده = روزهایی که حداقل یک پرداخت ثبت شده
     if($('fcDays')) $('fcDays').textContent = String(st.daysWithSpend);
+    // خرج ماهانه پیش‌بینی‌شده — فقط از paymentهای واقعی ماه (منطق computeMonthSpendStats)
     if($('fcExpense')) $('fcExpense').textContent = fmt(st.projectedMonth) + ' ت';
 
-    // منابع = موجودی کارت (+ درآمد مورد انتظار در صورت تعمیم)
-    let expectedIncome = 0;
-    if(st.extrapolate && st.daysWithSpend >= 1){
-      expectedIncome = Math.max(0, safeNum(st.projectedReceipt, 0) - safeNum(st.sumReceipt, 0));
-    }
-    const resources = currentBal + expectedIncome;
+    // منابع مالی: بدون افزودن درآمد فرضی — برابر جمع کل دارایی
+    const resources = totalAssets;
     const capacity = resources * 0.8;
     let pressure = 0;
     if(capacity > 1e-9) pressure = (st.projectedMonth / capacity) * 100;
