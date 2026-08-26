@@ -323,7 +323,7 @@
     cursor:pointer;
     box-shadow:0 2px 10px rgba(0,0,0,.04);
     transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    animation: noteIn .28s ease both;
+    animation: noteIn .18s ease both;
   }
   html[data-anim="off"] .note-card{animation:none;}
   @keyframes noteIn{
@@ -383,7 +383,7 @@
     border:1px solid var(--border-strong);
     background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
     box-shadow:0 4px 20px rgba(0,0,0,.06);
-    animation: noteIn .22s ease both;
+    animation: noteIn .16s ease both;
   }
   .note-editor.open{display:block;}
   .note-editor .field{margin-top:2px;}
@@ -940,7 +940,7 @@
   .menu-item:hover{background:var(--blue-soft); color:var(--ink);}
   .menu-item.active{background:var(--blue-soft); color:var(--blue-light); font-weight:700;}
 
-  .reveal{opacity:0; transform:translate3d(0,14px,0); transition:opacity .45s ease, transform .45s ease;}
+  .reveal{opacity:0; transform:translate3d(0,8px,0); transition:opacity .28s ease, transform .28s ease;}
   .reveal.in-view{opacity:1; transform:translate3d(0,0,0);}
 
   /* ---- Interactive motion (minimal) ---- */
@@ -2033,22 +2033,18 @@
   .goal-conf.warn{color:var(--orange, #F59E0B);}
 
 
-  /* Goal collapse — advanced CSS animation */
+  /* Goal collapse — transform/opacity only (GPU-friendly) */
   .goal-card{
-    transition: border-color .35s ease, box-shadow .35s ease;
+    transition: border-color .2s ease, box-shadow .2s ease;
   }
   .goal-card.expanded{
-    border-color: rgba(139,92,246,.42);
-    box-shadow: 0 10px 32px rgba(0,0,0,.32), 0 0 0 1px rgba(139,92,246,.12), inset 0 1px 0 rgba(167,139,250,.10);
+    border-color: rgba(139,92,246,.38);
+    box-shadow: 0 8px 24px rgba(0,0,0,.28), 0 0 0 1px rgba(139,92,246,.10);
   }
   .goal-card .gc-summary{
     cursor:pointer; user-select:none;
     display:flex; flex-direction:column; gap:8px;
     border-radius:12px;
-    transition: background .25s ease;
-  }
-  .goal-card .gc-summary:hover{
-    background: rgba(139,92,246,.04);
   }
   .goal-card .gc-summary:focus-visible{
     outline:2px solid var(--blue-light); outline-offset:2px; border-radius:10px;
@@ -2060,19 +2056,14 @@
     width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
     background:var(--bg-2); color:var(--ink-dim); flex-shrink:0;
     display:inline-flex; align-items:center; justify-content:center;
-    transition:
-      transform .45s cubic-bezier(.34,1.4,.64,1),
-      background .25s ease,
-      color .25s ease,
-      border-color .25s ease,
-      box-shadow .3s ease;
+    transition: transform .28s cubic-bezier(.22,.61,.36,1), background .15s, color .15s, border-color .15s;
+    will-change: transform;
   }
   .goal-card.expanded .gc-chev{
     transform:rotate(180deg);
     color:var(--blue-light);
-    border-color:rgba(139,92,246,.45);
+    border-color:rgba(139,92,246,.4);
     background:var(--blue-soft);
-    box-shadow: 0 0 12px rgba(139,92,246,.25);
   }
   .goal-card .gc-summary-metrics{
     display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; font-size:12px;
@@ -2085,7 +2076,7 @@
   .goal-body{
     display:grid;
     grid-template-rows:0fr;
-    transition: grid-template-rows .42s cubic-bezier(.22,.61,.36,1);
+    transition: grid-template-rows .28s cubic-bezier(.22,.61,.36,1);
   }
   .goal-card.expanded .goal-body{
     grid-template-rows:1fr;
@@ -2093,17 +2084,13 @@
   .goal-body-inner{
     overflow:hidden; min-height:0;
     opacity:0;
-    transform: translateY(-6px);
-    filter: blur(2px);
-    transition:
-      opacity .32s ease .04s,
-      transform .38s cubic-bezier(.22,.61,.36,1) .02s,
-      filter .3s ease;
+    transform: translate3d(0,-4px,0);
+    transition: opacity .22s ease, transform .26s cubic-bezier(.22,.61,.36,1);
+    will-change: opacity, transform;
   }
   .goal-card.expanded .goal-body-inner{
     opacity:1;
-    transform: translateY(0);
-    filter: blur(0);
+    transform: translate3d(0,0,0);
   }
   .goal-body-inner > *:first-child{margin-top:10px;}
   .goal-card .gc-actions{margin-top:4px;}
@@ -2113,7 +2100,22 @@
     transition:none !important;
   }
   html[data-anim="off"] .goal-body-inner{
-    opacity:1; transform:none; filter:none;
+    opacity:1; transform:none;
+  }
+  .goal-dl-row{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  }
+  .goal-dl-row select{
+    min-width:72px; flex:1;
+    padding:8px 10px; border-radius:10px;
+    border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
+    font-family:var(--app-font); font-size:13px;
+  }
+  .goal-dl-row select:disabled{opacity:.45;}
+  .goal-dl-none{font-size:12px; color:var(--ink-dim); white-space:nowrap; margin:0;}
+  @media (prefers-reduced-motion: reduce){
+    .goal-body, .goal-body-inner, .goal-card .gc-chev, .goal-card{transition:none !important;}
+    .goal-body-inner{opacity:1; transform:none;}
   }
 
   /* Note copy button */
@@ -2657,7 +2659,7 @@
       <div class="goals-head">
         <div>
           <div class="section-title" style="margin-bottom:4px;"><span class="dot"></span>اهداف مالی</div>
-          <div class="section-sub" style="margin:0;">بر پایه جمع کل دارایی و جریان واقعی درآمد/هزینه — بدون عدد ساختگی</div>
+          <div class="section-sub" style="margin:0;">بر اساس جمع دارایی و جریان واقعی درآمد و هزینه</div>
         </div>
         <div class="gh-actions">
           <button type="button" class="btn" id="goalAddBtn">هدف جدید</button>
@@ -2687,9 +2689,14 @@
             <label class="field" for="goalAmount">مبلغ هدف (تومان)</label>
             <input type="text" inputmode="numeric" id="goalAmount" class="money-input" placeholder="مثلاً 500,000,000">
           </div>
-          <div>
-            <label class="field" for="goalDeadline">مهلت (اختیاری)</label>
-            <input type="date" id="goalDeadline">
+          <div style="grid-column:1/-1;">
+            <label class="field">مهلت (اختیاری — شمسی)</label>
+            <div class="goal-dl-row" id="goalDeadlinePicker">
+              <select id="goalDlDay" aria-label="روز مهلت"></select>
+              <select id="goalDlMonth" aria-label="ماه مهلت"></select>
+              <select id="goalDlYear" aria-label="سال مهلت"></select>
+              <label class="chk goal-dl-none"><input type="checkbox" id="goalDlNone"> بدون مهلت</label>
+            </div>
           </div>
         </div>
         <div class="gf-actions">

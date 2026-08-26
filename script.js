@@ -2185,6 +2185,83 @@ function computeGoalProjection(goal, capital, model){
   };
 }
 
+function setupGoalDeadlinePicker(){
+  const daySel = $('goalDlDay'), monthSel = $('goalDlMonth'), yearSel = $('goalDlYear'), noneChk = $('goalDlNone');
+  if(!daySel || !monthSel || !yearSel) return;
+  if(daySel.dataset.ready === '1') return;
+  daySel.dataset.ready = '1';
+  const [ty, tm, td] = gregorianToJalali(...todayISO().split('-').map(Number));
+  monthSel.innerHTML = JMONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  const years = [];
+  for(let y = ty - 1; y <= ty + 12; y++) years.push(y);
+  yearSel.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  function rebuildDays(){
+    const jy = parseInt(yearSel.value, 10), jm = parseInt(monthSel.value, 10);
+    if(!isFinite(jy) || !isFinite(jm)) return;
+    const dCount = daysInJalaliMonth(jy, jm);
+    const prevVal = parseInt(daySel.value, 10) || td;
+    daySel.innerHTML = Array.from({length:dCount}, (_,i)=>i+1).map(d=>`<option value="${d}">${d}</option>`).join('');
+    daySel.value = String(Math.min(prevVal, dCount));
+  }
+  monthSel.value = String(tm);
+  yearSel.value = String(ty);
+  rebuildDays();
+  daySel.value = String(td);
+  monthSel.addEventListener('change', rebuildDays);
+  yearSel.addEventListener('change', rebuildDays);
+  function applyNoneState(){
+    const off = !!(noneChk && noneChk.checked);
+    [daySel, monthSel, yearSel].forEach(el => { if(el) el.disabled = off; });
+  }
+  if(noneChk){
+    noneChk.checked = true;
+    noneChk.addEventListener('change', applyNoneState);
+    applyNoneState();
+  }
+}
+function setGoalDeadlinePickerFromISO(iso){
+  setupGoalDeadlinePicker();
+  const daySel = $('goalDlDay'), monthSel = $('goalDlMonth'), yearSel = $('goalDlYear'), noneChk = $('goalDlNone');
+  if(!daySel || !monthSel || !yearSel) return;
+  if(!iso){
+    if(noneChk) noneChk.checked = true;
+    [daySel, monthSel, yearSel].forEach(el => { if(el) el.disabled = true; });
+    return;
+  }
+  try{
+    const parts = String(iso).slice(0,10).split('-').map(Number);
+    if(parts.length < 3 || parts.some(n => !isFinite(n))){
+      if(noneChk) noneChk.checked = true;
+      return;
+    }
+    const [jy, jm, jd] = gregorianToJalali(parts[0], parts[1], parts[2]);
+    if(noneChk) noneChk.checked = false;
+    [daySel, monthSel, yearSel].forEach(el => { if(el) el.disabled = false; });
+    if(![...yearSel.options].some(o => Number(o.value) === jy)){
+      const o = document.createElement('option');
+      o.value = jy; o.textContent = jy;
+      yearSel.appendChild(o);
+    }
+    yearSel.value = String(jy);
+    monthSel.value = String(jm);
+    const dCount = daysInJalaliMonth(jy, jm);
+    daySel.innerHTML = Array.from({length:dCount}, (_,i)=>i+1).map(d=>`<option value="${d}">${d}</option>`).join('');
+    daySel.value = String(Math.min(jd, dCount));
+  }catch(e){
+    if(noneChk) noneChk.checked = true;
+  }
+}
+function getGoalDeadlineISO(){
+  const noneChk = $('goalDlNone');
+  if(noneChk && noneChk.checked) return '';
+  return getJalaliPickerISO('goalDlDay', 'goalDlMonth', 'goalDlYear');
+}
+function formatGoalDeadlineDisplay(iso){
+  if(!iso) return '';
+  const s = toJalaliStr(String(iso).slice(0,10));
+  return s || String(iso).slice(0,10);
+}
+
 function openGoalForm(editId){
   // اطمینان از نمایش صفحه اهداف
   const page = document.getElementById('page-goals');
@@ -2202,22 +2279,22 @@ function openGoalForm(editId){
   const idEl = document.getElementById('goalEditId');
   const titleEl = document.getElementById('goalTitle');
   const amtEl = document.getElementById('goalAmount');
-  const dlEl = document.getElementById('goalDeadline');
   const ft = document.getElementById('goalFormTitle');
+  setupGoalDeadlinePicker();
   if(editId){
     const g = (financialGoals || []).find(x => String(x.id) === String(editId));
     if(g){
       if(idEl) idEl.value = String(g.id);
       if(titleEl) titleEl.value = g.title || '';
       if(amtEl) amtEl.value = fmt(g.targetAmount);
-      if(dlEl) dlEl.value = g.deadline ? String(g.deadline).slice(0,10) : '';
+      setGoalDeadlinePickerFromISO(g.deadline ? String(g.deadline).slice(0,10) : '');
       if(ft) ft.textContent = 'ویرایش هدف';
     }
   } else {
     if(idEl) idEl.value = '';
     if(titleEl) titleEl.value = '';
     if(amtEl) amtEl.value = '';
-    if(dlEl) dlEl.value = '';
+    setGoalDeadlinePickerFromISO('');
     if(ft) ft.textContent = 'هدف جدید';
   }
   try{ form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(e){}
@@ -2237,7 +2314,7 @@ function closeGoalForm(){
 function saveGoalFromForm(){
   const title = String(($('goalTitle') && $('goalTitle').value) || '').trim();
   const amount = parseMoney(($('goalAmount') && $('goalAmount').value) || '');
-  const deadlineRaw = ($('goalDeadline') && $('goalDeadline').value) || '';
+  const deadlineRaw = (typeof getGoalDeadlineISO === 'function' ? getGoalDeadlineISO() : '') || '';
   const editId = ($('goalEditId') && $('goalEditId').value) || '';
 
   if(!title){
@@ -2320,7 +2397,7 @@ function renderFinancialGoals(){
     const model = computeSavingsModel();
     if($('goalsSavingsRate')){
       if(model.dataSource === 'none'){
-        $('goalsSavingsRate').textContent = 'داده ناکافی';
+        $('goalsSavingsRate').textContent = 'داده کافی نیست';
       } else {
         const v = model.monthlyReal;
         const sign = v >= 0 ? '' : '−';
@@ -2332,22 +2409,22 @@ function renderFinancialGoals(){
     goals.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
 
     if(!goals.length){
-      listEl.innerHTML = '<div class="goals-empty">هنوز هدفی ثبت نشده است.<br>با «هدف جدید» اولین هدف مالی‌تان را بسازید.</div>';
+      listEl.innerHTML = '<div class="goals-empty">هنوز هدفی ندارید.<br>با «هدف جدید» شروع کنید.</div>';
       return;
     }
 
     listEl.innerHTML = goals.map(g => {
       const proj = computeGoalProjection(g, capital, model);
-      const badge = proj.achieved ? 'محقق‌شده' : 'در مسیر';
+      const badge = proj.achieved ? 'رسیده' : 'در مسیر';
       const confPct = Math.round(model.confidence * 100);
       let confHtml = '';
       if(model.dataSource === 'none'){
-        confHtml = '<div class="goal-conf warn">داده درآمد/هزینه برای پیش‌بینی زمان کافی نیست — فقط فاصله تا هدف قطعی است.</div>';
+        confHtml = '<div class="goal-conf warn">داده کافی برای پیش‌بینی زمان نیست؛ فقط فاصله تا هدف مشخص است.</div>';
       } else if(model.confidence < 0.45){
-        confHtml = '<div class="goal-conf warn">اطمینان پیش‌بینی حدود ' + confPct + '٪ (داده محدود یا ماه ناقص). اعداد زمان تقریبی‌اند.</div>';
+        confHtml = '<div class="goal-conf warn">اطمینان پیش‌بینی ≈ ' + confPct + '٪ — داده محدود است.</div>';
       } else {
-        confHtml = '<div class="goal-conf">اطمینان نسبی پیش‌بینی ≈ ' + confPct + '٪ · منبع: ' +
-          (model.dataSource === 'cashflow' ? 'جریان درآمد/هزینه ماه' : 'رشد مشاهده‌شده سرمایه') + '</div>';
+        confHtml = '<div class="goal-conf">اطمینان ≈ ' + confPct + '٪ · ' +
+          (model.dataSource === 'cashflow' ? 'بر پایه درآمد/هزینه' : 'بر پایه رشد سرمایه') + '</div>';
       }
 
       const scBlock = (name, sc, monthly) => {
@@ -2357,7 +2434,7 @@ function renderFinancialGoals(){
           : '—';
         return '<div class="goal-sc"><div class="sc-name">' + name + '</div>' +
           '<div class="sc-line">پس‌انداز: <b>' + monTxt + '</b></div>' +
-          '<div class="sc-line">زمان: <b>' + escapeHtml(sc.label) + '</b></div></div>';
+          '<div class="sc-line">زمان تقریبی: <b>' + escapeHtml(sc.label) + '</b></div></div>';
       };
 
       let condHtml = '';
@@ -2365,42 +2442,45 @@ function renderFinancialGoals(){
         const lines = proj.horizons.map(h => {
           if(h.needMonthly <= 0) return '';
           if(h.gap <= 0){
-            return '<p>در <b>' + h.months + ' ماه</b>: با آهنگ فعلی (≈ ' + fmt(Math.round(h.currentMonthly)) +
-              ' ت/ماه) از نظر عددی قابل دسترس است؛ نیاز ماهانه ≈ <b>' + fmt(Math.round(h.needMonthly)) + '</b> ت.</p>';
+            return '<p><b>' + h.months + ' ماه:</b> با پس‌انداز فعلی قابل دسترس (≈ ' +
+              fmt(Math.round(h.needMonthly)) + ' ت/ماه).</p>';
           }
-          return '<p>در <b>' + h.months + ' ماه</b>: نیاز به پس‌انداز ≈ <b>' + fmt(Math.round(h.needMonthly)) +
-            '</b> ت/ماه — حدود <b>' + fmt(Math.round(h.gap)) +
-            '</b> ت بیشتر از آهنگ فعلی (افزایش درآمد یا کاهش هزینه).</p>';
+          return '<p><b>' + h.months + ' ماه:</b> نیاز ≈ ' + fmt(Math.round(h.needMonthly)) +
+            ' ت/ماه — ' + fmt(Math.round(h.gap)) + ' ت بیشتر از روند فعلی.</p>';
         }).filter(Boolean).join('');
         if(model.monthlyReal <= 0 && proj.remaining > 0){
-          condHtml = '<div class="goal-conditions"><div class="gc-h">چه شرایطی لازم است؟</div>' +
-            '<p>نرخ پس‌انداز فعلی صفر یا منفی است؛ بدون افزایش درآمد یا کاهش هزینه، رسیدن به هدف قطعی نیست.</p>' +
+          condHtml = '<div class="goal-conditions"><div class="gc-h">شرایط لازم</div>' +
+            '<p>پس‌انداز فعلی صفر یا منفی است؛ برای رسیدن باید درآمد بیشتر یا هزینه کمتر شود.</p>' +
             lines + '</div>';
         } else if(lines){
-          condHtml = '<div class="goal-conditions"><div class="gc-h">چه شرایطی لازم است؟</div>' + lines + '</div>';
+          condHtml = '<div class="goal-conditions"><div class="gc-h">شرایط لازم</div>' + lines + '</div>';
         }
       }
 
       let deadlineHtml = '';
-      if(proj.deadlineInfo){
+      if(g.deadline || proj.deadlineInfo){
         const di = proj.deadlineInfo;
-        if(di.expired){
-          deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v" style="color:var(--red)">منقضی شده</span></div>';
-        } else {
+        const jalaliDl = g.deadline ? formatGoalDeadlineDisplay(g.deadline) : '';
+        if(di && di.expired){
+          deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v" style="color:var(--red)">' +
+            escapeHtml(jalaliDl || 'منقضی') + ' — منقضی</span></div>';
+        } else if(di){
           deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v">' +
-            (di.daysLeft) + ' روز مانده · نیاز ≈ ' + fmt(Math.round(di.needMonthly)) + ' ت/ماه</span></div>';
+            escapeHtml(jalaliDl) + ' · ' + di.daysLeft + ' روز · نیاز ≈ ' + fmt(Math.round(di.needMonthly)) + ' ت/ماه</span></div>';
+        } else if(jalaliDl){
+          deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v">' + escapeHtml(jalaliDl) + '</span></div>';
         }
       }
 
       const expanded = isGoalExpanded(g.id);
       const detailsHtml = proj.achieved
-        ? '<p class="an-ok" style="margin:0 0 10px;font-size:12px;">سرمایه فعلی به مبلغ هدف رسیده یا از آن عبور کرده است.</p>' +
+        ? '<p class="an-ok" style="margin:0 0 10px;font-size:12px;">به مبلغ هدف رسیده‌اید.</p>' +
           '<div class="gc-rows">' +
-          '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
+          '<div class="gc-row"><span class="k">مانده تا هدف</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
           deadlineHtml + '</div>'
         : '<div class="gc-rows">' +
-          '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
-          '<div class="gc-row"><span class="k">نیاز ماهانه (واقع‌بینانه)</span><span class="v">' +
+          '<div class="gc-row"><span class="k">مانده تا هدف</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
+          '<div class="gc-row"><span class="k">پس‌انداز ماهانه (واقع‌بینانه)</span><span class="v">' +
           (proj.scReal.reachable && model.monthlyReal > 0 ? fmt(Math.round(model.monthlyReal)) + ' ت' : '—') +
           '</span></div>' + deadlineHtml + '</div>' +
           '<div class="goal-scenarios">' +
@@ -2421,14 +2501,14 @@ function renderFinancialGoals(){
           '</div>' +
         '</div>' +
         '<div class="gc-summary-metrics">' +
-          '<div><span class="sm-k">مبلغ هدف</span> · <span class="sm-v">' + fmt(proj.target) + ' ت</span></div>' +
+          '<div><span class="sm-k">هدف</span> · <span class="sm-v">' + fmt(proj.target) + ' ت</span></div>' +
           '<div><span class="sm-k">سرمایه فعلی</span> · <span class="sm-v">' + fmt(proj.current) + ' ت</span></div>' +
         '</div>' +
         '<div class="goal-progress" style="margin:4px 0 0;"><div class="gp-label"><span>پیشرفت</span><span>' +
           proj.progress.toFixed(1) + '٪</span></div>' +
         '<div class="gp-track"><div class="gp-fill" style="width:' + Math.min(100, proj.progress).toFixed(2) +
         '%"></div></div></div>' +
-        (g.deadline ? '<div class="gc-meta" style="margin:6px 0 0;">مهلت: ' + escapeHtml(String(g.deadline).slice(0,10)) + '</div>' : '') +
+        (g.deadline ? '<div class="gc-meta" style="margin:6px 0 0;">مهلت: ' + escapeHtml(formatGoalDeadlineDisplay(g.deadline)) + '</div>' : '') +
         '</div>' +
         '<div class="goal-body"><div class="goal-body-inner">' + detailsHtml +
         '<div class="gc-actions">' +
@@ -3877,15 +3957,9 @@ function renderNotes(){
 }
 
 function buildNotePlainText(note){
+  // فقط متن بدنهٔ یادداشت — بدون عنوان، تاریخ، برچسب
   if(!note) return '';
-  const title = String(note.title || '').trim();
-  const body = String(note.body || '').trim();
-  const tags = (note.tags || []).map(t => '#' + String(t).trim()).filter(t => t.length > 1);
-  const parts = [];
-  if(title) parts.push(title);
-  if(body) parts.push(body);
-  if(tags.length) parts.push(tags.join(' '));
-  return parts.join('\\n\\n');
+  return String(note.body || '').trim();
 }
 
 function copyTextFallback(text){
