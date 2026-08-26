@@ -35,7 +35,7 @@ const I18N = {
   '۲۴ ساعت':'24 Hours','۱ هفته':'1 Week','۱ ماه':'1 Month','۱ سال':'1 Year',
   'داده کافی برای این بازه هنوز ثبت نشده — با هر تغییر دارایی یه نقطه جدید اضافه می‌شه':'Not enough data for this range yet — a new point is added whenever an asset changes',
   'این نمودار فقط از لحظه‌ای که این ویژگی اضافه شد نقطه ثبت می‌کنه؛ سابقه قبل از اون رو نداره.':'This chart only records points since this feature was added; earlier history is unavailable.',
-  'پیش‌بینی مالی ماهانه':'Monthly Financial Forecast','برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.':'Expenses are based on the last 15 payments this month; income is used only to calculate financial capacity.',
+  'پیش‌بینی مالی ماهانه':'Monthly Financial Forecast','برآورد هزینه ماه با میانگین روزانه و احتساب روزهای بدون خرج؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.':'Monthly expense uses daily average including zero-spend days; income is used only for financial capacity.',
   'ماه:':'Month:','موجودی:':'Balance:','تراکنش:':'Transactions:','روز داده:':'Data Days:','روز باقی‌مانده:':'Days Remaining:',
   'خرج ماهانه پیش‌بینی‌شده':'Projected Monthly Expense','منابع مالی':'Financial Resources','توان مالی (۸۰٪ منابع)':'Financial Capacity (80% of Resources)',
   'نسبت فشار مالی':'Financial Pressure Ratio','کسری بودجه':'Budget Deficit','فشار مالی':'Financial Pressure',
@@ -75,7 +75,7 @@ const I18N = {
   I18N['نرخ مؤثر سالانه (مرکب)']='Effective Annual Rate (compound)'; I18N['نرخ اسمی سالانه']='Nominal Annual Rate'; I18N['سود کل تا الان']='Total profit to date'; I18N['موجودی فعلی اسنپ']='Current Snapp balance'; I18N['ثبت موجودی نهایی کارت؟']='Save final card balance?'; I18N['آخرین تغییرات']='Latest changes'; I18N['شروع سابقه']='Start of history'; I18N['کاهش دارایی']='Asset decrease'; I18N['افزایش دارایی']='Asset increase';
   I18N['سهم هر دارایی از مجموع نقدینگی و سرمایه‌گذاری را در یک نگاه ببینید.']='See each asset’s share of total cash and investments at a glance.';
   I18N['روند تغییر ارزش کل دارایی را در بازه زمانی انتخاب‌شده دنبال کنید.']='Track changes in total asset value over the selected period.';
-  I18N['برآورد هزینه ماه بر پایه پرداخت‌های اخیر؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.']='Estimate monthly expenses from recent payments; income is used only to measure financial capacity.';
+  I18N['برآورد هزینه ماه با میانگین روزانه و احتساب روزهای بدون خرج؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.']='Monthly expense uses daily average including zero-spend days; income measures capacity only.';
   I18N['مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.']='Enter the change and use + or − to update the balance; remove with ×.';
   I18N['یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.']='Add a new cash or investment asset to your ledger.';
   I18N['افزودن مورد جدید از فرم پایین؛ برای اصلاح همان مورد از دکمه ویرایش استفاده کنید (جایگزین می‌شود، نه اضافه).']='Estimated value of assets excluded from the official cash-asset total.';
@@ -1672,51 +1672,215 @@ function clearNotebookForNewMonth(){
   return before !== notebook.length;
 }
 
-function computeForecastForMonthKey(monthKey, balanceForResources){
-  const monthEvents = (fcEvents || []).filter(e => e && e.date && isoToJalaliMonthKey(e.date) === monthKey);
+/**
+ * موتور پیش‌بینی/تحلیل هزینه ماهانه
+ * — روزهای بدون پرداخت در بازهٔ سپری‌شده = صفر واقعی (نه «دادهٔ مفقود»)
+ * — «روز بدون ثبت» فقط برای روزهای آیندهٔ ماه جاری معنا دارد
+ * — ماه ناقص: فقط تا امروز میانگین گرفته می‌شود و به باقی‌مانده تعمیم داده می‌شود
+ */
+function jalaliDayOfMonthFromISO(iso){
+  if(!iso) return 0;
+  const parts = String(iso).slice(0,10).split('-').map(Number);
+  if(parts.length < 3 || parts.some(x => isNaN(x))) return 0;
+  try{
+    const [, , jd] = gregorianToJalali(parts[0], parts[1], parts[2]);
+    return safeNum(jd, 0);
+  }catch(e){ return 0; }
+}
+
+function buildDailySpendSeries(payments, elapsedDays){
+  // آرایهٔ ۱..elapsedDays با مجموع پرداخت هر روز شمسی
+  const byDay = {};
+  (payments || []).forEach(e => {
+    if(!e || !e.date) return;
+    const d = jalaliDayOfMonthFromISO(e.date);
+    if(d < 1 || d > elapsedDays) return;
+    const key = String(d);
+    byDay[key] = (byDay[key] || 0) + safeNum(e.amount, 0);
+  });
+  const series = [];
+  for(let d = 1; d <= elapsedDays; d++){
+    series.push(safeNum(byDay[String(d)], 0));
+  }
+  return series;
+}
+
+function linearTrendSlope(series){
+  // شیب رگرسیون خطی ساده (روز → مبلغ). واحد: تومان بر روز
+  const n = series.length;
+  if(n < 2) return 0;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for(let i = 0; i < n; i++){
+    const x = i + 1;
+    const y = series[i];
+    sumX += x; sumY += y; sumXY += x * y; sumXX += x * x;
+  }
+  const den = n * sumXX - sumX * sumX;
+  if(Math.abs(den) < 1e-12) return 0;
+  return (n * sumXY - sumX * sumY) / den;
+}
+
+function sampleStdev(series){
+  const n = series.length;
+  if(n < 2) return 0;
+  const mean = series.reduce((a,b)=>a+b, 0) / n;
+  let ss = 0;
+  for(let i = 0; i < n; i++){
+    const d = series[i] - mean;
+    ss += d * d;
+  }
+  return Math.sqrt(ss / (n - 1));
+}
+
+/**
+ * @param {string} monthKey  مثلاً 1405-06
+ * @param {object} opts
+ *   closedMonth: ماه بسته‌شده (بدون تعمیم آینده)
+ *   asOfDay: روز شمسی مبنا (پیش‌فرض: امروز اگر ماه جاری، وگرنه آخرین روز ماه)
+ *   balanceForResources: موجودی برای توان مالی
+ */
+function computeMonthSpendStats(monthKey, opts){
+  opts = opts || {};
+  const parts = String(monthKey || '').split('-');
+  const mJy = parseInt(parts[0], 10);
+  const mJm = parseInt(parts[1], 10);
+  const totalDays = (isFinite(mJy) && isFinite(mJm)) ? daysInJalaliMonth(mJy, mJm) : 30;
+
+  const [cjy, cjm, cjd] = currentJalaliParts();
+  const currentKey = cjy + '-' + String(cjm).padStart(2, '0');
+  const isCurrentMonth = monthKey === currentKey;
+  const closed = !!opts.closedMonth || !isCurrentMonth;
+
+  let asOfDay = safeNum(opts.asOfDay, 0);
+  if(!(asOfDay >= 1)){
+    asOfDay = closed ? totalDays : Math.min(Math.max(1, cjd), totalDays);
+  } else {
+    asOfDay = Math.min(Math.max(1, asOfDay), totalDays);
+  }
+
+  // بازهٔ سپری‌شده: روزهای ۱..asOfDay — روز بدون پرداخت = صفر واقعی
+  const elapsedDays = asOfDay;
+  const remainingDays = closed ? 0 : Math.max(0, totalDays - asOfDay);
+
+  const monthEvents = (Array.isArray(fcEvents) ? fcEvents : []).filter(e =>
+    e && e.date && isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey
+  );
   const payments = monthEvents.filter(e => e.type === 'payment' && safeNum(e.amount) > 0);
   const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
-  let monthlyExpense = 0;
-  let daysWithData = 0;
-  if(payments.length){
-    const sumPay = payments.reduce((s,e)=> s + safeNum(e.amount), 0);
-    daysWithData = Math.max(1, new Set(payments.map(e => e.date)).size);
-    // هم‌راستا با renderForecast: با کمتر از ۲ روز داده، تعمیم ×روزهای‌ماه نده (فقط مجموع واقعی)؛
-    // در غیر این‌صورت روزهای واقعی همان ماه شمسی (۲۹ تا ۳۱) را به‌جای عدد ثابت ۳۰ به‌کار ببر
-    // (قبلاً همیشه ×۳۰ بود که در ماه‌های کم‌داده مقدار را تا ۳۰ برابر بیش از نمایش زنده متورم می‌کرد)
-    if(daysWithData < 2){
-      monthlyExpense = sumPay;
-    } else {
-      const parts = String(monthKey).split('-');
-      const mJy = parseInt(parts[0], 10), mJm = parseInt(parts[1], 10);
-      const totalDaysInMonth = (isFinite(mJy) && isFinite(mJm)) ? daysInJalaliMonth(mJy, mJm) : 30;
-      monthlyExpense = (sumPay / daysWithData) * totalDaysInMonth;
-    }
-    if(!isFinite(monthlyExpense) || monthlyExpense < 0) monthlyExpense = 0;
+
+  const series = buildDailySpendSeries(payments, elapsedDays);
+  const sumPay = series.reduce((a,b)=>a+b, 0);
+  const daysWithSpend = series.filter(v => v > 0).length;
+  const daysZero = elapsedDays - daysWithSpend;
+  const paymentCount = payments.length;
+
+  // میانگین روزانه با احتساب صفرها
+  const avgDaily = elapsedDays > 0 ? (sumPay / elapsedDays) : 0;
+  // میانگین شدت در روزهای دارای خرج (شاخص جدا — برای میانگین پیش‌بینی استفاده نمی‌شود)
+  const avgOnSpendDays = daysWithSpend > 0 ? (sumPay / daysWithSpend) : 0;
+
+  const stdev = sampleStdev(series);
+  const cv = avgDaily > 1e-9 ? (stdev / avgDaily) : 0; // ضریب تغییرات
+  const slope = linearTrendSlope(series); // تومان/روز
+
+  // پیش‌بینی خرج ماه
+  // داده کم: فقط مجموع واقعی — بدون تعمیم
+  // داده کافی (≥۲ روز سپری‌شده): مجموع تا امروز + میانگین‌روزانه × باقی‌مانده
+  let projectedMonth = sumPay;
+  let extrapolate = false;
+  if(!closed && elapsedDays >= 2 && remainingDays > 0){
+    projectedMonth = sumPay + avgDaily * remainingDays;
+    extrapolate = true;
+  } else if(closed){
+    projectedMonth = sumPay; // ماه تمام‌شده = واقعیت
   }
-  // ماه بسته‌شده: روز باقی‌مانده صفر
-  let avgDailyReceipt = 0;
-  if(receipts.length){
-    const sumR = receipts.reduce((s,e)=> s + safeNum(e.amount), 0);
-    const rDays = Math.max(1, new Set(receipts.map(e=>e.date)).size);
-    avgDailyReceipt = sumR / rDays;
+  if(!isFinite(projectedMonth) || projectedMonth < 0) projectedMonth = 0;
+
+  // دریافتی‌ها — همان منطق صفر واقعی
+  const receiptSeries = buildDailySpendSeries(
+    receipts.map(e => ({ date: e.date, amount: e.amount })),
+    elapsedDays
+  );
+  const sumReceipt = receiptSeries.reduce((a,b)=>a+b, 0);
+  const avgDailyReceipt = elapsedDays > 0 ? (sumReceipt / elapsedDays) : 0;
+  let projectedReceipt = sumReceipt;
+  if(!closed && elapsedDays >= 2 && remainingDays > 0){
+    projectedReceipt = sumReceipt + avgDailyReceipt * remainingDays;
   }
-  const bal = safeNum(balanceForResources, 0);
-  const resources = bal; // بدون درآمد مورد انتظار برای ماه تمام‌شده
-  const capacity = resources * 0.8;
+
+  // اطمینان نسبی: نسبت روزهای سپری‌شده و وجود حداقل ۲ روز
+  // عدد بین ۰ و ۱ — بدون ضریب دلخواه؛ فقط elapsed/total
+  const coverage = totalDays > 0 ? (elapsedDays / totalDays) : 0;
+  const confidence = (elapsedDays < 2) ? 0 : Math.min(1, coverage);
+
+  // روند: شیب نسبت به میانگین (اگر میانگین نزدیک صفر باشد، فقط علامت شیب)
+  let trend = 'flat';
+  if(elapsedDays >= 3 && avgDaily > 1e-9){
+    // شیب معنی‌دار اگر |slope| > 5٪ میانگین روزانه
+    const thr = avgDaily * 0.05;
+    if(slope > thr) trend = 'up';
+    else if(slope < -thr) trend = 'down';
+  } else if(elapsedDays >= 3 && avgDaily <= 1e-9 && slope > 0){
+    trend = 'up';
+  }
+
+  const bal = safeNum(opts.balanceForResources, 0);
+  const resources = bal;
+  const capacity = resources * 0.8; // توان مالی تعریف‌شده محصول (۸۰٪ منابع)
   let pressure = 0;
-  if(capacity > 1e-9) pressure = (monthlyExpense / capacity) * 100;
-  else if(monthlyExpense > 0) pressure = 999;
+  if(capacity > 1e-9) pressure = (projectedMonth / capacity) * 100;
+  else if(projectedMonth > 0) pressure = 999;
   pressure = safeNum(pressure, 0);
   if(pressure < 0) pressure = 0;
   if(pressure > 9999) pressure = 9999;
+
+  const incomeRatio = sumReceipt > 1e-9 ? (sumPay / sumReceipt) : (sumPay > 0 ? Infinity : 0);
+
   return {
     monthKey,
-    pressure: Math.round(pressure * 100) / 100,
-    expense: Math.round(monthlyExpense),
+    totalDays,
+    elapsedDays,
+    remainingDays,
+    closed,
+    extrapolate,
+    sumPay: Math.round(sumPay),
+    sumReceipt: Math.round(sumReceipt),
+    paymentCount,
+    daysWithSpend,
+    daysZero,
+    avgDaily,
+    avgOnSpendDays,
+    stdev,
+    cv,
+    slope,
+    trend,
+    projectedMonth: Math.round(projectedMonth),
+    projectedReceipt: Math.round(projectedReceipt),
+    coverage,
+    confidence,
+    resources,
     capacity: Math.round(capacity),
-    payments: payments.length,
-    daysWithData
+    pressure: Math.round(pressure * 100) / 100,
+    incomeRatio,
+    series
+  };
+}
+
+function computeForecastForMonthKey(monthKey, balanceForResources){
+  const st = computeMonthSpendStats(monthKey, {
+    closedMonth: true,
+    balanceForResources: balanceForResources
+  });
+  return {
+    monthKey,
+    pressure: st.pressure,
+    expense: st.projectedMonth,
+    capacity: st.capacity,
+    payments: st.paymentCount,
+    daysWithData: st.elapsedDays,
+    daysWithSpend: st.daysWithSpend,
+    daysZero: st.daysZero,
+    avgDaily: st.avgDaily
   };
 }
 
@@ -1860,20 +2024,13 @@ function renderFinancialAnalysis(){
     const [jy, jm, jd] = currentJalaliParts();
     const monthKey = jy + '-' + String(jm).padStart(2, '0');
     const monthName = (JMONTHS[jm-1] || '') + ' ' + jy;
-    const totalDays = daysInJalaliMonth(jy, jm);
-    const remain = Math.max(0, totalDays - jd);
 
-    const monthEvents = (Array.isArray(fcEvents) ? fcEvents : []).filter(e =>
-      e && e.date && isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey
-    );
-    const payments = monthEvents.filter(e => e.type === 'payment' && safeNum(e.amount) > 0);
-    const deposits = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
-    const sumPay = payments.reduce((s,e)=> s + safeNum(e.amount), 0);
-    const sumDep = deposits.reduce((s,e)=> s + safeNum(e.amount), 0);
-    const payDays = payments.length ? new Set(payments.map(e => String(e.date).slice(0,10))).size : 0;
-    const depDays = deposits.length ? new Set(deposits.map(e => String(e.date).slice(0,10))).size : 0;
+    const st = computeMonthSpendStats(monthKey, {
+      closedMonth: false,
+      balanceForResources: card
+    });
 
-    if(total <= 0 && !payments.length && !deposits.length){
+    if(total <= 0 && st.paymentCount === 0 && st.sumReceipt === 0){
       el.innerHTML = '<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>وضعیت کلی</div><p class="an-muted">دادهٔ کافی برای تحلیل ثبت نشده است. با ثبت تراکنش‌ها و موجودی‌ها، این بخش به‌روز می‌شود.</p></div>';
       return;
     }
@@ -1883,36 +2040,83 @@ function renderFinancialAnalysis(){
       (cash || invest ? ' <span class="analysis-chip">نقد ' + fmt(cash) + '</span> <span class="analysis-chip">سرمایه ' + fmt(invest) + '</span>' : '') +
       '</p><p>موجودی ثبت‌شده کارت: <b>' + fmt(card) + '</b> تومان.</p></div>');
 
+    // --- هزینه ماه با صفرهای واقعی ---
     lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip gold"></span>روند ' + monthName + '</div>');
-    if(!payments.length && !deposits.length){
-      lines.push('<p class="an-muted">در این ماه هنوز دریافتی یا پرداختی ثبت نشده.</p></div>');
+    if(st.paymentCount === 0 && st.sumReceipt === 0){
+      lines.push('<p class="an-muted">در این ماه هنوز دریافتی یا پرداختی ثبت نشده. ' +
+        st.elapsedDays + ' روز سپری‌شده بدون خرج به‌عنوان صفر در آمار لحاظ می‌شود.</p></div>');
     } else {
-      let trend = 'تا امروز ';
-      if(deposits.length) trend += 'حدود <b>' + fmt(sumDep) + '</b> تومان دریافتی (' + deposits.length + ' مورد) ';
-      if(deposits.length && payments.length) trend += 'و ';
-      if(payments.length) trend += 'حدود <b>' + fmt(sumPay) + '</b> تومان پرداخت (' + payments.length + ' مورد) ';
-      trend += 'ثبت شده است.';
-      lines.push('<p>' + trend + '</p>');
-      const net = sumDep - sumPay;
-      if(net > 0) lines.push('<p><span class="analysis-chip ok">خالص مثبت ≈ ' + fmt(net) + ' ت</span></p>');
-      else if(net < 0) lines.push('<p><span class="analysis-chip warn">خالص منفی ≈ ' + fmt(Math.abs(net)) + ' ت</span></p>');
-      else lines.push('<p class="an-muted">دریافتی و پرداخت تقریباً برابرند.</p>');
+      lines.push('<p>تا روز <b>' + st.elapsedDays + '</b> از <b>' + st.totalDays + '</b> · ' +
+        'خرج واقعی <b>' + fmt(st.sumPay) + '</b> ت · دریافتی <b>' + fmt(st.sumReceipt) + '</b> ت</p>');
+      lines.push('<p><span class="analysis-chip">' + st.daysWithSpend + ' روز دارای خرج</span> ' +
+        '<span class="analysis-chip">' + st.daysZero + ' روز بدون خرج</span> ' +
+        '<span class="analysis-chip">باقی ' + st.remainingDays + ' روز</span></p>');
+      lines.push('<p>میانگین روزانه (با صفرها): <b>' + fmt(Math.round(st.avgDaily)) + '</b> ت' +
+        (st.daysWithSpend > 0 ? ' · میانگین روزهای دارای خرج: <b>' + fmt(Math.round(st.avgOnSpendDays)) + '</b> ت' : '') +
+        '</p>');
+      if(st.extrapolate){
+        lines.push('<p>خرج پیش‌بینی‌شده ماه: <b>' + fmt(st.projectedMonth) + '</b> ت' +
+          (st.confidence < 0.5 ? ' <span class="an-muted">(پوشش ماه هنوز کم است — غیرقطعی)</span>' : '') +
+          '</p>');
+      } else if(st.elapsedDays < 2 && st.paymentCount > 0){
+        lines.push('<p class="an-muted">داده کمتر از دو روز سپری‌شده؛ تعمیم به کل ماه انجام نشد.</p>');
+      }
+      const net = st.sumReceipt - st.sumPay;
+      if(st.paymentCount && st.sumReceipt){
+        if(net > 0) lines.push('<p class="an-ok">خالص ماه تا امروز مثبت ≈ ' + fmt(net) + ' ت</p>');
+        else if(net < 0) lines.push('<p><span class="analysis-chip warn">خالص منفی ≈ ' + fmt(Math.abs(net)) + ' ت</span></p>');
+        else lines.push('<p class="an-muted">دریافتی و پرداخت تقریباً برابرند.</p>');
+      }
+      lines.push('</div>');
+
+      // شدت / نوسان / روند
+      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>شاخص‌های مصرف</div>');
+      const pressurePip = st.pressure >= 100 ? 'warn' : (st.pressure >= 70 ? 'gold' : 'ok');
+      lines.push('<p>فشار مالی (خرج پیش‌بینی ÷ توان): <b>' + st.pressure.toFixed(1) + '٪</b></p>');
+      if(st.elapsedDays >= 2){
+        lines.push('<p class="an-muted">نوسان روزانه (انحراف معیار): ' + fmt(Math.round(st.stdev)) + ' ت' +
+          (st.avgDaily > 0 ? ' · ضریب تغییرات ' + (st.cv * 100).toFixed(0) + '٪' : '') + '</p>');
+        if(st.trend === 'up'){
+          lines.push('<p class="an-warn">روند هزینه افزایشی است (شیب مثبت نسبت به میانگین).</p>');
+        } else if(st.trend === 'down'){
+          lines.push('<p class="an-ok">روند هزینه کاهشی است.</p>');
+        } else {
+          lines.push('<p class="an-muted">روند هزینه نسبتاً پایدار است.</p>');
+        }
+      }
+      if(isFinite(st.incomeRatio) && st.sumReceipt > 0){
+        lines.push('<p>نسبت خرج به دریافتی تا امروز: <b>' + (st.incomeRatio * 100).toFixed(0) + '٪</b></p>');
+      }
+      // سرعت مصرف بودجه کارت نسبت به روزهای باقی‌مانده
+      if(card > 0 && st.avgDaily > 0 && st.remainingDays > 0){
+        const daysCover = card / st.avgDaily;
+        lines.push('<p class="an-muted">با آهنگ فعلی، موجودی کارت حدود <b>' +
+          Math.round(daysCover) + '</b> روز پوشش می‌دهد' +
+          (daysCover < st.remainingDays ? ' — کمتر از باقی‌مانده ماه' : '') + '.</p>');
+      }
       lines.push('</div>');
     }
 
+    // الگوی دسته از توضیحات پرداخت (دفتر ماه جاری)
+    const payments = (Array.isArray(notebook) ? notebook : []).filter(e =>
+      e && e.type === 'payment' && safeNum(e.amount) > 0 &&
+      (!e.date || isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey)
+    );
     const catMap = {};
     payments.forEach(e => {
-      const raw = String(e.desc || '').trim() || 'بدون توضیح';
-      let key = raw.length > 24 ? raw.slice(0, 24) + '…' : raw;
-      catMap[key] = (catMap[key] || 0) + safeNum(e.amount);
+      const note = String(e.desc || e.note || '').trim();
+      if(!note) return;
+      const k = note.split(/\s+/)[0].slice(0, 24);
+      catMap[k] = (catMap[k] || 0) + safeNum(e.amount, 0);
     });
     const cats = Object.keys(catMap).map(k => ({k, v: catMap[k]})).sort((a,b)=> b.v - a.v);
-    if(cats.length && sumPay > 0){
+    if(cats.length){
       const top = cats[0];
-      const share = (top.v / sumPay) * 100;
-      const pip = share >= 40 ? 'warn' : '';
-      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip ' + pip + '"></span>الگوی هزینه</div>');
-      lines.push('<p>بیشترین سهم: «' + escapeHtml(top.k) + '» حدود <b>' + fmt(top.v) + '</b> تومان (' + share.toFixed(0) + '٪).</p>');
+      const share = st.sumPay > 0 ? (top.v / st.sumPay) * 100 : 0;
+      lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip' +
+        (share >= 40 ? ' warn' : '') + '"></span>الگوی هزینه</div>');
+      lines.push('<p>بیشترین سهم تقریبی: «' + escapeHtml(top.k) + '» ≈ ' + fmt(top.v) +
+        ' ت (' + share.toFixed(0) + '٪)</p>');
       if(share >= 40){
         lines.push('<p class="an-warn">سهم بالاست؛ خریدهای غیرضروری این حوزه را کم کنید یا سقف هفتگی بگذارید.</p>');
       } else if(cats.length >= 2){
@@ -1923,21 +2127,22 @@ function renderFinancialAnalysis(){
       lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip"></span>الگوی هزینه</div><p class="an-muted">برای تشخیص دسته، هنگام پرداخت توضیح کوتاه بنویسید.</p></div>');
     }
 
+    // برآورد کارت تا پایان ماه
     lines.push('<div class="analysis-block"><div class="an-h"><span class="an-pip ok"></span>برآورد تا پایان ماه <span class="an-muted" style="font-weight:500">(تقریبی)</span></div>');
-    if(payDays < 2 && depDays < 2){
-      lines.push('<p class="an-muted">داده کمتر از دو روز است؛ مبنای مطمئن فقط موجودی فعلی کارت (' + fmt(card) + ' ت) است.</p></div>');
+    if(st.elapsedDays < 2){
+      lines.push('<p class="an-muted">داده کمتر از دو روز سپری‌شده است؛ مبنای مطمئن فقط موجودی فعلی کارت (' + fmt(card) + ' ت) است.</p></div>');
     } else {
-      let projPay = sumPay, projDep = sumDep;
-      if(payDays >= 2){ projPay = sumPay + (sumPay / Math.max(1, jd)) * remain; }
-      if(depDays >= 2){
-        let extra = (sumDep / Math.max(1, jd)) * remain;
-        if(extra > sumDep) extra = sumDep;
-        projDep = sumDep + extra;
-      }
-      const est = card - (projPay - sumPay) + (projDep - sumDep);
-      lines.push('<p>با ادامهٔ آهنگ فعلی، موجودی کارت تا پایان ماه حدود <b>' + fmt(Math.max(0, est)) + '</b> تومان برآورد می‌شود — غیرقطعی.</p>');
-      if(est < card * 0.85 && payDays >= 2){
+      const extraPay = Math.max(0, st.projectedMonth - st.sumPay);
+      const extraDep = Math.max(0, st.projectedReceipt - st.sumReceipt);
+      const est = card - extraPay + extraDep;
+      lines.push('<p>با ادامهٔ آهنگ فعلی (میانگین با روزهای صفر)، موجودی کارت تا پایان ماه حدود <b>' +
+        fmt(Math.max(0, Math.round(est))) + '</b> تومان برآورد می‌شود' +
+        (st.confidence < 0.45 ? ' — غیرقطعی' : '') + '.</p>');
+      if(est < card * 0.85 && st.daysWithSpend >= 1){
         lines.push('<p class="an-warn">روند خرج نسبت به کارت تند است؛ پرداخت‌های تکرارشونده را مرور کنید.</p>');
+      }
+      if(st.pressure >= 100){
+        lines.push('<p class="an-warn">احتمال فشار بودجه تا پایان ماه بالاست (خرج پیش‌بینی‌شده از توان مالی بیشتر است).</p>');
       }
       lines.push('</div>');
     }
@@ -1950,7 +2155,7 @@ function renderFinancialAnalysis(){
       lines.push('<p class="an-muted">طلب ≈ ' + fmt(lent) + ' ت · بدهی ≈ ' + fmt(borrowed) + ' ت</p></div>');
     }
 
-    lines.push('<p class="an-muted">منبع: فقط داده‌های ثبت‌شده در همین برنامه.</p>');
+    lines.push('<p class="an-muted">منبع: فقط داده‌های ثبت‌شده در همین برنامه. روز بدون پرداخت در بازهٔ سپری‌شده = صفر واقعی.</p>');
     el.innerHTML = lines.join('');
   }catch(err){
     console.error('renderFinancialAnalysis', err);
@@ -1958,91 +2163,47 @@ function renderFinancialAnalysis(){
   }
 }
 
+
 function renderForecast(){
   try{
     if(!$('fcMonth') || !$('fcExpense')) return;
 
     const [jy, jm, jd] = currentJalaliParts();
     const monthLabel = (JMONTHS[jm-1] || '') + ' ' + jy;
-    const totalDays = daysInJalaliMonth(jy, jm);
-    const remain = Math.max(0, totalDays - jd);
     const monthKey = jy + '-' + String(jm).padStart(2, '0');
 
     $('fcMonth').textContent = monthLabel;
-    if($('fcRemain')) $('fcRemain').textContent = String(remain);
 
-    // موجودی کارت — فقط مقدار ذخیره‌شده (بدون دلتا، بدون درآمد خیالی)
     const currentBal = safeNum(assets && assets.card, 0);
     if($('fcBalance')) $('fcBalance').textContent = fmt(currentBal) + ' ت';
 
-    // رویدادهای همین ماه شمسی از آرشیو fcEvents
-    const monthEvents = (Array.isArray(fcEvents) ? fcEvents : []).filter(e => {
-      if(!e || !e.date) return false;
-      return isoToJalaliMonthKey(String(e.date).slice(0, 10)) === monthKey;
+    const st = computeMonthSpendStats(monthKey, {
+      closedMonth: false,
+      balanceForResources: currentBal
     });
 
-    const payments = monthEvents
-      .filter(e => e.type === 'payment' && safeNum(e.amount) > 0)
-      .slice()
-      .sort((a,b) => String(a.date+(a.time||'')).localeCompare(String(b.date+(b.time||''))));
+    if($('fcRemain')) $('fcRemain').textContent = String(st.remainingDays);
+    if($('fcCount')) $('fcCount').textContent = String(st.paymentCount);
+    // «روز داده» = روزهای سپری‌شده تقویمی (شامل صفرها)، نه فقط روزهای دارای خرج
+    if($('fcDays')) $('fcDays').textContent = String(st.elapsedDays);
+    if($('fcExpense')) $('fcExpense').textContent = fmt(st.projectedMonth) + ' ت';
 
-    const receipts = monthEvents.filter(e => e.type === 'deposit' && safeNum(e.amount) > 0);
-
-    const sumPay = payments.reduce((s,e) => s + safeNum(e.amount), 0);
-    const payDays = payments.length ? new Set(payments.map(e => String(e.date).slice(0,10))).size : 0;
-    const sumR = receipts.reduce((s,e) => s + safeNum(e.amount), 0);
-    const rDays = receipts.length ? new Set(receipts.map(e => String(e.date).slice(0,10))).size : 0;
-
-    // --- خرج ماهانه ---
-    // با داده کم (< ۲ روز پرداخت): فقط مجموع واقعی — بدون ×۳۰
-    // با داده کافی: (مجموع ÷ روزهای پرداخت) × تعداد روزهای همان ماه شمسی
-    let monthlyExpense = 0;
-    let daysWithData = payDays;
-    if(payments.length === 0){
-      monthlyExpense = 0;
-      daysWithData = 0;
-    } else if(payDays < 2){
-      monthlyExpense = sumPay;
-      daysWithData = Math.max(1, payDays);
-    } else {
-      daysWithData = payDays;
-      const dailyRate = sumPay / daysWithData;
-      monthlyExpense = dailyRate * totalDays;
-    }
-    if(!isFinite(monthlyExpense) || monthlyExpense < 0) monthlyExpense = 0;
-
-    if($('fcCount')) $('fcCount').textContent = String(payments.length);
-    if($('fcDays')) $('fcDays').textContent = String(daysWithData);
-    if($('fcExpense')) $('fcExpense').textContent = fmt(monthlyExpense) + ' ت';
-
-    // --- منابع مالی ---
-    // پایه = موجودی کارت
-    // درآمد مورد انتظار فقط با ≥۲ روز دریافتی جداگانه:
-    //   نرخ = مجموع دریافتی ÷ روزهای سپری‌شده ماه
-    //   انتظار = نرخ × روز باقی‌مانده
-    //   و سقف انتظار = همان مجموع دریافتی تا الان (جلوگیری از انفجار)
+    // منابع = موجودی کارت (+ درآمد مورد انتظار فقط وقتی داده کافی و تعمیم مجاز)
     let expectedIncome = 0;
-    if(rDays >= 2 && sumR > 0 && remain > 0){
-      const elapsed = Math.max(1, jd);
-      const avgDaily = sumR / elapsed;
-      expectedIncome = avgDaily * remain;
-      if(expectedIncome > sumR) expectedIncome = sumR; // سقف محافظه‌کارانه
-      if(!isFinite(expectedIncome) || expectedIncome < 0) expectedIncome = 0;
+    if(st.extrapolate && st.elapsedDays >= 2){
+      expectedIncome = Math.max(0, st.projectedReceipt - st.sumReceipt);
     }
     const resources = currentBal + expectedIncome;
     const capacity = resources * 0.8;
-
-    if($('fcResources')) $('fcResources').textContent = fmt(safeNum(resources, 0)) + ' ت';
-    if($('fcCapacity')) $('fcCapacity').textContent = fmt(safeNum(capacity, 0)) + ' ت';
-
-    // فشار مالی
     let pressure = 0;
-    if(capacity > 1e-9) pressure = (monthlyExpense / capacity) * 100;
-    else if(monthlyExpense > 0) pressure = 999;
+    if(capacity > 1e-9) pressure = (st.projectedMonth / capacity) * 100;
+    else if(st.projectedMonth > 0) pressure = 999;
     pressure = safeNum(pressure, 0);
     if(pressure < 0) pressure = 0;
     if(pressure > 9999) pressure = 9999;
 
+    if($('fcResources')) $('fcResources').textContent = fmt(Math.round(resources)) + ' ت';
+    if($('fcCapacity')) $('fcCapacity').textContent = fmt(Math.round(capacity)) + ' ت';
     if($('fcPressure')) $('fcPressure').textContent = pressure.toFixed(1) + '٪';
 
     const barPct = Math.min(100, Math.max(0, pressure));
@@ -2056,26 +2217,47 @@ function renderForecast(){
       $('fcPctLabel').style.color = color;
     }
 
-    const deficit = safeNum(monthlyExpense - capacity, 0);
+    const deficit = Math.max(0, st.projectedMonth - capacity);
     if($('fcDeficitRow') && $('fcDeficit')){
-      if(deficit > 0.5 && monthlyExpense > 0){
-        $('fcDeficitRow').style.display = 'flex';
-        $('fcDeficit').textContent = fmt(deficit) + ' ت';
+      if(deficit > 0 && st.projectedMonth > 0){
+        $('fcDeficitRow').style.display = '';
+        $('fcDeficit').textContent = fmt(Math.round(deficit)) + ' ت';
       } else {
         $('fcDeficitRow').style.display = 'none';
         $('fcDeficit').textContent = '—';
       }
     }
 
-    if(payments.length === 0){
-      if($('fcNote')) $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده.';
-    } else if(payDays < 2){
-      if($('fcNote')) $('fcNote').textContent = 'با یک روز پرداخت، خرج ماهانه برابر مجموع واقعی است (بدون تعمیم ×۳۰).';
-    } else if(deficit > 0){
-      if($('fcNote')) $('fcNote').textContent = 'خرج پیش‌بینی‌شده از توان مالی بیشتر است.';
-    } else {
-      if($('fcNote')) $('fcNote').textContent = 'پیش‌بینی با پرداخت‌های این ماه به‌روز می‌شود.';
+    // یادداشت وضعیت — تفکیک صفر واقعی / داده کم / تعمیم
+    if($('fcNote')){
+      if(st.paymentCount === 0){
+        $('fcNote').textContent = 'هنوز پرداختی در این ماه ثبت نشده. روزهای سپری‌شده بدون خرج به‌عنوان صفر لحاظ می‌شوند.';
+      } else if(st.elapsedDays < 2){
+        $('fcNote').textContent = 'با کمتر از ۲ روز سپری‌شده، خرج ماهانه برابر مجموع واقعی است (بدون تعمیم به کل ماه).';
+      } else if(!st.extrapolate){
+        $('fcNote').textContent = 'پیش‌بینی بر پایه میانگین روزانه با احتساب روزهای بدون خرج.';
+      } else {
+        const zeroHint = st.daysZero > 0
+          ? (' · ' + st.daysZero + ' روز بدون خرج در میانگین لحاظ شد')
+          : '';
+        const trendHint = st.trend === 'up' ? ' · روند افزایشی' : (st.trend === 'down' ? ' · روند کاهشی' : '');
+        if(deficit > 0){
+          $('fcNote').textContent = 'خرج پیش‌بینی‌شده از توان مالی بیشتر است' + zeroHint + trendHint + '.';
+        } else {
+          $('fcNote').textContent = 'میانگین روزانه با احتساب روزهای صفر · پوشش ماه ' +
+            Math.round(st.coverage * 100) + '٪' + zeroHint + trendHint + '.';
+        }
+      }
     }
+
+    // snapshot فشار (منطق قبلی: با ≥۱۵ پرداخت یکتا)
+    try{
+      const monthEvents = (Array.isArray(fcEvents) ? fcEvents : []).filter(e =>
+        e && e.date && isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey
+      );
+      const pays = monthEvents.filter(e => e.type === 'payment' && safeNum(e.amount) > 0);
+      if(typeof maybeCreateSnapshot === 'function') maybeCreateSnapshot(pays, pressure);
+    }catch(_e){}
 
     if(typeof renderForecastSnapshots === 'function') renderForecastSnapshots();
   }catch(err){
@@ -2091,6 +2273,7 @@ function renderForecast(){
     }catch(_e){}
   }
 }
+
 
 function renderLoans(){
   const el = $('loanList');
