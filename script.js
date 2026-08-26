@@ -1,3 +1,4 @@
+/* APP_BUILD 20260826v3 — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
