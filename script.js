@@ -369,6 +369,10 @@ function showPage(pageId){
   if(pageId === 'page-goals' && typeof renderFinancialGoals === 'function'){
     renderFinancialGoals();
   }
+  // بخش‌های مخفی با reveal که هنگام display:none مشاهده نشدند را نمایان کن
+  if(target){
+    target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
+  }
 }
 document.querySelectorAll('.menu-item').forEach(item=>{
   item.addEventListener('click', (e)=>{
@@ -2182,19 +2186,28 @@ function computeGoalProjection(goal, capital, model){
 }
 
 function openGoalForm(editId){
-  const form = $('goalForm');
-  if(!form) return;
+  // اطمینان از نمایش صفحه اهداف
+  const page = document.getElementById('page-goals');
+  if(page && !page.classList.contains('active') && typeof showPage === 'function'){
+    showPage('page-goals');
+  }
+  const form = document.getElementById('goalForm');
+  if(!form){
+    console.error('goalForm not found in DOM');
+    return;
+  }
   form.classList.add('open');
   form.setAttribute('aria-hidden', 'false');
-  const idEl = $('goalEditId');
-  const titleEl = $('goalTitle');
-  const amtEl = $('goalAmount');
-  const dlEl = $('goalDeadline');
-  const ft = $('goalFormTitle');
+  form.style.display = 'block';
+  const idEl = document.getElementById('goalEditId');
+  const titleEl = document.getElementById('goalTitle');
+  const amtEl = document.getElementById('goalAmount');
+  const dlEl = document.getElementById('goalDeadline');
+  const ft = document.getElementById('goalFormTitle');
   if(editId){
     const g = (financialGoals || []).find(x => String(x.id) === String(editId));
     if(g){
-      if(idEl) idEl.value = g.id;
+      if(idEl) idEl.value = String(g.id);
       if(titleEl) titleEl.value = g.title || '';
       if(amtEl) amtEl.value = fmt(g.targetAmount);
       if(dlEl) dlEl.value = g.deadline ? String(g.deadline).slice(0,10) : '';
@@ -2207,15 +2220,18 @@ function openGoalForm(editId){
     if(dlEl) dlEl.value = '';
     if(ft) ft.textContent = 'هدف جدید';
   }
-  if(titleEl) setTimeout(()=> titleEl.focus(), 50);
+  try{ form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(e){}
+  if(titleEl) setTimeout(()=>{ try{ titleEl.focus(); }catch(e){} }, 80);
 }
 
 function closeGoalForm(){
-  const form = $('goalForm');
+  const form = document.getElementById('goalForm');
   if(!form) return;
   form.classList.remove('open');
   form.setAttribute('aria-hidden', 'true');
-  if($('goalEditId')) $('goalEditId').value = '';
+  form.style.display = '';
+  const idEl = document.getElementById('goalEditId');
+  if(idEl) idEl.value = '';
 }
 
 function saveGoalFromForm(){
@@ -2225,12 +2241,14 @@ function saveGoalFromForm(){
   const editId = ($('goalEditId') && $('goalEditId').value) || '';
 
   if(!title){
-    if(typeof toast === 'function') toast('عنوان هدف را وارد کنید', true);
+    if(typeof showToast === 'function') showToast('عنوان هدف را وارد کنید', true);
+    else if(typeof toast === 'function') toast('عنوان هدف را وارد کنید', true);
     else alert('عنوان هدف را وارد کنید');
     return;
   }
   if(!isFinite(amount) || amount < 0){
-    if(typeof toast === 'function') toast('مبلغ هدف نامعتبر است', true);
+    if(typeof showToast === 'function') showToast('مبلغ هدف نامعتبر است', true);
+    else if(typeof toast === 'function') toast('مبلغ هدف نامعتبر است', true);
     else alert('مبلغ هدف نامعتبر است');
     return;
   }
@@ -2259,6 +2277,7 @@ function saveGoalFromForm(){
   closeGoalForm();
   persist();
   renderFinancialGoals();
+  if(typeof showToast === 'function') showToast(editId ? 'هدف به‌روز شد' : 'هدف ذخیره شد');
 }
 
 function deleteGoal(id){
@@ -2392,23 +2411,45 @@ function renderFinancialGoals(){
 }
 
 function bindGoalUi(){
-  if($('goalAddBtn')){
-    $('goalAddBtn').addEventListener('click', ()=> openGoalForm(null));
-  }
-  if($('goalCancelBtn')){
-    $('goalCancelBtn').addEventListener('click', closeGoalForm);
-  }
-  if($('goalSaveBtn')){
-    $('goalSaveBtn').addEventListener('click', saveGoalFromForm);
-  }
+  // Event Delegation — همیشه کار می‌کند حتی اگر دکمه بعداً re-render شود
+  if(window.__goalsUiBound) return;
+  window.__goalsUiBound = true;
   document.addEventListener('click', (e)=>{
-    const ed = e.target && e.target.closest && e.target.closest('.goal-edit-btn');
-    if(ed){ openGoalForm(ed.getAttribute('data-id')); return; }
-    const del = e.target && e.target.closest && e.target.closest('.goal-del-btn');
-    if(del){ deleteGoal(del.getAttribute('data-id')); }
+    const t = e.target;
+    if(!t || !t.closest) return;
+    if(t.closest('#goalAddBtn')){
+      e.preventDefault();
+      openGoalForm(null);
+      return;
+    }
+    if(t.closest('#goalCancelBtn')){
+      e.preventDefault();
+      closeGoalForm();
+      return;
+    }
+    if(t.closest('#goalSaveBtn')){
+      e.preventDefault();
+      saveGoalFromForm();
+      return;
+    }
+    const ed = t.closest('.goal-edit-btn');
+    if(ed){
+      e.preventDefault();
+      openGoalForm(ed.getAttribute('data-id'));
+      return;
+    }
+    const del = t.closest('.goal-del-btn');
+    if(del){
+      e.preventDefault();
+      deleteGoal(del.getAttribute('data-id'));
+    }
   });
 }
+// اتصال فوری + پس از DOMContentLoaded برای اطمینان
 bindGoalUi();
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', bindGoalUi, { once: true });
+}
 
 
 function renderForecastSnapshots(){
