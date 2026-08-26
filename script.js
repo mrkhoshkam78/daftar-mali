@@ -366,6 +366,9 @@ function showPage(pageId){
   if(pageId === 'page-noncash' && typeof ensureMarketPrices === 'function'){
     ensureMarketPrices(false);
   }
+  if(pageId === 'page-goals' && typeof renderFinancialGoals === 'function'){
+    renderFinancialGoals();
+  }
 }
 document.querySelectorAll('.menu-item').forEach(item=>{
   item.addEventListener('click', (e)=>{
@@ -652,6 +655,7 @@ let fcEvents = []; // آرشیو دائمی پرداخت/دریافتی برای
 let fcSnapshots = []; // {id, date, pressure, setKey, monthKey} — سوابق دائمی فشار مالی
 let notes = []; // {id,title,body,cat,pinned,createdAt,updatedAt}
 let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف ثبت‌شده
+let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 
 const STORE_KEY = 'daftar-mali-v1';
@@ -675,6 +679,7 @@ function loadAll(){
         if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
         if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
         if(Array.isArray(d.notes)) notes = d.notes;
+        if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
         if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
       }
@@ -704,7 +709,7 @@ function pushSeriesPoint(){
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function getStatePayload(){
-  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, assetDefs: ASSET_DEFS};
+  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, assetDefs: ASSET_DEFS};
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
@@ -719,6 +724,7 @@ function applyStatePayload(d){
   if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
   if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
   if(Array.isArray(d.notes)) notes = d.notes;
+  if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
   if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
   if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
 }
@@ -890,6 +896,7 @@ function render(){
   renderForecast();
   if(typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
   if(typeof renderNotes === 'function') renderNotes();
+  if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
 }
 
 let selectedDonutKey = null;
@@ -1985,6 +1992,425 @@ function maybeCreateSnapshot(paymentSet, pressure){
   persist();
 }
 
+
+/* ================= اهداف مالی (Financial Goals) ================= */
+function daysPerMonthFromStats(st){
+  const d = st && st.totalDays ? st.totalDays : 30;
+  return Math.max(28, Math.min(31, d));
+}
+
+/** جریان خالص روزانه از fcEvents ماه جاری — روز بدون تراکنش = صفر */
+function buildDailyNetSeriesForGoals(st){
+  const elapsed = st && st.elapsedDays ? st.elapsedDays : 0;
+  if(elapsed < 1) return [];
+  const [jy, jm] = currentJalaliParts();
+  const monthKey = jy + '-' + String(jm).padStart(2, '0');
+  const events = (Array.isArray(fcEvents) ? fcEvents : []).filter(e =>
+    e && e.date && isoToJalaliMonthKey(String(e.date).slice(0,10)) === monthKey
+  );
+  const payBy = {}, recBy = {};
+  events.forEach(e => {
+    const d = jalaliDayOfMonthFromISO(e.date);
+    if(d < 1 || d > elapsed) return;
+    const amt = safeNum(e.amount, 0);
+    if(e.type === 'payment' && amt > 0) payBy[d] = (payBy[d] || 0) + amt;
+    if(e.type === 'deposit' && amt > 0) recBy[d] = (recBy[d] || 0) + amt;
+  });
+  const series = [];
+  for(let d = 1; d <= elapsed; d++){
+    series.push(safeNum(recBy[d], 0) - safeNum(payBy[d], 0));
+  }
+  return series;
+}
+
+/** رشد مشاهده‌شده جمع دارایی از netSeries (تومان/روز) */
+function observedCapitalGrowthPerDay(){
+  const series = (Array.isArray(netSeries) ? netSeries : [])
+    .filter(p => p && isFinite(p.ts) && isFinite(p.total))
+    .slice()
+    .sort((a,b)=> a.ts - b.ts);
+  if(series.length < 2) return { perDay: null, spanDays: 0, points: series.length };
+  const first = series[0], last = series[series.length - 1];
+  const spanMs = last.ts - first.ts;
+  const spanDays = spanMs / (24 * 3600 * 1000);
+  if(spanDays < 1) return { perDay: null, spanDays, points: series.length };
+  const perDay = (safeNum(last.total, 0) - safeNum(first.total, 0)) / spanDays;
+  return { perDay, spanDays, points: series.length };
+}
+
+/**
+ * مدل پس‌انداز ماهانه — سه سناریو از μ و σ جریان خالص روزانه
+ * بدون ضریب دلخواه: محافظه‌کار = μ−σ ، واقع‌بین = μ ، خوش‌بین = μ+σ
+ */
+function computeSavingsModel(){
+  const [jy, jm] = currentJalaliParts();
+  const monthKey = jy + '-' + String(jm).padStart(2, '0');
+  const st = (typeof computeMonthSpendStats === 'function')
+    ? computeMonthSpendStats(monthKey, { closedMonth: false, balanceForResources: safeNum(assets && assets.card, 0) })
+    : null;
+
+  const dpm = daysPerMonthFromStats(st);
+  const netSeriesDaily = buildDailyNetSeriesForGoals(st || { elapsedDays: 0 });
+  const n = netSeriesDaily.length;
+  let mean = 0, stdev = 0;
+  if(n > 0){
+    mean = netSeriesDaily.reduce((a,b)=>a+b, 0) / n;
+    if(n >= 2){
+      let ss = 0;
+      for(let i = 0; i < n; i++){
+        const d = netSeriesDaily[i] - mean;
+        ss += d * d;
+      }
+      stdev = Math.sqrt(ss / (n - 1));
+    }
+  }
+
+  const growth = observedCapitalGrowthPerDay();
+  // اگر جریان ماه جاری داده دارد از آن استفاده کن؛ در غیر این صورت از رشد سرمایه
+  let useCashflow = n >= 2;
+  let dailyReal = mean;
+  let dailyCons = mean - stdev;
+  let dailyOpt = mean + stdev;
+  if(!useCashflow && growth.perDay != null && growth.spanDays >= 3){
+    dailyReal = growth.perDay;
+    // نوسان جایگزین نداریم — سناریوها حول رشد مشاهده‌شده با نصف |رشد| به‌عنوان پهنهٔ آماری ساده از خود داده
+    const band = Math.abs(growth.perDay) * 0.5;
+    dailyCons = growth.perDay - band;
+    dailyOpt = growth.perDay + band;
+    useCashflow = false;
+  }
+
+  const monthly = (d) => d * dpm;
+  const confidence = n >= 7 ? Math.min(1, (st && st.coverage) || (n / 30))
+    : (n >= 2 ? Math.min(0.45, n / 14) : (growth.spanDays >= 7 ? 0.35 : 0));
+
+  return {
+    st,
+    elapsedDays: n,
+    meanDailyNet: mean,
+    stdevDailyNet: stdev,
+    daysPerMonth: dpm,
+    monthlyCons: monthly(dailyCons),
+    monthlyReal: monthly(dailyReal),
+    monthlyOpt: monthly(dailyOpt),
+    dailyCons, dailyReal, dailyOpt,
+    confidence,
+    dataSource: n >= 2 ? 'cashflow' : (growth.perDay != null && growth.spanDays >= 3 ? 'capital-growth' : 'none'),
+    growth,
+    pressure: st ? st.pressure : 0,
+    daysZero: st ? st.daysZero : 0,
+    daysWithSpend: st ? st.daysWithSpend : 0
+  };
+}
+
+function formatDurationMonths(months){
+  if(months == null || !isFinite(months)) return '—';
+  if(months <= 0) return 'اکنون';
+  if(months < 1){
+    const days = Math.ceil(months * 30.4375);
+    return days <= 1 ? 'حدود ۱ روز' : ('حدود ' + days + ' روز');
+  }
+  if(months < 12){
+    const m = Math.ceil(months * 10) / 10;
+    return m % 1 === 0 ? (m + ' ماه') : (m.toFixed(1) + ' ماه');
+  }
+  const y = months / 12;
+  if(y < 10) return (Math.round(y * 10) / 10).toFixed(1) + ' سال';
+  return Math.round(y) + ' سال';
+}
+
+function scenarioTime(remaining, monthlySave){
+  if(remaining <= 0) return { months: 0, label: 'محقق‌شده', reachable: true };
+  if(!(monthlySave > 0)) return { months: null, label: 'با آهنگ فعلی قابل وصول نیست', reachable: false };
+  const months = remaining / monthlySave;
+  // سقف نمایشی منطقی
+  if(months > 1200) return { months, label: 'بیش از ۱۰۰ سال', reachable: true };
+  return { months, label: formatDurationMonths(months), reachable: true };
+}
+
+function computeGoalProjection(goal, capital, model){
+  const target = Math.max(0, safeNum(goal && goal.targetAmount, 0));
+  const current = Math.max(0, safeNum(capital, 0));
+  const remaining = Math.max(0, target - current);
+  const achieved = target > 0 ? current >= target : (target === 0 && current >= 0);
+  const progress = target > 0 ? Math.min(100, (current / target) * 100) : (achieved ? 100 : 0);
+
+  const scCons = scenarioTime(remaining, model.monthlyCons);
+  const scReal = scenarioTime(remaining, model.monthlyReal);
+  const scOpt = scenarioTime(remaining, model.monthlyOpt);
+
+  // شرایط برای رسیدن در ۶ / ۱۲ / ۲۴ ماه
+  const horizons = [6, 12, 24].map(m => {
+    const needMonthly = remaining > 0 ? (remaining / m) : 0;
+    const gap = needMonthly - model.monthlyReal;
+    return {
+      months: m,
+      needMonthly,
+      gap, // مثبت = کمبود پس‌انداز ماهانه
+      currentMonthly: model.monthlyReal
+    };
+  });
+
+  // اگر مهلت تعیین شده
+  let deadlineInfo = null;
+  if(goal && goal.deadline){
+    const dl = Date.parse(goal.deadline);
+    if(isFinite(dl)){
+      const daysLeft = Math.ceil((dl - Date.now()) / (24 * 3600 * 1000));
+      const monthsLeft = daysLeft / 30.4375;
+      const needByDeadline = (daysLeft > 0 && remaining > 0) ? (remaining / Math.max(daysLeft / 30.4375, 1/30)) : 0;
+      deadlineInfo = {
+        daysLeft,
+        monthsLeft,
+        needMonthly: needByDeadline,
+        gap: needByDeadline - model.monthlyReal,
+        expired: daysLeft < 0,
+        reachableOnReal: model.monthlyReal > 0 && monthsLeft > 0 && (remaining / model.monthlyReal) <= monthsLeft
+      };
+    }
+  }
+
+  return {
+    target, current, remaining, achieved, progress,
+    scCons, scReal, scOpt,
+    horizons,
+    deadlineInfo,
+    dailyNeedReal: model.daysPerMonth > 0 && remaining > 0 && model.monthlyReal > 0
+      ? (remaining / (scReal.months * model.daysPerMonth))
+      : (remaining > 0 && model.monthlyReal > 0 ? model.dailyReal : null)
+  };
+}
+
+function openGoalForm(editId){
+  const form = $('goalForm');
+  if(!form) return;
+  form.classList.add('open');
+  form.setAttribute('aria-hidden', 'false');
+  const idEl = $('goalEditId');
+  const titleEl = $('goalTitle');
+  const amtEl = $('goalAmount');
+  const dlEl = $('goalDeadline');
+  const ft = $('goalFormTitle');
+  if(editId){
+    const g = (financialGoals || []).find(x => String(x.id) === String(editId));
+    if(g){
+      if(idEl) idEl.value = g.id;
+      if(titleEl) titleEl.value = g.title || '';
+      if(amtEl) amtEl.value = fmt(g.targetAmount);
+      if(dlEl) dlEl.value = g.deadline ? String(g.deadline).slice(0,10) : '';
+      if(ft) ft.textContent = 'ویرایش هدف';
+    }
+  } else {
+    if(idEl) idEl.value = '';
+    if(titleEl) titleEl.value = '';
+    if(amtEl) amtEl.value = '';
+    if(dlEl) dlEl.value = '';
+    if(ft) ft.textContent = 'هدف جدید';
+  }
+  if(titleEl) setTimeout(()=> titleEl.focus(), 50);
+}
+
+function closeGoalForm(){
+  const form = $('goalForm');
+  if(!form) return;
+  form.classList.remove('open');
+  form.setAttribute('aria-hidden', 'true');
+  if($('goalEditId')) $('goalEditId').value = '';
+}
+
+function saveGoalFromForm(){
+  const title = String(($('goalTitle') && $('goalTitle').value) || '').trim();
+  const amount = parseMoney(($('goalAmount') && $('goalAmount').value) || '');
+  const deadlineRaw = ($('goalDeadline') && $('goalDeadline').value) || '';
+  const editId = ($('goalEditId') && $('goalEditId').value) || '';
+
+  if(!title){
+    if(typeof toast === 'function') toast('عنوان هدف را وارد کنید', true);
+    else alert('عنوان هدف را وارد کنید');
+    return;
+  }
+  if(!isFinite(amount) || amount < 0){
+    if(typeof toast === 'function') toast('مبلغ هدف نامعتبر است', true);
+    else alert('مبلغ هدف نامعتبر است');
+    return;
+  }
+
+  const now = Date.now();
+  const deadline = deadlineRaw ? String(deadlineRaw).slice(0,10) : null;
+
+  if(editId){
+    const g = (financialGoals || []).find(x => String(x.id) === String(editId));
+    if(g){
+      g.title = title;
+      g.targetAmount = amount;
+      g.deadline = deadline;
+      g.updatedAt = now;
+    }
+  } else {
+    financialGoals.push({
+      id: now,
+      title,
+      targetAmount: amount,
+      deadline,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+  closeGoalForm();
+  persist();
+  renderFinancialGoals();
+}
+
+function deleteGoal(id){
+  if(!confirm('این هدف حذف شود؟')) return;
+  financialGoals = (financialGoals || []).filter(g => String(g.id) !== String(id));
+  persist();
+  renderFinancialGoals();
+}
+
+function renderFinancialGoals(){
+  const listEl = $('goalsList');
+  if(!listEl) return;
+
+  try{
+    const capital = safeNum(typeof computeTotal === 'function' ? computeTotal() : 0, 0);
+    if($('goalsCurrentCapital')) $('goalsCurrentCapital').textContent = fmt(capital) + ' ت';
+
+    const model = computeSavingsModel();
+    if($('goalsSavingsRate')){
+      if(model.dataSource === 'none'){
+        $('goalsSavingsRate').textContent = 'داده ناکافی';
+      } else {
+        const v = model.monthlyReal;
+        const sign = v >= 0 ? '' : '−';
+        $('goalsSavingsRate').textContent = sign + fmt(Math.abs(Math.round(v))) + ' ت/ماه';
+      }
+    }
+
+    const goals = Array.isArray(financialGoals) ? financialGoals.slice() : [];
+    goals.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+
+    if(!goals.length){
+      listEl.innerHTML = '<div class="goals-empty">هنوز هدفی ثبت نشده است.<br>با «هدف جدید» اولین هدف مالی‌تان را بسازید.</div>';
+      return;
+    }
+
+    listEl.innerHTML = goals.map(g => {
+      const proj = computeGoalProjection(g, capital, model);
+      const badge = proj.achieved ? 'محقق‌شده' : 'در مسیر';
+      const confPct = Math.round(model.confidence * 100);
+      let confHtml = '';
+      if(model.dataSource === 'none'){
+        confHtml = '<div class="goal-conf warn">داده درآمد/هزینه برای پیش‌بینی زمان کافی نیست — فقط فاصله تا هدف قطعی است.</div>';
+      } else if(model.confidence < 0.45){
+        confHtml = '<div class="goal-conf warn">اطمینان پیش‌بینی حدود ' + confPct + '٪ (داده محدود یا ماه ناقص). اعداد زمان تقریبی‌اند.</div>';
+      } else {
+        confHtml = '<div class="goal-conf">اطمینان نسبی پیش‌بینی ≈ ' + confPct + '٪ · منبع: ' +
+          (model.dataSource === 'cashflow' ? 'جریان درآمد/هزینه ماه' : 'رشد مشاهده‌شده سرمایه') + '</div>';
+      }
+
+      const scBlock = (name, sc, monthly) => {
+        const mon = monthly;
+        const monTxt = isFinite(mon)
+          ? ((mon >= 0 ? '' : '−') + fmt(Math.abs(Math.round(mon))) + ' ت/ماه')
+          : '—';
+        return '<div class="goal-sc"><div class="sc-name">' + name + '</div>' +
+          '<div class="sc-line">پس‌انداز: <b>' + monTxt + '</b></div>' +
+          '<div class="sc-line">زمان: <b>' + escapeHtml(sc.label) + '</b></div></div>';
+      };
+
+      let condHtml = '';
+      if(!proj.achieved){
+        const lines = proj.horizons.map(h => {
+          if(h.needMonthly <= 0) return '';
+          if(h.gap <= 0){
+            return '<p>در <b>' + h.months + ' ماه</b>: با آهنگ فعلی (≈ ' + fmt(Math.round(h.currentMonthly)) +
+              ' ت/ماه) از نظر عددی قابل دسترس است؛ نیاز ماهانه ≈ <b>' + fmt(Math.round(h.needMonthly)) + '</b> ت.</p>';
+          }
+          return '<p>در <b>' + h.months + ' ماه</b>: نیاز به پس‌انداز ≈ <b>' + fmt(Math.round(h.needMonthly)) +
+            '</b> ت/ماه — حدود <b>' + fmt(Math.round(h.gap)) +
+            '</b> ت بیشتر از آهنگ فعلی (افزایش درآمد یا کاهش هزینه).</p>';
+        }).filter(Boolean).join('');
+        if(model.monthlyReal <= 0 && proj.remaining > 0){
+          condHtml = '<div class="goal-conditions"><div class="gc-h">چه شرایطی لازم است؟</div>' +
+            '<p>نرخ پس‌انداز فعلی صفر یا منفی است؛ بدون افزایش درآمد یا کاهش هزینه، رسیدن به هدف قطعی نیست.</p>' +
+            lines + '</div>';
+        } else if(lines){
+          condHtml = '<div class="goal-conditions"><div class="gc-h">چه شرایطی لازم است؟</div>' + lines + '</div>';
+        }
+      }
+
+      let deadlineHtml = '';
+      if(proj.deadlineInfo){
+        const di = proj.deadlineInfo;
+        if(di.expired){
+          deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v" style="color:var(--red)">منقضی شده</span></div>';
+        } else {
+          deadlineHtml = '<div class="gc-row"><span class="k">مهلت</span><span class="v">' +
+            (di.daysLeft) + ' روز مانده · نیاز ≈ ' + fmt(Math.round(di.needMonthly)) + ' ت/ماه</span></div>';
+        }
+      }
+
+      const dailyNeed = (proj.remaining > 0 && model.monthlyReal > 0 && proj.scReal.months)
+        ? proj.remaining / Math.max(proj.scReal.months * model.daysPerMonth, 1)
+        : (proj.remaining > 0 && model.daysPerMonth > 0 ? (proj.remaining / (6 * model.daysPerMonth)) : 0);
+
+      return '<div class="goal-card' + (proj.achieved ? ' achieved' : '') + '" data-goal-id="' + g.id + '">' +
+        '<div class="gc-top"><h3 class="gc-title">' + escapeHtml(g.title || 'بدون عنوان') + '</h3>' +
+        '<span class="gc-badge">' + badge + '</span></div>' +
+        '<div class="gc-meta">هدف: <b>' + fmt(proj.target) + '</b> ت' +
+          (g.deadline ? ' · مهلت ' + escapeHtml(String(g.deadline).slice(0,10)) : '') + '</div>' +
+        '<div class="goal-progress"><div class="gp-label"><span>پیشرفت</span><span>' +
+          proj.progress.toFixed(1) + '٪</span></div>' +
+        '<div class="gp-track"><div class="gp-fill" style="width:' + Math.min(100, proj.progress).toFixed(2) +
+        '%"></div></div></div>' +
+        '<div class="gc-rows">' +
+        '<div class="gc-row"><span class="k">سرمایه فعلی</span><span class="v">' + fmt(proj.current) + ' ت</span></div>' +
+        '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
+        (proj.achieved ? '' :
+          '<div class="gc-row"><span class="k">نیاز ماهانه (واقع‌بینانه)</span><span class="v">' +
+          (proj.scReal.reachable && model.monthlyReal > 0 ? fmt(Math.round(model.monthlyReal)) + ' ت' : '—') +
+          '</span></div>') +
+        deadlineHtml +
+        '</div>' +
+        (proj.achieved
+          ? '<p class="an-ok" style="margin:0 0 10px;font-size:12px;">سرمایه فعلی به مبلغ هدف رسیده یا از آن عبور کرده است.</p>'
+          : '<div class="goal-scenarios">' +
+            scBlock('محافظه‌کارانه', proj.scCons, model.monthlyCons) +
+            scBlock('واقع‌بینانه', proj.scReal, model.monthlyReal) +
+            scBlock('خوش‌بینانه', proj.scOpt, model.monthlyOpt) +
+            '</div>' + condHtml + confHtml) +
+        '<div class="gc-actions">' +
+        '<button type="button" class="btn ghost goal-edit-btn" data-id="' + g.id + '">ویرایش</button>' +
+        '<button type="button" class="btn ghost goal-del-btn" data-id="' + g.id + '" style="color:var(--red)">حذف</button>' +
+        '</div></div>';
+    }).join('');
+  }catch(err){
+    console.error('renderFinancialGoals', err);
+    listEl.innerHTML = '<div class="goals-empty">نمایش اهداف در دسترس نیست.</div>';
+  }
+}
+
+function bindGoalUi(){
+  if($('goalAddBtn')){
+    $('goalAddBtn').addEventListener('click', ()=> openGoalForm(null));
+  }
+  if($('goalCancelBtn')){
+    $('goalCancelBtn').addEventListener('click', closeGoalForm);
+  }
+  if($('goalSaveBtn')){
+    $('goalSaveBtn').addEventListener('click', saveGoalFromForm);
+  }
+  document.addEventListener('click', (e)=>{
+    const ed = e.target && e.target.closest && e.target.closest('.goal-edit-btn');
+    if(ed){ openGoalForm(ed.getAttribute('data-id')); return; }
+    const del = e.target && e.target.closest && e.target.closest('.goal-del-btn');
+    if(del){ deleteGoal(del.getAttribute('data-id')); }
+  });
+}
+bindGoalUi();
+
+
 function renderForecastSnapshots(){
   const el = $('fcSnapList');
   if(!el) return;
@@ -2712,6 +3138,14 @@ $('importFile').addEventListener('change', (e)=>{
       fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
       milestonesClaimed = (d.milestonesClaimed && typeof d.milestonesClaimed === 'object') ? d.milestonesClaimed : {};
       notes = Array.isArray(d.notes) ? d.notes : [];
+      financialGoals = Array.isArray(d.financialGoals) ? d.financialGoals.map(g => ({
+        id: g.id,
+        title: String(g.title || '').slice(0, 80),
+        targetAmount: Math.max(0, safeNum(g.targetAmount, 0)),
+        deadline: g.deadline ? String(g.deadline).slice(0, 10) : null,
+        createdAt: g.createdAt || Date.now(),
+        updatedAt: g.updatedAt || Date.now()
+      })) : [];
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
       ensureCoreAssets();
       initMilestonesBaseline();
