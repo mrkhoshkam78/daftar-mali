@@ -2287,6 +2287,28 @@ function deleteGoal(id){
   renderFinancialGoals();
 }
 
+const GOALS_COLLAPSE_KEY = 'daftar-goals-collapse';
+function loadGoalCollapseState(){
+  try{
+    const raw = sessionStorage.getItem(GOALS_COLLAPSE_KEY);
+    if(!raw) return {};
+    const o = JSON.parse(raw);
+    return (o && typeof o === 'object') ? o : {};
+  }catch(e){ return {}; }
+}
+function saveGoalCollapseState(map){
+  try{ sessionStorage.setItem(GOALS_COLLAPSE_KEY, JSON.stringify(map || {})); }catch(e){}
+}
+function isGoalExpanded(id){
+  const map = loadGoalCollapseState();
+  return map[String(id)] === true;
+}
+function setGoalExpanded(id, open){
+  const map = loadGoalCollapseState();
+  map[String(id)] = !!open;
+  saveGoalCollapseState(map);
+}
+
 function renderFinancialGoals(){
   const listEl = $('goalsList');
   if(!listEl) return;
@@ -2370,39 +2392,49 @@ function renderFinancialGoals(){
         }
       }
 
-      const dailyNeed = (proj.remaining > 0 && model.monthlyReal > 0 && proj.scReal.months)
-        ? proj.remaining / Math.max(proj.scReal.months * model.daysPerMonth, 1)
-        : (proj.remaining > 0 && model.daysPerMonth > 0 ? (proj.remaining / (6 * model.daysPerMonth)) : 0);
-
-      return '<div class="goal-card' + (proj.achieved ? ' achieved' : '') + '" data-goal-id="' + g.id + '">' +
-        '<div class="gc-top"><h3 class="gc-title">' + escapeHtml(g.title || 'بدون عنوان') + '</h3>' +
-        '<span class="gc-badge">' + badge + '</span></div>' +
-        '<div class="gc-meta">هدف: <b>' + fmt(proj.target) + '</b> ت' +
-          (g.deadline ? ' · مهلت ' + escapeHtml(String(g.deadline).slice(0,10)) : '') + '</div>' +
-        '<div class="goal-progress"><div class="gp-label"><span>پیشرفت</span><span>' +
-          proj.progress.toFixed(1) + '٪</span></div>' +
-        '<div class="gp-track"><div class="gp-fill" style="width:' + Math.min(100, proj.progress).toFixed(2) +
-        '%"></div></div></div>' +
-        '<div class="gc-rows">' +
-        '<div class="gc-row"><span class="k">سرمایه فعلی</span><span class="v">' + fmt(proj.current) + ' ت</span></div>' +
-        '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
-        (proj.achieved ? '' :
+      const expanded = isGoalExpanded(g.id);
+      const detailsHtml = proj.achieved
+        ? '<p class="an-ok" style="margin:0 0 10px;font-size:12px;">سرمایه فعلی به مبلغ هدف رسیده یا از آن عبور کرده است.</p>' +
+          '<div class="gc-rows">' +
+          '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
+          deadlineHtml + '</div>'
+        : '<div class="gc-rows">' +
+          '<div class="gc-row"><span class="k">باقی‌مانده</span><span class="v">' + fmt(proj.remaining) + ' ت</span></div>' +
           '<div class="gc-row"><span class="k">نیاز ماهانه (واقع‌بینانه)</span><span class="v">' +
           (proj.scReal.reachable && model.monthlyReal > 0 ? fmt(Math.round(model.monthlyReal)) + ' ت' : '—') +
-          '</span></div>') +
-        deadlineHtml +
-        '</div>' +
-        (proj.achieved
-          ? '<p class="an-ok" style="margin:0 0 10px;font-size:12px;">سرمایه فعلی به مبلغ هدف رسیده یا از آن عبور کرده است.</p>'
-          : '<div class="goal-scenarios">' +
+          '</span></div>' + deadlineHtml + '</div>' +
+          '<div class="goal-scenarios">' +
             scBlock('محافظه‌کارانه', proj.scCons, model.monthlyCons) +
             scBlock('واقع‌بینانه', proj.scReal, model.monthlyReal) +
             scBlock('خوش‌بینانه', proj.scOpt, model.monthlyOpt) +
-            '</div>' + condHtml + confHtml) +
+          '</div>' + condHtml + confHtml;
+
+      return '<div class="goal-card' + (proj.achieved ? ' achieved' : '') + (expanded ? ' expanded' : '') +
+        '" data-goal-id="' + g.id + '">' +
+        '<div class="gc-summary" role="button" tabindex="0" aria-expanded="' + (expanded ? 'true' : 'false') +
+        '" data-goal-toggle="' + g.id + '" title="باز/بسته کردن جزئیات">' +
+        '<div class="gc-top">' +
+          '<h3 class="gc-title">' + escapeHtml(g.title || 'بدون عنوان') + '</h3>' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<span class="gc-badge">' + badge + '</span>' +
+            '<span class="gc-chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="gc-summary-metrics">' +
+          '<div><span class="sm-k">مبلغ هدف</span> · <span class="sm-v">' + fmt(proj.target) + ' ت</span></div>' +
+          '<div><span class="sm-k">سرمایه فعلی</span> · <span class="sm-v">' + fmt(proj.current) + ' ت</span></div>' +
+        '</div>' +
+        '<div class="goal-progress" style="margin:4px 0 0;"><div class="gp-label"><span>پیشرفت</span><span>' +
+          proj.progress.toFixed(1) + '٪</span></div>' +
+        '<div class="gp-track"><div class="gp-fill" style="width:' + Math.min(100, proj.progress).toFixed(2) +
+        '%"></div></div></div>' +
+        (g.deadline ? '<div class="gc-meta" style="margin:6px 0 0;">مهلت: ' + escapeHtml(String(g.deadline).slice(0,10)) + '</div>' : '') +
+        '</div>' +
+        '<div class="goal-body"><div class="goal-body-inner">' + detailsHtml +
         '<div class="gc-actions">' +
         '<button type="button" class="btn ghost goal-edit-btn" data-id="' + g.id + '">ویرایش</button>' +
         '<button type="button" class="btn ghost goal-del-btn" data-id="' + g.id + '" style="color:var(--red)">حذف</button>' +
-        '</div></div>';
+        '</div></div></div></div>';
     }).join('');
   }catch(err){
     console.error('renderFinancialGoals', err);
@@ -2435,15 +2467,42 @@ function bindGoalUi(){
     const ed = t.closest('.goal-edit-btn');
     if(ed){
       e.preventDefault();
+      e.stopPropagation();
       openGoalForm(ed.getAttribute('data-id'));
       return;
     }
     const del = t.closest('.goal-del-btn');
     if(del){
       e.preventDefault();
+      e.stopPropagation();
       deleteGoal(del.getAttribute('data-id'));
+      return;
+    }
+    const tog = t.closest('[data-goal-toggle]');
+    if(tog){
+      e.preventDefault();
+      const id = tog.getAttribute('data-goal-toggle');
+      const card = tog.closest('.goal-card');
+      const next = !isGoalExpanded(id);
+      setGoalExpanded(id, next);
+      if(card){
+        card.classList.toggle('expanded', next);
+        tog.setAttribute('aria-expanded', next ? 'true' : 'false');
+      }
+      return;
     }
   });
+  if(!window.__goalsKeyBound){
+    window.__goalsKeyBound = true;
+    document.addEventListener('keydown', (e)=>{
+      const tog = e.target && e.target.closest && e.target.closest('[data-goal-toggle]');
+      if(!tog) return;
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        tog.click();
+      }
+    });
+  }
 }
 // اتصال فوری + پس از DOMContentLoaded برای اطمینان
 bindGoalUi();
@@ -3293,6 +3352,71 @@ let notesViewMode = 'list'; // list | cal
 let notesCalCursor = null; // Date for calendar month
 let notesCalSelectedISO = null;
 let noteDraftTags = [];
+const NOTES_UI_KEY = 'daftar-notes-ui';
+function loadNotesUiState(){
+  try{
+    const raw = sessionStorage.getItem(NOTES_UI_KEY);
+    if(!raw) return;
+    const o = JSON.parse(raw);
+    if(!o || typeof o !== 'object') return;
+    if(typeof o.query === 'string') notesQuery = o.query;
+    if(typeof o.cat === 'string') notesFilterCat = o.cat;
+    if(Array.isArray(o.tags)) notesFilterTags = o.tags;
+    if(typeof o.pinned === 'boolean') notesPinnedOnly = o.pinned;
+    if(typeof o.sort === 'string') notesSortMode = o.sort;
+    if(typeof o.view === 'string') notesViewMode = o.view;
+  }catch(e){}
+}
+function saveNotesUiState(){
+  try{
+    sessionStorage.setItem(NOTES_UI_KEY, JSON.stringify({
+      query: notesQuery,
+      cat: notesFilterCat,
+      tags: notesFilterTags,
+      pinned: notesPinnedOnly,
+      sort: notesSortMode,
+      view: notesViewMode
+    }));
+  }catch(e){}
+}
+function updateNotesSearchChrome(){
+  const wrap = document.getElementById('notesSearchWrap');
+  const inp = document.getElementById('notesSearch');
+  if(wrap && inp) wrap.classList.toggle('has-query', !!(inp.value || '').trim());
+}
+function renderNotesActiveFilters(){
+  const el = document.getElementById('notesActiveFilters');
+  if(!el) return;
+  const chips = [];
+  if((notesQuery || '').trim()){
+    chips.push('<span class="naf-chip">جستجو: ' + escapeHtml(notesQuery.trim()) +
+      ' <button type="button" data-naf="query" aria-label="حذف">×</button></span>');
+  }
+  if(notesFilterCat && notesFilterCat !== 'all'){
+    chips.push('<span class="naf-chip">دسته: ' + escapeHtml(noteCatMeta(notesFilterCat).label) +
+      ' <button type="button" data-naf="cat" aria-label="حذف">×</button></span>');
+  }
+  (notesFilterTags || []).forEach(t => {
+    chips.push('<span class="naf-chip">#' + escapeHtml(t) +
+      ' <button type="button" data-naf="tag" data-tag="' + escapeHtml(t) + '" aria-label="حذف">×</button></span>');
+  });
+  if(notesPinnedOnly){
+    chips.push('<span class="naf-chip">فقط سنجاق‌شده <button type="button" data-naf="pin" aria-label="حذف">×</button></span>');
+  }
+  el.innerHTML = chips.join('');
+}
+function renderNotesResultMeta(filteredLen){
+  const el = document.getElementById('notesResultMeta');
+  if(!el) return;
+  const total = Array.isArray(notes) ? notes.length : 0;
+  const active = (notesQuery && notesQuery.trim()) || (notesFilterCat && notesFilterCat !== 'all') ||
+    (notesFilterTags && notesFilterTags.length) || notesPinnedOnly;
+  if(!total){ el.innerHTML = ''; return; }
+  if(active) el.innerHTML = 'نمایش <b>' + filteredLen + '</b> از <b>' + total + '</b> یادداشت';
+  else el.innerHTML = '<b>' + total + '</b> یادداشت';
+}
+loadNotesUiState();
+
 
 function noteCatMeta(id){
   return NOTE_CATS.find(c => c.id === id) || NOTE_CATS[NOTE_CATS.length-1];
@@ -3609,13 +3733,14 @@ function getFilteredNotes(){
   if(notesViewMode === 'cal' && notesCalSelectedISO){
     list = list.filter(n => noteScheduleISO(n) === notesCalSelectedISO);
   }
-  const q = (notesQuery || '').trim().toLowerCase();
-  if(q){
+  const qRaw = (notesQuery || '').trim().toLowerCase();
+  if(qRaw){
+    const tokens = qRaw.split(/\s+/).filter(Boolean);
     list = list.filter(n => {
       if(!n) return false;
       const cat = noteCatMeta(n.cat).label;
       const hay = [n.title, n.body, cat, ...(n.tags||[])].map(x => String(x||'').toLowerCase()).join(' ');
-      return hay.includes(q);
+      return tokens.every(tok => hay.includes(tok));
     });
   }
   list.sort((a,b)=>{
@@ -3675,10 +3800,20 @@ function renderNotesCalendar(){
 function renderNotes(){
   const grid = $('notesGrid');
   if(!grid) return;
+  // همگام‌سازی UI جستجو با state
+  if($('notesSearch') && document.activeElement !== $('notesSearch')){
+    $('notesSearch').value = notesQuery || '';
+  }
+  if($('notesSort')) $('notesSort').value = notesSortMode || 'updated';
+  if($('notesPinnedOnly')) $('notesPinnedOnly').checked = !!notesPinnedOnly;
+  updateNotesSearchChrome();
   renderNotesCatBar();
   renderNotesTagBar();
   renderNotesCalendar();
   const list = getFilteredNotes();
+  renderNotesActiveFilters();
+  renderNotesResultMeta(list.length);
+  saveNotesUiState();
   if(!list.length){
     grid.innerHTML = `<div class="notes-empty" style="grid-column:1/-1">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
@@ -3696,9 +3831,14 @@ function renderNotes(){
     return `<article class="note-card${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
       <div class="note-card-head">
         <div class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</div>
-        <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
-        </button>
+        <div class="note-card-actions">
+          <button type="button" class="note-copy-btn" data-copy="${n.id}" title="کپی محتوا" aria-label="کپی محتوا">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+          <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
+          </button>
+        </div>
       </div>
       <div class="note-card-body">${escapeHtml(stripMd(n.body||''))}</div>
       ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
@@ -3711,7 +3851,7 @@ function renderNotes(){
 
   grid.querySelectorAll('.note-card').forEach(card=>{
     card.addEventListener('click', (e)=>{
-      if(e.target.closest && e.target.closest('[data-pin]')) return;
+      if(e.target.closest && (e.target.closest('[data-pin]') || e.target.closest('[data-copy]'))) return;
       const note = notes.find(x => String(x.id) === String(card.dataset.id));
       if(note) openNoteReader(note);
     });
@@ -3726,6 +3866,73 @@ function renderNotes(){
       if(persist()){ showToast(note.pinned ? 'سنجاق شد' : 'سنجاق برداشته شد'); renderNotes(); }
     });
   });
+  grid.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      e.preventDefault();
+      const note = notes.find(x => String(x.id) === String(btn.dataset.copy));
+      if(note) copyNoteContent(note, btn);
+    });
+  });
+}
+
+function buildNotePlainText(note){
+  if(!note) return '';
+  const title = String(note.title || '').trim();
+  const body = String(note.body || '').trim();
+  const tags = (note.tags || []).map(t => '#' + String(t).trim()).filter(t => t.length > 1);
+  const parts = [];
+  if(title) parts.push(title);
+  if(body) parts.push(body);
+  if(tags.length) parts.push(tags.join(' '));
+  return parts.join('\\n\\n');
+}
+
+function copyTextFallback(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  let ok = false;
+  try{ ok = document.execCommand('copy'); }catch(e){ ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+async function copyNoteContent(note, btnEl){
+  const text = buildNotePlainText(note);
+  if(!text){
+    if(typeof showToast === 'function') showToast('محتوایی برای کپی نیست', true);
+    return false;
+  }
+  let ok = false;
+  try{
+    if(navigator.clipboard && typeof navigator.clipboard.writeText === 'function'){
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  }catch(e){ ok = false; }
+  if(!ok) ok = copyTextFallback(text);
+  if(ok){
+    if(typeof showToast === 'function') showToast('کپی شد ✓');
+    if(btnEl){
+      btnEl.classList.add('copied');
+      const prev = btnEl.getAttribute('title') || '';
+      btnEl.setAttribute('title', 'کپی شد ✓');
+      setTimeout(()=>{
+        btnEl.classList.remove('copied');
+        if(prev) btnEl.setAttribute('title', prev);
+      }, 1400);
+    }
+  } else {
+    if(typeof showToast === 'function') showToast('کپی ممکن نشد', true);
+    else alert('کپی ممکن نشد');
+  }
+  return ok;
 }
 
 function escapeHtml(s){
@@ -3754,6 +3961,14 @@ if($('noteModalClose')) $('noteModalClose').addEventListener('click', closeNoteM
 if($('noteModalClose2')) $('noteModalClose2').addEventListener('click', closeNoteModal);
 if($('noteModal')){
   $('noteModal').addEventListener('click', (e)=>{ if(e.target === $('noteModal')) closeNoteModal(); });
+}
+if($('noteModalCopyBtn')){
+  $('noteModalCopyBtn').addEventListener('click', ()=>{
+    const id = noteModalCurrentId || ($('noteEditId') && $('noteEditId').value);
+    const note = (notes || []).find(x => String(x.id) === String(id));
+    if(note) copyNoteContent(note, $('noteModalCopyBtn'));
+    else if(typeof showToast === 'function') showToast('یادداشتی انتخاب نشده', true);
+  });
 }
 if($('noteModalEditBtn')){
   $('noteModalEditBtn').addEventListener('click', ()=>{
@@ -3834,11 +4049,51 @@ if($('noteDeleteBtn')){
 }
 if($('notesSearch')){
   let tmr = null;
+  $('notesSearch').value = notesQuery || '';
+  updateNotesSearchChrome();
   $('notesSearch').addEventListener('input', ()=>{
     clearTimeout(tmr);
-    tmr = setTimeout(()=>{ notesQuery = $('notesSearch').value || ''; renderNotes(); }, 140);
+    tmr = setTimeout(()=>{
+      notesQuery = $('notesSearch').value || '';
+      updateNotesSearchChrome();
+      renderNotes();
+    }, 120);
   });
 }
+if($('notesSearchClear')){
+  $('notesSearchClear').addEventListener('click', ()=>{
+    notesQuery = '';
+    if($('notesSearch')) $('notesSearch').value = '';
+    updateNotesSearchChrome();
+    renderNotes();
+  });
+}
+if($('notesClearFilters')){
+  $('notesClearFilters').addEventListener('click', ()=>{
+    notesQuery = '';
+    notesFilterCat = 'all';
+    notesFilterTags = [];
+    notesPinnedOnly = false;
+    if($('notesSearch')) $('notesSearch').value = '';
+    if($('notesPinnedOnly')) $('notesPinnedOnly').checked = false;
+    updateNotesSearchChrome();
+    renderNotes();
+  });
+}
+document.addEventListener('click', (e)=>{
+  const btn = e.target && e.target.closest && e.target.closest('[data-naf]');
+  if(!btn) return;
+  const kind = btn.getAttribute('data-naf');
+  if(kind === 'query'){ notesQuery = ''; if($('notesSearch')) $('notesSearch').value = ''; }
+  else if(kind === 'cat'){ notesFilterCat = 'all'; }
+  else if(kind === 'pin'){ notesPinnedOnly = false; if($('notesPinnedOnly')) $('notesPinnedOnly').checked = false; }
+  else if(kind === 'tag'){
+    const tag = btn.getAttribute('data-tag');
+    notesFilterTags = (notesFilterTags || []).filter(x => !tagsEqual(x, tag));
+  }
+  updateNotesSearchChrome();
+  renderNotes();
+});
 if($('notesSort')){
   $('notesSort').addEventListener('change', ()=>{
     notesSortMode = $('notesSort').value || 'updated';

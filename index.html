@@ -2032,6 +2032,141 @@
   }
   .goal-conf.warn{color:var(--orange, #F59E0B);}
 
+
+  /* Goal collapse — advanced CSS animation */
+  .goal-card{
+    transition: border-color .35s ease, box-shadow .35s ease;
+  }
+  .goal-card.expanded{
+    border-color: rgba(139,92,246,.42);
+    box-shadow: 0 10px 32px rgba(0,0,0,.32), 0 0 0 1px rgba(139,92,246,.12), inset 0 1px 0 rgba(167,139,250,.10);
+  }
+  .goal-card .gc-summary{
+    cursor:pointer; user-select:none;
+    display:flex; flex-direction:column; gap:8px;
+    border-radius:12px;
+    transition: background .25s ease;
+  }
+  .goal-card .gc-summary:hover{
+    background: rgba(139,92,246,.04);
+  }
+  .goal-card .gc-summary:focus-visible{
+    outline:2px solid var(--blue-light); outline-offset:2px; border-radius:10px;
+  }
+  .goal-card .gc-top{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+  }
+  .goal-card .gc-chev{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink-dim); flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:
+      transform .45s cubic-bezier(.34,1.4,.64,1),
+      background .25s ease,
+      color .25s ease,
+      border-color .25s ease,
+      box-shadow .3s ease;
+  }
+  .goal-card.expanded .gc-chev{
+    transform:rotate(180deg);
+    color:var(--blue-light);
+    border-color:rgba(139,92,246,.45);
+    background:var(--blue-soft);
+    box-shadow: 0 0 12px rgba(139,92,246,.25);
+  }
+  .goal-card .gc-summary-metrics{
+    display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; font-size:12px;
+  }
+  @media (max-width:420px){
+    .goal-card .gc-summary-metrics{grid-template-columns:1fr;}
+  }
+  .goal-card .gc-summary-metrics .sm-k{color:var(--ink-dim);}
+  .goal-card .gc-summary-metrics .sm-v{font-weight:700; color:var(--ink); text-align:left;}
+  .goal-body{
+    display:grid;
+    grid-template-rows:0fr;
+    transition: grid-template-rows .42s cubic-bezier(.22,.61,.36,1);
+  }
+  .goal-card.expanded .goal-body{
+    grid-template-rows:1fr;
+  }
+  .goal-body-inner{
+    overflow:hidden; min-height:0;
+    opacity:0;
+    transform: translateY(-6px);
+    filter: blur(2px);
+    transition:
+      opacity .32s ease .04s,
+      transform .38s cubic-bezier(.22,.61,.36,1) .02s,
+      filter .3s ease;
+  }
+  .goal-card.expanded .goal-body-inner{
+    opacity:1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  .goal-body-inner > *:first-child{margin-top:10px;}
+  .goal-card .gc-actions{margin-top:4px;}
+  html[data-anim="off"] .goal-body,
+  html[data-anim="off"] .goal-body-inner,
+  html[data-anim="off"] .goal-card .gc-chev{
+    transition:none !important;
+  }
+  html[data-anim="off"] .goal-body-inner{
+    opacity:1; transform:none; filter:none;
+  }
+
+  /* Note copy button */
+  .note-card-head{display:flex; align-items:flex-start; gap:6px;}
+  .note-card-head .note-card-title{flex:1; min-width:0;}
+  .note-card-actions{display:flex; align-items:center; gap:4px; flex-shrink:0;}
+  .note-copy-btn{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink-dim); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; padding:0;
+    transition: background .15s, color .15s, border-color .15s, transform .15s;
+  }
+  .note-copy-btn:hover{
+    color:var(--blue-light); border-color:var(--border-strong); background:var(--blue-soft);
+  }
+  .note-copy-btn:active{transform:scale(.94);}
+  .note-copy-btn.copied{
+    color:var(--green); border-color:rgba(34,197,94,.4); background:var(--green-soft);
+  }
+  .note-copy-btn svg{display:block; pointer-events:none;}
+
+  /* Notes: search clear + count */
+  .notes-search-wrap{position:relative; display:flex; align-items:center; min-width:0;}
+  .notes-toolbar .notes-search-wrap{grid-column:1 / -1;}
+  @media (min-width:640px){
+    .notes-toolbar .notes-search-wrap{grid-column:auto;}
+  }
+  .notes-search-wrap .notes-search{width:100%; padding-left:34px;}
+  .notes-search-clear{
+    position:absolute; left:6px; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:8px; border:none;
+    background:transparent; color:var(--ink-dim); cursor:pointer;
+    display:none; align-items:center; justify-content:center; padding:0;
+  }
+  .notes-search-wrap.has-query .notes-search-clear{display:inline-flex;}
+  .notes-search-clear:hover{background:var(--blue-soft); color:var(--blue-light);}
+  .notes-result-meta{
+    font-size:11px; color:var(--ink-dim); margin:6px 0 2px; min-height:16px;
+  }
+  .notes-result-meta b{color:var(--ink); font-weight:700;}
+  .notes-active-filters{
+    display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 4px;
+  }
+  .notes-active-filters .naf-chip{
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 8px; border-radius:999px; font-size:11px;
+    background:var(--blue-soft); color:var(--blue-light); border:1px solid var(--border);
+  }
+  .notes-active-filters .naf-chip button{
+    border:none; background:none; color:var(--ink-dim); cursor:pointer;
+    font-size:13px; line-height:1; padding:0 2px;
+  }
+
 </style>
 </head>
 <body>
@@ -2472,7 +2607,12 @@
 
       <div class="notes-shell">
         <div class="notes-toolbar">
-          <input type="search" class="notes-search" id="notesSearch" placeholder="جستجو در عنوان، متن، تگ و دسته…" autocomplete="off">
+          <div class="notes-search-wrap" id="notesSearchWrap">
+            <input type="search" class="notes-search" id="notesSearch" placeholder="جستجو سریع در عنوان، متن، تگ و دسته…" autocomplete="off">
+            <button type="button" class="notes-search-clear" id="notesSearchClear" title="پاک کردن جستجو" aria-label="پاک کردن جستجو">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
           <select class="notes-sort" id="notesSort" aria-label="مرتب‌سازی">
             <option value="updated">آخرین ویرایش</option>
             <option value="newest">جدیدترین</option>
@@ -2490,7 +2630,10 @@
 
         <div class="notes-filters-row">
           <label class="chk"><input type="checkbox" id="notesPinnedOnly"> فقط سنجاق‌شده</label>
+          <button type="button" class="btn ghost" id="notesClearFilters" style="margin:0;padding:6px 10px;font-size:11px;">پاک کردن فیلترها</button>
         </div>
+        <div class="notes-active-filters" id="notesActiveFilters"></div>
+        <div class="notes-result-meta" id="notesResultMeta"></div>
 
         <div class="notes-cats" id="notesCatBar"></div>
         <div class="notes-tags-bar" id="notesTagBar"></div>
@@ -2722,6 +2865,7 @@
       </div>
     </div>
     <div class="note-modal-foot note-modal-foot-read">
+      <button type="button" class="btn ghost" id="noteModalCopyBtn">کپی</button>
       <button type="button" class="btn" id="noteModalEditBtn">ویرایش</button>
       <button type="button" class="btn ghost" id="noteModalClose2">بستن</button>
     </div>
