@@ -167,12 +167,13 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
 const APP_VERSION = '2.03';
-const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet'];
+const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet','navy-crimson'];
 /** نرمال‌سازی نام تم — نام‌های قدیمی/غلط را اصلاح می‌کند */
 function normalizeThemeId(t){
   t = String(t || '').trim().toLowerCase();
   if(t === 'finverse' || t === 'finance-blue' || t === 'finverse-blue' || t === 'finverse_blue') return 'finverse-violet';
   if(t === 'finverse_violet' || t === 'finverseviolet') return 'finverse-violet';
+  if(t === 'navy_crimson' || t === 'navycrimson' || t === 'navy-crimson') return 'navy-crimson';
   return t;
 }
 function applyTheme(t){
