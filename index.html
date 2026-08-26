@@ -2104,15 +2104,197 @@
   }
   .goal-dl-row{
     display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    width:100%;
   }
   .goal-dl-row select{
-    min-width:72px; flex:1;
+    min-width:64px; flex:1 1 72px;
     padding:8px 10px; border-radius:10px;
     border:1px solid var(--border); background:var(--bg-2); color:var(--ink);
     font-family:var(--app-font); font-size:13px;
+    box-sizing:border-box;
   }
   .goal-dl-row select:disabled{opacity:.45;}
-  .goal-dl-none{font-size:12px; color:var(--ink-dim); white-space:nowrap; margin:0;}
+  /* چک‌باکس سفارشی — تراز و اندازه مناسب موبایل/دسکتاپ */
+  label.chk.goal-dl-none{
+    display:flex !important;
+    align-items:center;
+    gap:8px;
+    margin:0;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    cursor:pointer;
+    flex:0 0 auto;
+    line-height:1.2;
+    user-select:none;
+    min-height:38px;
+    box-sizing:border-box;
+  }
+  label.chk.goal-dl-none input[type="checkbox"]{
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    width:18px !important;
+    height:18px !important;
+    min-width:18px !important;
+    min-height:18px !important;
+    max-width:18px !important;
+    max-height:18px !important;
+    margin:0 !important;
+    padding:0 !important;
+    flex-shrink:0;
+    border-radius:5px !important;
+    border:1.5px solid var(--border-strong) !important;
+    background:var(--card) !important;
+    cursor:pointer;
+    position:relative;
+    vertical-align:middle;
+    box-shadow:none;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+  }
+  label.chk.goal-dl-none input[type="checkbox"]:checked{
+    background:#6366f1;
+    border-color:#6366f1;
+    box-shadow:0 0 0 2px rgba(99,102,241,.2);
+  }
+  label.chk.goal-dl-none input[type="checkbox"]:checked::after{
+    content:"";
+    position:absolute;
+    left:5px; top:2px;
+    width:5px; height:9px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  label.chk.goal-dl-none input[type="checkbox"]:focus-visible{
+    outline:2px solid #818cf8;
+    outline-offset:2px;
+  }
+  @media (max-width:520px){
+    .goal-dl-row{flex-direction:column; align-items:stretch;}
+    .goal-dl-row select{flex:1 1 auto; width:100%; min-width:0;}
+    label.chk.goal-dl-none{width:100%; justify-content:flex-start;}
+  }
+
+  /* دکمه هدف جدید — طراحی مستقل از Theme */
+  #goalAddBtn.goal-add-btn,
+  button#goalAddBtn{
+    --gab-fg:#0b1020;
+    --gab-bg1:#a5b4fc;
+    --gab-bg2:#818cf8;
+    --gab-bg3:#6366f1;
+    position:relative;
+    display:inline-flex !important;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin:0 !important;
+    padding:11px 18px !important;
+    border:none !important;
+    border-radius:999px !important;
+    background:linear-gradient(135deg, var(--gab-bg1) 0%, var(--gab-bg2) 48%, var(--gab-bg3) 100%) !important;
+    color:var(--gab-fg) !important;
+    font-family:inherit;
+    font-size:13px !important;
+    font-weight:800 !important;
+    letter-spacing:.01em;
+    line-height:1.2;
+    cursor:pointer;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.35) inset,
+      0 8px 20px rgba(99,102,241,.35),
+      0 2px 6px rgba(0,0,0,.18) !important;
+    transition: transform .18s cubic-bezier(.22,.61,.36,1), box-shadow .18s ease, filter .18s ease !important;
+    overflow:hidden;
+    isolation:isolate;
+  }
+  #goalAddBtn.goal-add-btn::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+    transform:translateX(-120%);
+    transition:transform .5s ease;
+    pointer-events:none;
+    z-index:0;
+  }
+  #goalAddBtn.goal-add-btn:hover{
+    transform:translateY(-1px) scale(1.02);
+    filter:brightness(1.05);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.4) inset,
+      0 12px 28px rgba(99,102,241,.45),
+      0 4px 10px rgba(0,0,0,.2) !important;
+  }
+  #goalAddBtn.goal-add-btn:hover::before{ transform:translateX(120%); }
+  #goalAddBtn.goal-add-btn:active{
+    transform:translateY(0) scale(.98);
+    filter:brightness(.98);
+  }
+  #goalAddBtn.goal-add-btn:focus-visible{
+    outline:2px solid #c7d2fe;
+    outline-offset:3px;
+  }
+  #goalAddBtn.goal-add-btn .gab-ic{
+    display:inline-flex;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:rgba(11,16,32,.14);
+    align-items:center; justify-content:center;
+    flex-shrink:0;
+    z-index:1;
+  }
+  #goalAddBtn.goal-add-btn .gab-ic svg{display:block;}
+  #goalAddBtn.goal-add-btn .gab-txt{position:relative; z-index:1;}
+  @media (max-width:420px){
+    #goalAddBtn.goal-add-btn{ width:100%; padding:12px 16px !important; }
+  }
+
+  /* Donut segment pulse (SVG overlay) */
+  .donut{ position:relative; }
+  .donut-seg-svg{
+    position:absolute; inset:0; width:100%; height:100%;
+    pointer-events:none; z-index:1;
+    overflow:visible;
+  }
+  .donut-center{ z-index:2; }
+  .donut-seg-arc{
+    fill:none;
+    stroke-linecap:butt;
+    opacity:0;
+    transform-origin:center;
+    animation: donutSegIn .7s cubic-bezier(.22,.61,.36,1) forwards;
+  }
+  .donut-seg-glow{
+    fill:none;
+    stroke-linecap:round;
+    opacity:0;
+    filter:blur(1.5px);
+    animation: donutSegGlow 2.8s ease-in-out infinite;
+  }
+  @keyframes donutSegIn{
+    0%{ opacity:0; stroke-dashoffset: var(--seg-len); }
+    55%{ opacity:.85; }
+    100%{ opacity:.55; stroke-dashoffset:0; }
+  }
+  @keyframes donutSegGlow{
+    0%,100%{ opacity:.12; }
+    50%{ opacity:.32; }
+  }
+  html[data-anim="off"] .donut-seg-arc,
+  html[data-anim="off"] .donut-seg-glow{
+    animation:none !important;
+    opacity:.35;
+    stroke-dashoffset:0;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .donut-seg-arc, .donut-seg-glow{ animation:none !important; opacity:.3; stroke-dashoffset:0; }
+    #goalAddBtn.goal-add-btn::before{ display:none; }
+  }
   @media (prefers-reduced-motion: reduce){
     .goal-body, .goal-body-inner, .goal-card .gc-chev, .goal-card{transition:none !important;}
     .goal-body-inner{opacity:1; transform:none;}
@@ -2662,7 +2844,10 @@
           <div class="section-sub" style="margin:0;">بر اساس جمع دارایی و جریان واقعی درآمد و هزینه</div>
         </div>
         <div class="gh-actions">
-          <button type="button" class="btn" id="goalAddBtn">هدف جدید</button>
+          <button type="button" class="goal-add-btn" id="goalAddBtn" aria-label="هدف جدید">
+            <span class="gab-ic" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="gab-txt">هدف جدید</span>
+          </button>
         </div>
       </div>
 

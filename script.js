@@ -937,7 +937,11 @@ function renderDonut(){
   const centerVal = $('donutTotal');
 
   if(total <= 0){
-    if(donut) donut.style.background = 'var(--card-2)';
+    if(donut){
+      donut.style.background = 'var(--card-2)';
+      const svg = donut.querySelector('.donut-seg-svg');
+      if(svg) svg.innerHTML = '';
+    }
     if(legend) legend.innerHTML = '<div class="empty">دارایی‌ای ثبت نشده</div>';
     if(centerLbl) centerLbl.textContent = 'جمع کل';
     if(centerVal) centerVal.textContent = '۰';
@@ -958,7 +962,43 @@ function renderDonut(){
     segments.push({key: d.key, start: acc, end: acc + pct, color: d.color, name: d.name, value: v});
     acc += pct;
   });
-  if(donut) donut.style.background = stops.length ? `conic-gradient(${stops.join(',')})` : 'var(--card-2)';
+  if(donut){
+    donut.style.background = stops.length ? `conic-gradient(${stops.join(',')})` : 'var(--card-2)';
+    // لایه SVG برای انیمیشن ظریف هر segment
+    let svg = donut.querySelector('.donut-seg-svg');
+    if(!svg){
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'donut-seg-svg');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('aria-hidden', 'true');
+      donut.appendChild(svg);
+    }
+    // شعاع حلقه روی لبهٔ دونات (بین outer و hole)
+    const R = 38, CX = 50, CY = 50;
+    const circ = 2 * Math.PI * R;
+    let arcs = '';
+    segments.forEach((seg, i) => {
+      const span = Math.max(0, seg.end - seg.start);
+      if(span < 0.15) return; // خیلی کوچک — انیمیشن لازم نیست
+      const len = circ * (span / 100);
+      // شروع از بالای دایره، ساعت‌گرد — مثل conic-gradient
+      const startAngle = (seg.start / 100) * 360 - 90;
+      const delay = (i * 0.08).toFixed(2) + 's';
+      // stroke کامل با dash برای طول segment
+      arcs += '<circle class="donut-seg-glow" cx="'+CX+'" cy="'+CY+'" r="'+R+'"' +
+        ' stroke="'+seg.color+'" stroke-width="5"' +
+        ' stroke-dasharray="'+len.toFixed(2)+' '+(circ - len).toFixed(2)+'"' +
+        ' stroke-dashoffset="0"' +
+        ' transform="rotate('+startAngle+' '+CX+' '+CY+')"' +
+        ' style="animation-delay:'+delay+'"></circle>';
+      arcs += '<circle class="donut-seg-arc" cx="'+CX+'" cy="'+CY+'" r="'+R+'"' +
+        ' stroke="'+seg.color+'" stroke-width="3.2"' +
+        ' stroke-dasharray="'+len.toFixed(2)+' '+(circ - len).toFixed(2)+'"' +
+        ' style="--seg-len:'+len.toFixed(2)+';animation-delay:'+delay+'"' +
+        ' transform="rotate('+startAngle+' '+CX+' '+CY+')"></circle>';
+    });
+    svg.innerHTML = arcs;
+  }
 
   if(legend){
     legend.innerHTML = ASSET_DEFS.map(d=>{
@@ -2124,20 +2164,40 @@ function formatDurationMonths(months){
 }
 
 function scenarioTime(remaining, monthlySave){
-  if(remaining <= 0) return { months: 0, label: 'محقق‌شده', reachable: true };
-  if(!(monthlySave > 0)) return { months: null, label: 'با آهنگ فعلی قابل وصول نیست', reachable: false };
-  const months = remaining / monthlySave;
-  // سقف نمایشی منطقی
+  const rem = safeNum(remaining, 0);
+  if(rem <= 0) return { months: 0, label: 'رسیده', reachable: true };
+  const mon = safeNum(monthlySave, 0);
+  if(!(mon > 0)) return { months: null, label: 'با روند فعلی قابل وصول نیست', reachable: false };
+  const months = rem / mon;
+  if(!isFinite(months) || months < 0) return { months: null, label: '—', reachable: false };
   if(months > 1200) return { months, label: 'بیش از ۱۰۰ سال', reachable: true };
   return { months, label: formatDurationMonths(months), reachable: true };
 }
 
+/** پارس تاریخ ISO به‌صورت محلی (بدون شیفت UTC) */
+function parseISODateLocalMs(iso){
+  if(!iso) return NaN;
+  const m = String(iso).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return NaN;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if(!y || !mo || !d) return NaN;
+  return new Date(y, mo - 1, d).getTime();
+}
+
 function computeGoalProjection(goal, capital, model){
   const target = Math.max(0, safeNum(goal && goal.targetAmount, 0));
+  // سرمایه فعلی = همان computeTotal() که از بیرون پاس داده می‌شود
   const current = Math.max(0, safeNum(capital, 0));
   const remaining = Math.max(0, target - current);
-  const achieved = target > 0 ? current >= target : (target === 0 && current >= 0);
-  const progress = target > 0 ? Math.min(100, (current / target) * 100) : (achieved ? 100 : 0);
+  const achieved = target > 0 ? (current >= target) : false;
+  let progress = 0;
+  if(target > 0){
+    progress = (current / target) * 100;
+    if(!isFinite(progress)) progress = 0;
+    progress = Math.max(0, Math.min(100, progress));
+  } else if(achieved){
+    progress = 100;
+  }
 
   const scCons = scenarioTime(remaining, model.monthlyCons);
   const scReal = scenarioTime(remaining, model.monthlyReal);
@@ -2155,22 +2215,37 @@ function computeGoalProjection(goal, capital, model){
     };
   });
 
-  // اگر مهلت تعیین شده
+  // مهلت — تاریخ محلی (هماهنگ با شمسی ذخیره‌شده به‌صورت ISO)
   let deadlineInfo = null;
   if(goal && goal.deadline){
-    const dl = Date.parse(goal.deadline);
+    const dl = parseISODateLocalMs(goal.deadline);
     if(isFinite(dl)){
-      const daysLeft = Math.ceil((dl - Date.now()) / (24 * 3600 * 1000));
+      const today = todayDate();
+      const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      const daysLeft = Math.ceil((dl - todayMs) / (24 * 3600 * 1000));
       const monthsLeft = daysLeft / 30.4375;
-      const needByDeadline = (daysLeft > 0 && remaining > 0) ? (remaining / Math.max(daysLeft / 30.4375, 1/30)) : 0;
+      const needByDeadline = (daysLeft > 0 && remaining > 0)
+        ? (remaining / Math.max(monthsLeft, 1/30))
+        : 0;
+      const realMon = safeNum(model && model.monthlyReal, 0);
       deadlineInfo = {
         daysLeft,
         monthsLeft,
         needMonthly: needByDeadline,
-        gap: needByDeadline - model.monthlyReal,
+        gap: needByDeadline - realMon,
         expired: daysLeft < 0,
-        reachableOnReal: model.monthlyReal > 0 && monthsLeft > 0 && (remaining / model.monthlyReal) <= monthsLeft
+        reachableOnReal: realMon > 0 && monthsLeft > 0 && (remaining / realMon) <= monthsLeft
       };
+    }
+  }
+
+  // نیاز روزانه واقع‌بینانه
+  let dailyNeedReal = null;
+  if(remaining > 0 && model){
+    if(scReal.reachable && scReal.months > 0 && model.daysPerMonth > 0){
+      dailyNeedReal = remaining / (scReal.months * model.daysPerMonth);
+    } else if(model.dailyReal > 0){
+      dailyNeedReal = model.dailyReal;
     }
   }
 
@@ -2179,9 +2254,7 @@ function computeGoalProjection(goal, capital, model){
     scCons, scReal, scOpt,
     horizons,
     deadlineInfo,
-    dailyNeedReal: model.daysPerMonth > 0 && remaining > 0 && model.monthlyReal > 0
-      ? (remaining / (scReal.months * model.daysPerMonth))
-      : (remaining > 0 && model.monthlyReal > 0 ? model.dailyReal : null)
+    dailyNeedReal
   };
 }
 
@@ -3957,9 +4030,15 @@ function renderNotes(){
 }
 
 function buildNotePlainText(note){
-  // فقط متن بدنهٔ یادداشت — بدون عنوان، تاریخ، برچسب
+  // فقط متن اصلی محتوا — بدون عنوان، تگ، تاریخ، HTML یا متادیتا
   if(!note) return '';
-  return String(note.body || '').trim();
+  let body = String(note.body == null ? '' : note.body);
+  // حذف تگ HTML احتمالی
+  body = body.replace(/<[^>]*>/g, ' ');
+  // نرمال‌سازی فاصله و خطوط
+  body = body.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  body = body.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  return body.trim();
 }
 
 function copyTextFallback(text){
