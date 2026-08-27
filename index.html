@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="app-build" content="20260827premium">
-<!-- BUILD_STAMP 20260827premium goals-checkbox-donut-copy -->
+<meta name="app-build" content="20260827cashfix">
+<!-- BUILD_STAMP 20260827cashfix goals-checkbox-donut-copy -->
 <title>مبحث درآمد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -94,246 +94,55 @@
     --orange:#F59E0B; --orange-soft:rgba(245,158,11,.14);
     --shadow: 0 10px 32px rgba(0,0,0,.45);
   }
-  /* Premium Theme (Navy Crimson) — Design Language: Cut-Corner Layered + Border Glow */
+  /* Premium Theme — Navy/Crimson (ظاهر امن و ساده، بدون clip مخرب) */
   html[data-theme="navy-crimson"],
   html.theme-navy-crimson{
     --bg:#0B1220; --bg-2:#0E1624;
     --card:#111A2B; --card-2:#152033;
-    --border:rgba(148,163,184,.14); --border-strong:rgba(185,28,44,.45);
-    /* متن/اعداد: نقره‌ای روشن مستقل از قرمز Accent */
-    --ink:#E8EEF7; --ink-dim:#9AA8BC;
+    --border:rgba(148,163,184,.12); --border-strong:rgba(185,28,44,.38);
+    --ink:#E8EDF5; --ink-dim:#94A3B8;
     --blue:#B91C2C; --blue-light:#E0313F; --blue-deep:#8F1522;
-    --blue-soft:rgba(185,28,44,.14); --blue-glow:rgba(224,49,63,.16);
+    --blue-soft:rgba(185,28,44,.12); --blue-glow:rgba(185,28,44,.10);
     --green:#22C55E; --green-soft:rgba(34,197,94,.14);
     --red:#EF4444; --red-soft:rgba(239,68,68,.14);
     --orange:#F59E0B; --orange-soft:rgba(245,158,11,.14);
-    --shadow: 0 12px 36px rgba(0,0,0,.48);
-    --premium-glow: 0 0 0 1px rgba(185,28,44,.22), 0 10px 28px rgba(0,0,0,.35);
+    --shadow: 0 10px 28px rgba(0,0,0,.42);
   }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(900px 400px at 15% -5%, var(--blue-glow), transparent 60%),
-      var(--bg);
-    color:var(--ink);
-    font-family:var(--app-font);
-    -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    transition:background .3s, color .3s;
-  }
-
-  /* ---- TOPBAR ---- */
-  .topbar{
-    position:sticky; top:0; z-index:39;
-    display:flex; align-items:center; justify-content:space-between;
-    gap:10px;
-    padding:14px 16px;
-    background:rgba(10,16,32,.55);
-    backdrop-filter:blur(12px) saturate(1.2);
-    -webkit-backdrop-filter:blur(12px) saturate(1.2);
-    border-bottom:1px solid var(--border);
-  }
-  html[data-theme="light"] .topbar{
-    background:rgba(255,255,255,.62);
-    backdrop-filter:blur(12px) saturate(1.15);
-    -webkit-backdrop-filter:blur(12px) saturate(1.15);
-  }
-  html[data-theme="warm-sand"] .topbar{
-    background:rgba(255,252,250,.72);
-    backdrop-filter:blur(12px) saturate(1.1);
-    -webkit-backdrop-filter:blur(12px) saturate(1.1);
-  }
-  html[data-theme="black"] .topbar{
-    background:rgba(0,0,0,.55);
-    backdrop-filter:blur(12px) saturate(1.1);
-    -webkit-backdrop-filter:blur(12px) saturate(1.1);
-  }
-  html[data-theme="gold"] .topbar{
-    background:rgba(11,13,16,.55);
-    backdrop-filter:blur(12px) saturate(1.15);
-    -webkit-backdrop-filter:blur(12px) saturate(1.15);
-  }
-  html[data-theme="matte-green"] .topbar{
-    background:rgba(5,7,6,.55);
-    backdrop-filter:blur(12px) saturate(1.15);
-    -webkit-backdrop-filter:blur(12px) saturate(1.15);
-  }
-  html[data-theme="teal-navy"] .topbar{
-    background:rgba(21,38,63,.7);
-    backdrop-filter:blur(12px) saturate(1.15);
-    -webkit-backdrop-filter:blur(12px) saturate(1.15);
-  }
-  html[data-theme="teal-navy"] body{
-    background:
-      radial-gradient(900px 400px at 15% -5%, rgba(58,139,136,.16), transparent 60%),
-      var(--bg);
-  }
-  html[data-theme="finverse-violet"] .topbar,
-  html.theme-finverse-violet .topbar{
-    background:rgba(23,19,33,.78);
-    backdrop-filter:blur(14px) saturate(1.15);
-    -webkit-backdrop-filter:blur(14px) saturate(1.15);
-    border-bottom:1px solid #2A2438;
-  }
-  html[data-theme="finverse-violet"] body,
-  html.theme-finverse-violet body{
-    background:
-      radial-gradient(900px 420px at 8% -8%, rgba(139,92,246,.22), transparent 55%),
-      radial-gradient(700px 340px at 100% 0%, rgba(91,33,182,.16), transparent 50%),
-      #0D0B14;
-  }
-  /* الگوی خطی بسیار ظریف */
-  html[data-theme="finverse-violet"] body::before,
-  html.theme-finverse-violet body::before{
-    content:'';
-    position:fixed; inset:0; pointer-events:none; z-index:0;
-    opacity:.04;
-    background-image:
-      linear-gradient(rgba(167,139,250,.5) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(167,139,250,.5) 1px, transparent 1px);
-    background-size:48px 48px;
-  }
-  html[data-theme="finverse-violet"] .layout,
-  html.theme-finverse-violet .layout{
-    position:relative; z-index:1;
-  }
-  /* کارت‌ها */
-  html[data-theme="finverse-violet"] .section,
-  html[data-theme="finverse-violet"] .hero,
-  html[data-theme="finverse-violet"] .asset-card,
-  html[data-theme="finverse-violet"] .nc-hero,
-  html[data-theme="finverse-violet"] .notes-shell,
-  html[data-theme="finverse-violet"] .note-card,
-  html[data-theme="finverse-violet"] .analysis-card,
-  html.theme-finverse-violet .section,
-  html.theme-finverse-violet .hero,
-  html.theme-finverse-violet .asset-card,
-  html.theme-finverse-violet .nc-hero,
-  html.theme-finverse-violet .notes-shell,
-  html.theme-finverse-violet .note-card,
-  html.theme-finverse-violet .analysis-card{
-    border-color:#2A2438;
-    box-shadow:0 8px 28px rgba(0,0,0,.32), inset 0 1px 0 rgba(167,139,250,.08);
-  }
-  html[data-theme="finverse-violet"] .hero,
-  html.theme-finverse-violet .hero{
-    border-color:rgba(139,92,246,.35);
-    background:
-      radial-gradient(400px 180px at 100% 0%, rgba(139,92,246,.18), transparent 60%),
-      linear-gradient(155deg, #171321 0%, #1C1728 100%);
-  }
-  html[data-theme="finverse-violet"] .btn:not(.ghost),
-  html.theme-finverse-violet .btn:not(.ghost){
-    background:linear-gradient(165deg, #8B5CF6 0%, #5B21B6 100%);
-    border-color:rgba(167,139,250,.4);
-    color:#F8FAFC;
-  }
-  html[data-theme="finverse-violet"] .btn:not(.ghost):hover,
-  html.theme-finverse-violet .btn:not(.ghost):hover{
-    box-shadow:0 6px 18px rgba(139,92,246,.32);
-  }
-  html[data-theme="finverse-violet"] .btn.ghost,
-  html.theme-finverse-violet .btn.ghost{
-    border-color:#2A2438;
-    color:var(--ink-dim);
-  }
-  html[data-theme="finverse-violet"] .btn.ghost:hover,
-  html.theme-finverse-violet .btn.ghost:hover{
-    background:rgba(139,92,246,.12);
-    border-color:var(--border-strong);
-    color:var(--ink);
-  }
-  html[data-theme="finverse-violet"] .section-title .dot,
-  html.theme-finverse-violet .section-title .dot{
-    background:#8B5CF6;
-    box-shadow:0 0 0 3px rgba(139,92,246,.2);
-  }
-  html[data-theme="finverse-violet"] .menu-item.active,
-  html.theme-finverse-violet .menu-item.active{
-    background:rgba(139,92,246,.14);
-    color:#A78BFA;
-  }
-
-  /* Navy Crimson — topbar + Corner Cut فقط روی دو کارت جمع */
   html[data-theme="navy-crimson"] .topbar,
   html.theme-navy-crimson .topbar{
-    background:rgba(11,18,32,.72);
-    border-bottom-color:rgba(185,28,44,.22);
+    background:rgba(11,18,32,.78);
+    border-bottom-color:rgba(148,163,184,.10);
   }
   html[data-theme="navy-crimson"] body,
   html.theme-navy-crimson body{
-    background:
-      radial-gradient(900px 420px at 12% -8%, rgba(185,28,44,.14), transparent 55%),
-      radial-gradient(700px 360px at 100% 0%, rgba(17,26,43,.9), transparent 50%),
-      var(--bg);
+    background:var(--bg);
   }
   html[data-theme="navy-crimson"] .menu-item.active,
   html.theme-navy-crimson .menu-item.active{
-    background:rgba(185,28,44,.14);
-    color:#E0313F;
+    background:rgba(185,28,44,.12);
+    color:#E8EDF5;
   }
-  /* Corner Cut — فقط .hero (جمع دارایی‌ها) و .nc-hero (جمع غیرنقد) */
+  html[data-theme="navy-crimson"] .section-title .dot,
+  html.theme-navy-crimson .section-title .dot{
+    background:#B91C2C;
+    box-shadow:0 0 0 3px rgba(185,28,44,.15);
+  }
+  /* جمع دارایی‌ها / غیرنقد — گوشه کمی تیز + Accent مورب ظریف (بدون clip-path) */
   html[data-theme="navy-crimson"] .hero,
   html[data-theme="navy-crimson"] .nc-hero,
   html.theme-navy-crimson .hero,
   html.theme-navy-crimson .nc-hero{
     position:relative;
-    border-radius:0;
-    border-color:rgba(185,28,44,.38);
+    overflow:hidden;
+    border-radius:4px 18px 4px 18px;
+    border:1px solid rgba(148,163,184,.14);
     background:
-      linear-gradient(145deg, rgba(224,49,63,.16) 0%, transparent 42%),
-      linear-gradient(165deg, #111A2B 0%, #152033 55%, #0E1624 100%);
+      linear-gradient(125deg, transparent 0 58%, rgba(185,28,44,.12) 58% 62%, transparent 62%),
+      linear-gradient(160deg, #111A2B 0%, #0E1624 100%);
     box-shadow:
-      0 12px 36px rgba(0,0,0,.4),
-      inset 0 1px 0 rgba(224,49,63,.12);
-    clip-path: polygon(
-      0 14px,
-      14px 0,
-      calc(100% - 22px) 0,
-      100% 22px,
-      100% calc(100% - 14px),
-      calc(100% - 14px) 100%,
-      22px 100%,
-      0 calc(100% - 22px)
-    );
-    -webkit-clip-path: polygon(
-      0 14px,
-      14px 0,
-      calc(100% - 22px) 0,
-      100% 22px,
-      100% calc(100% - 14px),
-      calc(100% - 14px) 100%,
-      22px 100%,
-      0 calc(100% - 22px)
-    );
+      0 1px 0 rgba(232,237,245,.04) inset,
+      0 12px 32px rgba(0,0,0,.38);
   }
-  html[data-theme="navy-crimson"] .hero::before,
-  html[data-theme="navy-crimson"] .nc-hero::before,
-  html.theme-navy-crimson .hero::before,
-  html.theme-navy-crimson .nc-hero::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    background:
-      linear-gradient(135deg, rgba(224,49,63,.55) 0 1.5px, transparent 1.5px 100%),
-      linear-gradient(315deg, rgba(185,28,44,.4) 0 1.5px, transparent 1.5px 100%);
-    background-position: right top, left bottom;
-    background-size: 28px 28px, 28px 28px;
-    background-repeat: no-repeat;
-    opacity:.9;
-    z-index:0;
-  }
-  html[data-theme="navy-crimson"] .hero > *,
-  html[data-theme="navy-crimson"] .nc-hero > *,
-  html.theme-navy-crimson .hero > *,
-  html.theme-navy-crimson .nc-hero > *{
-    position:relative;
-    z-index:1;
-  }
-
-  /* Premium Design System — Layered cards + Border Glow (غیر از hero/nc-hero که Cut-Corner دارند) */
   html[data-theme="navy-crimson"] .section,
   html[data-theme="navy-crimson"] .asset-card,
   html[data-theme="navy-crimson"] .goal-card,
@@ -348,76 +157,39 @@
   html.theme-navy-crimson .notes-shell,
   html.theme-navy-crimson .analysis-card,
   html.theme-navy-crimson .goals-cap-card{
-    background:linear-gradient(165deg, var(--card) 0%, var(--card-2) 100%);
-    border-color:rgba(148,163,184,.14);
-    box-shadow:var(--premium-glow);
+    background:linear-gradient(165deg, #111A2B 0%, #152033 100%);
+    border-color:rgba(148,163,184,.12);
+    box-shadow:0 1px 0 rgba(232,237,245,.03) inset, 0 8px 24px rgba(0,0,0,.32);
   }
   html[data-theme="navy-crimson"] .goal-card.expanded,
   html.theme-navy-crimson .goal-card.expanded{
-    border-color:rgba(185,28,44,.4);
-    box-shadow:0 0 0 1px rgba(185,28,44,.28), 0 12px 32px rgba(0,0,0,.4);
+    border-color:rgba(185,28,44,.32);
   }
   html[data-theme="navy-crimson"] .btn:not(.ghost),
   html.theme-navy-crimson .btn:not(.ghost){
-    background:linear-gradient(165deg, #E0313F 0%, #B91C2C 55%, #8F1522 100%);
-    border-color:rgba(224,49,63,.4);
-    color:#E8EEF7;
+    background:linear-gradient(165deg, #E0313F 0%, #B91C2C 60%, #8F1522 100%);
+    border-color:rgba(185,28,44,.4);
+    color:#E8EDF5;
   }
-  html[data-theme="navy-crimson"] .btn:not(.ghost):hover,
-  html.theme-navy-crimson .btn:not(.ghost):hover{
-    box-shadow:0 6px 18px rgba(185,28,44,.35);
-  }
-  html[data-theme="navy-crimson"] .section-title .dot,
-  html.theme-navy-crimson .section-title .dot{
-    background:#E0313F;
-    box-shadow:0 0 0 3px rgba(185,28,44,.2);
-  }
-  /* Collapse chevron اهداف — بدون بنفش */
   html[data-theme="navy-crimson"] .goal-card.expanded .gc-chev,
   html.theme-navy-crimson .goal-card.expanded .gc-chev{
     color:#E0313F;
-    border-color:rgba(185,28,44,.45);
-    background:rgba(185,28,44,.14);
+    border-color:rgba(185,28,44,.4);
+    background:rgba(185,28,44,.12);
   }
-  html[data-theme="navy-crimson"] .goal-card .gc-summary:hover .gc-chev,
-  html.theme-navy-crimson .goal-card .gc-summary:hover .gc-chev{
-    border-color:rgba(185,28,44,.35);
-    color:#E0313F;
-  }
-  /* دکمه هدف جدید — هماهنگ با Premium (بدون بنفش) */
   html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn,
   html[data-theme="navy-crimson"] button#goalAddBtn,
   html.theme-navy-crimson #goalAddBtn.goal-add-btn,
   html.theme-navy-crimson button#goalAddBtn{
-    border:1px solid rgba(224,49,63,.4) !important;
-    background:
-      linear-gradient(145deg, rgba(255,255,255,.1) 0%, transparent 40%),
-      linear-gradient(135deg, #E0313F 0%, #B91C2C 55%, #8F1522 100%) !important;
-    color:#E8EEF7 !important;
-    box-shadow:
-      0 8px 22px rgba(185,28,44,.38),
-      inset 0 1px 0 rgba(255,255,255,.15) !important;
-  }
-  html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn:hover,
-  html.theme-navy-crimson #goalAddBtn.goal-add-btn:hover{
-    box-shadow:0 12px 28px rgba(185,28,44,.48), inset 0 1px 0 rgba(255,255,255,.2) !important;
-  }
-  html[data-theme="navy-crimson"] #goalAddBtn.goal-add-btn:focus-visible,
-  html.theme-navy-crimson #goalAddBtn.goal-add-btn:focus-visible{
-    outline:2px solid #E0313F;
-    outline-offset:3px;
+    border:1px solid rgba(185,28,44,.4) !important;
+    background:linear-gradient(135deg, #E0313F 0%, #B91C2C 55%, #8F1522 100%) !important;
+    color:#E8EDF5 !important;
+    box-shadow:0 6px 18px rgba(185,28,44,.28) !important;
   }
   html[data-theme="navy-crimson"] .goal-progress .gp-fill,
   html.theme-navy-crimson .goal-progress .gp-fill{
     background:linear-gradient(90deg, #B91C2C, #E0313F);
   }
-  html[data-theme="navy-crimson"] .goal-card .gc-badge,
-  html.theme-navy-crimson .goal-card .gc-badge{
-    background:rgba(185,28,44,.14);
-    color:#E8EEF7;
-    border:1px solid rgba(185,28,44,.3);
-  }
-
 
   /* ---- Notes (دفترچه یادداشت) — هم‌تراز با کارت‌ها و تم سایت ---- */
   .notes-shell{
@@ -3283,7 +3055,7 @@
   <div class="ms-sub"><span id="msName"></span> · <span class="ms-amt" id="msAmt"></span></div>
 </div>
 
-<script src="prices-api.js?v=20260827premium"></script>
-<script src="script.js?v=20260827premium"></script>
+<script src="prices-api.js?v=20260827cashfix"></script>
+<script src="script.js?v=20260827cashfix"></script>
 </body>
 </html>
