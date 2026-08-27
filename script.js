@@ -1,5 +1,14 @@
 /* APP_BUILD 20260827premium — goals/donut/copy/cache-bust */
-const $ = id => document.getElementById(id);
+/* $ با کش سبک برای کاهش query تکراری getElementById */
+const _elCache = Object.create(null);
+const $ = id => {
+  const c = _elCache[id];
+  if(c && c.isConnected !== false) return c;
+  const el = document.getElementById(id);
+  if(el) _elCache[id] = el;
+  else delete _elCache[id];
+  return el;
+};
 const fmt = n => {
   const v = Number(n);
   if(!isFinite(v) || isNaN(v)) return '0';
@@ -387,9 +396,8 @@ function showPage(pageId){
   if(pageId === 'page-noncash' && typeof ensureMarketPrices === 'function'){
     ensureMarketPrices(false);
   }
-  if(pageId === 'page-goals' && typeof renderFinancialGoals === 'function'){
-    renderFinancialGoals();
-  }
+  // رندر محتوای صفحهٔ مقصد (صفحه‌های غیرفعال در render() رندر نمی‌شوند)
+  if(typeof render === 'function') render();
   // بخش‌های مخفی با reveal که هنگام display:none مشاهده نشدند را نمایان کن
   if(target){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
@@ -905,10 +913,28 @@ function ensureCoreAssets(){
     if(!ASSET_DEFS.some(d => d.key === c.key)) ASSET_DEFS.push({...c});
     if(assets[c.key] == null) assets[c.key] = 0;
   });
+  if(typeof invalidateAssetKeyCache === 'function') invalidateAssetKeyCache();
 }
 
-function investKeys(){ return ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key); }
-function cashKeys(){ return ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key); }
+/* کش کلیدهای دارایی — با تغییر ASSET_DEFS باطل می‌شود */
+let _investKeysCache = null, _cashKeysCache = null, _keysCacheSrc = null;
+function invalidateAssetKeyCache(){ _investKeysCache = null; _cashKeysCache = null; _keysCacheSrc = null; }
+function investKeys(){
+  if(_keysCacheSrc !== ASSET_DEFS || !_investKeysCache){
+    _keysCacheSrc = ASSET_DEFS;
+    _investKeysCache = ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key);
+    _cashKeysCache = ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key);
+  }
+  return _investKeysCache;
+}
+function cashKeys(){
+  if(_keysCacheSrc !== ASSET_DEFS || !_cashKeysCache){
+    _keysCacheSrc = ASSET_DEFS;
+    _investKeysCache = ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key);
+    _cashKeysCache = ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key);
+  }
+  return _cashKeysCache;
+}
 function sumKeys(keys){ return keys.reduce((s,k)=> s + (assets[k]||0), 0); }
 function computeInvest(){ return sumKeys(investKeys()); }
 function computeCash(){ return sumKeys(cashKeys()); }
@@ -916,22 +942,78 @@ function computeTotal(){ return computeInvest() + computeCash(); }
 
 /* ================= RENDER ================= */
 let currentTrendRange = 'week'; // پیش‌فرض: ۱ هفته
-function render(){
-  $('sumInvest').textContent = fmt(computeInvest());
-  $('sumCash').textContent = fmt(computeCash());
-  $('totalNet').innerHTML = fmt(computeTotal()) + ' <small>تومان</small>';
-  renderDonut();
-  renderTrendChart(currentTrendRange);
-  renderAssetCards();
-  renderLogs();
-  renderTxs();
-  renderHistory();
-  renderNonCash();
-  renderNotebook();
-  renderForecast();
-  if(typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
-  if(typeof renderNotes === 'function') renderNotes();
-  if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
+let _renderRaf = 0;
+let _renderFull = false;
+
+/** صفحهٔ فعال فعلی */
+function getActivePageId(){
+  const p = document.querySelector('.page.active');
+  return p ? p.id : 'page-dashboard';
+}
+
+/** به‌روزرسانی فقط کارت‌های جمع کل (سبک) */
+function renderTotals(){
+  const inv = computeInvest(), cash = computeCash(), tot = inv + cash;
+  const si = $('sumInvest'), sc = $('sumCash'), tn = $('totalNet');
+  if(si) si.textContent = fmt(inv);
+  if(sc) sc.textContent = fmt(cash);
+  if(tn) tn.innerHTML = fmt(tot) + ' <small>تومان</small>';
+}
+
+/**
+ * رندر هوشمند: فقط بخش‌های مرتبط با صفحهٔ فعال (+ totals همیشه).
+ * render(true) یا render({full:true}) همهٔ صفحات را رندر می‌کند.
+ * فراخوانی‌های پشت‌سرهم در یک فریم با rAF ادغام می‌شوند.
+ */
+function render(opts){
+  if(opts === true || (opts && opts.full)) _renderFull = true;
+  if(_renderRaf) return;
+  _renderRaf = requestAnimationFrame(()=>{
+    _renderRaf = 0;
+    const full = _renderFull;
+    _renderFull = false;
+    const page = full ? null : getActivePageId();
+    renderTotals();
+    // داشبورد / خانه
+    if(full || page === 'page-dashboard'){
+      renderDonut();
+      renderTrendChart(currentTrendRange);
+      renderForecast();
+      if(typeof renderFinancialAnalysis === 'function'){
+        const body = $('analysisBody');
+        if(full || (body && body.classList.contains('open'))) renderFinancialAnalysis();
+      }
+    }
+    // دارایی‌ها
+    if(full || page === 'page-assets'){
+      renderAssetCards();
+    }
+    // غیرنقد
+    if(full || page === 'page-noncash'){
+      renderNonCash();
+    }
+    // اسنپ
+    if(full || page === 'page-snapp'){
+      renderLogs();
+    }
+    // تراکنش‌ها
+    if(full || page === 'page-notebook'){
+      renderNotebook();
+    }
+    // تاریخچه
+    if(full || page === 'page-history'){
+      renderTxs();
+      renderHistory();
+    }
+    // یادداشت‌ها
+    if(full || page === 'page-notes'){
+      if(typeof renderNotes === 'function') renderNotes();
+    }
+    // اهداف
+    if(full || page === 'page-goals'){
+      if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
+    }
+  });
 }
 
 let selectedDonutKey = null;
@@ -1034,9 +1116,12 @@ function renderDonut(){
         '<span class="legend-pct">' + pct.toFixed(1) + '%</span></div>';
     }).join('');
 
-    legend.querySelectorAll('.legend-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const key = el.dataset.key;
+    if(!legend._legendDelegated){
+      legend._legendDelegated = true;
+      legend.addEventListener('click', (e)=>{
+        const item = e.target.closest && e.target.closest('.legend-item');
+        if(!item || !legend.contains(item)) return;
+        const key = item.dataset.key;
         if(selectedDonutKey === key){
           selectedDonutKey = null;
           selectDonutAsset(null);
@@ -1044,7 +1129,7 @@ function renderDonut(){
           selectDonutAsset(key);
         }
       });
-    });
+    }
   }
 
   if(donut && !donut._donutBound){
@@ -1302,6 +1387,7 @@ function fillTransferSelects(){
 
 function renderAssetCards(){
   const el = $('assetCards');
+  if(!el) return;
   el.classList.add('rendering');
   // کارت فقط در خانه/نمودار/انتقال — نه در لیست قابل‌ویرایش دارایی‌ها
   const visibleDefs = ASSET_DEFS.filter(d => d.key !== 'card');
@@ -1328,14 +1414,26 @@ function renderAssetCards(){
     </div>`;
   }).join('');
 
-  el.querySelectorAll('.adj-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = btn.dataset.key;
-      const dir = parseInt(btn.dataset.dir);
+  // Event delegation — یک‌بار روی والد، بدون bind مجدد در هر رندر
+  if(!el._assetDelegated){
+    el._assetDelegated = true;
+    el.addEventListener('click', (e)=>{
+      const delBtn = e.target.closest && e.target.closest('.asset-del-btn');
+      if(delBtn){
+        e.stopPropagation();
+        confirmDeleteAsset(delBtn.dataset.delKey);
+        return;
+      }
+      const adjBtn = e.target.closest && e.target.closest('.adj-btn');
+      if(!adjBtn || !el.contains(adjBtn)) return;
+      const key = adjBtn.dataset.key;
+      const dir = parseInt(adjBtn.dataset.dir, 10);
       const input = el.querySelector(`input[data-amount="${key}"]`);
+      if(!input) return;
       const amount = parseMoney(input.value);
-      if(isNaN(amount) || amount<=0){ showToast('یک مبلغ معتبر وارد کن', true); return; }
+      if(isNaN(amount) || amount<=0){ showToast('یک مبلغ معتبر وارد کنید', true); return; }
       const def = ASSET_DEFS.find(d=>d.key===key);
+      if(!def) return;
       const prevVal = assets[key]||0;
       assets[key] = prevVal + dir*amount;
       txs.push({date: todayISO(), key, delta: dir*amount, note: def.name});
@@ -1354,15 +1452,7 @@ function renderAssetCards(){
         render();
       }
     });
-  });
-
-  // دکمه سطل زباله — راه مطمئن و همیشه در دسترس برای حذف
-  el.querySelectorAll('.asset-del-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      confirmDeleteAsset(btn.dataset.delKey);
-    });
-  });
+  }
 
   fillTransferSelects();
   requestAnimationFrame(()=>{ el.classList.remove('rendering'); });
@@ -3466,8 +3556,7 @@ $('importFile').addEventListener('change', (e)=>{
       initMilestonesBaseline();
       if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
       persist();
-      render();
-      if(typeof renderForecast === 'function') renderForecast();
+      render(true);
       showToast('بازگردانی شد');
       e.target.value = '';
     }catch(err){ showToast('فایل نامعتبره', true); }
@@ -3533,6 +3622,7 @@ $('newAssetBtn').addEventListener('click', ()=>{
   const key = 'custom_' + Date.now();
   const color = NEW_ASSET_PALETTE[ASSET_DEFS.length % NEW_ASSET_PALETTE.length];
   ASSET_DEFS.push({key, name, cat, color});
+  invalidateAssetKeyCache();
   assets[key] = amount;
   if(amount > 0) txs.push({date: todayISO(), key, delta: amount, note: name + ' (دارایی جدید)'});
   pushSeriesPoint();
