@@ -566,6 +566,7 @@ function showConfirmModal(title, sub, onConfirm){
 }
 
 /* ================= DATA MODEL ================= */
+/* ----- ASSETS (تعریف دارایی‌ها و محاسبات طلا/نقره) ----- */
 const DEFAULT_ASSET_DEFS = [
   {key:'snapp',  name:'اسنپ',        cat:'سرمایه‌گذاری', color:'#3b82f6'},
   {key:'hami',   name:'صندوق حامی',   cat:'سرمایه‌گذاری', color:'#22d3ee'},
@@ -683,6 +684,7 @@ let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف 
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 
+/* ----- CASH (ذخیره‌سازی و بازیابی محلی — localStorage: Load/Parse/Persist) ----- */
 const STORE_KEY = 'daftar-mali-v1';
 
 function loadAll(){
@@ -690,44 +692,51 @@ function loadAll(){
     const raw = localStorage.getItem(STORE_KEY);
     if(raw){
       const d = JSON.parse(raw);
-      if(d && d.enc === true && d.ct && d.iv && d.salt){
+      // اعتبارسنجی نوع هر فیلد قبل از اعمال — کش خراب/ناقص/ناسازگار نباید باعث Crash در render شود
+      // (همان الگوی امنی که در بازگردانی فایل پشتیبان استفاده می‌شود)
+      if(d && typeof d === 'object' && d.enc === true && d.ct && d.iv && d.salt){
         window._pendingEncStore = d;
-      } else {
-        if(d.assets) assets = {...assets, ...d.assets};
-        if(d.logs) logs = d.logs;
-        if(d.txs) txs = d.txs;
-        if(d.history) history = d.history;
-        if(d.noncash) noncash = d.noncash;
-        if(d.netSeries) netSeries = d.netSeries;
+      } else if(d && typeof d === 'object'){
+        if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)) assets = {...assets, ...d.assets};
+        if(Array.isArray(d.logs)) logs = d.logs;
+        if(Array.isArray(d.txs)) txs = d.txs;
+        if(Array.isArray(d.history)) history = d.history;
+        if(Array.isArray(d.noncash)) noncash = d.noncash;
+        if(Array.isArray(d.netSeries)) netSeries = d.netSeries;
         if(Array.isArray(d.notebook)) notebook = d.notebook;
         if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
         if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
-        if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+        if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object' && !Array.isArray(d.milestonesClaimed)) milestonesClaimed = d.milestonesClaimed;
         if(Array.isArray(d.notes)) notes = d.notes;
         if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
-        if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+        if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
       }
     }
   }catch(e){ console.error(e); }
   // مهاجرت: اگر fcEvents خالی است ولی notebook داده دارد، یک‌بار کپی کن
-  if(fcEvents.length === 0 && notebook.length > 0){
-    notebook.forEach(e=>{
-      if(e.type === 'payment' || e.type === 'deposit'){
-        fcEvents.push({id:e.id, type:e.type, amount:e.amount, date:e.date, time:e.time||''});
-      }
-    });
-  }
-  // اولین بار: بدون جشن، همه اهداف رد‌شده را ثبت کن
-  ensureCoreAssets();
-  initMilestonesBaseline();
-  milestonesReady = true;
-  if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
-  if(netSeries.length === 0){
-    // اولین بار: یک نقطه شروع با وضعیت فعلی ثبت می‌شه تا نمودار خالی نباشه
-    netSeries.push({ts: Date.now(), total: computeTotal()});
-  }
-  render();
+  try{
+    if(fcEvents.length === 0 && notebook.length > 0){
+      notebook.forEach(e=>{
+        if(e && (e.type === 'payment' || e.type === 'deposit')){
+          fcEvents.push({id:e.id, type:e.type, amount:e.amount, date:e.date, time:e.time||''});
+        }
+      });
+    }
+    // اولین بار: بدون جشن، همه اهداف رد‌شده را ثبت کن
+    ensureCoreAssets();
+    initMilestonesBaseline();
+    milestonesReady = true;
+    if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
+    if(netSeries.length === 0){
+      // اولین بار: یک نقطه شروع با وضعیت فعلی ثبت می‌شه تا نمودار خالی نباشه
+      netSeries.push({ts: Date.now(), total: computeTotal()});
+    }
+  }catch(e){ console.error(e); }
+  // حتی اگر خطای غیرمنتظره‌ای در render رخ دهد، ادامهٔ راه‌اندازی صفحه (بعد از loadAll) نباید متوقف شود
+  try{
+    render();
+  }catch(e){ console.error(e); }
 }
 function pushSeriesPoint(){
   netSeries.push({ts: Date.now(), total: computeTotal()});
@@ -738,19 +747,20 @@ function getStatePayload(){
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
-  if(d.assets) assets = Object.assign({}, assets, d.assets);
-  if(d.logs) logs = d.logs;
-  if(d.txs) txs = d.txs;
-  if(d.history) history = d.history;
-  if(d.noncash) noncash = d.noncash;
-  if(d.netSeries) netSeries = d.netSeries;
+  // همان اعتبارسنجی نوع فیلدهای loadAll — داده رمزگشایی‌شدهٔ ناسازگار نباید state را خراب کند
+  if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)) assets = Object.assign({}, assets, d.assets);
+  if(Array.isArray(d.logs)) logs = d.logs;
+  if(Array.isArray(d.txs)) txs = d.txs;
+  if(Array.isArray(d.history)) history = d.history;
+  if(Array.isArray(d.noncash)) noncash = d.noncash;
+  if(Array.isArray(d.netSeries)) netSeries = d.netSeries;
   if(Array.isArray(d.notebook)) notebook = d.notebook;
   if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
   if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
-  if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
+  if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object' && !Array.isArray(d.milestonesClaimed)) milestonesClaimed = d.milestonesClaimed;
   if(Array.isArray(d.notes)) notes = d.notes;
   if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
-  if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+  if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
   if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
 }
 let sessionCryptoKey = null;
