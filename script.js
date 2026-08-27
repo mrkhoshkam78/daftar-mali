@@ -1,4 +1,4 @@
-/* APP_BUILD 20260827cashfix — storage harden + section tags */
+/* APP_BUILD 20260827premium — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -163,7 +163,6 @@ const langObserver = new MutationObserver(mutations=>{
 langObserver.observe(document.body,{childList:true,subtree:true});
 
 
-// ===== THEME =====
 /* ================= THEME ================= */
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
@@ -197,11 +196,14 @@ function applyTheme(t){
     const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
     c.classList.toggle('active', val === t);
   });
-  // پاک‌سازی استایل inline body تا CSS تم کنترل کند (از ماندن پس‌زمینهٔ قبلی جلوگیری)
+  // اجبار به‌روزرسانی پس‌زمینه body (بعضی مرورگرهای موبایل var را دیر اعمال می‌کنند)
   try{
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#070b16';
+    const glow = getComputedStyle(root).getPropertyValue('--blue-glow').trim() || 'transparent';
     if(document.body){
-      document.body.style.background = '';
-      document.body.style.color = '';
+      document.body.style.background =
+        'radial-gradient(900px 400px at 15% -5%, ' + glow + ', transparent 60%), ' + bg;
+      document.body.style.color = getComputedStyle(root).getPropertyValue('--ink').trim() || '';
     }
   }catch(_e){}
 }
@@ -681,63 +683,29 @@ let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف 
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 
-// ===== STORAGE / CASH (LocalStorage Load & Persist) =====
 const STORE_KEY = 'daftar-mali-v1';
-
-function safeJsonParse(raw, fallback){
-  if(raw == null || raw === '') return fallback;
-  try{
-    const d = JSON.parse(raw);
-    if(d === null || typeof d !== 'object') return fallback;
-    return d;
-  }catch(e){
-    console.error('JSON parse failed', e);
-    return fallback;
-  }
-}
-function safeStorageGet(key){
-  try{ return localStorage.getItem(key); }catch(e){ console.error(e); return null; }
-}
-function safeStorageSet(key, value){
-  try{ localStorage.setItem(key, value); return true; }catch(e){ console.error(e); return false; }
-}
-function sanitizeAssetsMap(src, base){
-  const out = Object.assign({}, base || {});
-  if(!src || typeof src !== 'object' || Array.isArray(src)) return out;
-  Object.keys(src).forEach(k => {
-    if(k == null || k === '') return;
-    const n = Number(src[k]);
-    out[k] = (isFinite(n) && !isNaN(n)) ? n : 0;
-  });
-  return out;
-}
 
 function loadAll(){
   try{
-    const raw = safeStorageGet(STORE_KEY);
+    const raw = localStorage.getItem(STORE_KEY);
     if(raw){
-      const d = safeJsonParse(raw, null);
-      if(!d){
-        try{ sessionStorage.setItem(STORE_KEY + '-corrupt-backup', String(raw).slice(0, 500000)); }catch(_e){}
-        console.error('loadAll: invalid JSON in store — keeping in-memory state, not overwriting store');
-      } else if(d.enc === true && d.ct && d.iv && d.salt){
+      const d = JSON.parse(raw);
+      if(d && d.enc === true && d.ct && d.iv && d.salt){
         window._pendingEncStore = d;
       } else {
-        if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
-          assets = sanitizeAssetsMap(d.assets, assets);
-        }
-        if(Array.isArray(d.logs)) logs = d.logs;
-        if(Array.isArray(d.txs)) txs = d.txs;
-        if(Array.isArray(d.history)) history = d.history;
-        if(Array.isArray(d.noncash)) noncash = d.noncash;
-        if(Array.isArray(d.netSeries)) netSeries = d.netSeries;
+        if(d.assets) assets = {...assets, ...d.assets};
+        if(d.logs) logs = d.logs;
+        if(d.txs) txs = d.txs;
+        if(d.history) history = d.history;
+        if(d.noncash) noncash = d.noncash;
+        if(d.netSeries) netSeries = d.netSeries;
         if(Array.isArray(d.notebook)) notebook = d.notebook;
         if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
         if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
-        if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object') milestonesClaimed = d.milestonesClaimed;
+        if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
         if(Array.isArray(d.notes)) notes = d.notes;
         if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
-        if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+        if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
       }
     }
@@ -769,22 +737,20 @@ function getStatePayload(){
   return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, assetDefs: ASSET_DEFS};
 }
 function applyStatePayload(d){
-  if(!d || typeof d !== 'object' || Array.isArray(d)) return;
-  if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
-    assets = sanitizeAssetsMap(d.assets, assets);
-  }
-  if(Array.isArray(d.logs)) logs = d.logs;
-  if(Array.isArray(d.txs)) txs = d.txs;
-  if(Array.isArray(d.history)) history = d.history;
-  if(Array.isArray(d.noncash)) noncash = d.noncash;
-  if(Array.isArray(d.netSeries)) netSeries = d.netSeries;
+  if(!d || typeof d !== 'object') return;
+  if(d.assets) assets = Object.assign({}, assets, d.assets);
+  if(d.logs) logs = d.logs;
+  if(d.txs) txs = d.txs;
+  if(d.history) history = d.history;
+  if(d.noncash) noncash = d.noncash;
+  if(d.netSeries) netSeries = d.netSeries;
   if(Array.isArray(d.notebook)) notebook = d.notebook;
   if(Array.isArray(d.fcEvents)) fcEvents = d.fcEvents;
   if(Array.isArray(d.fcSnapshots)) fcSnapshots = d.fcSnapshots;
-  if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object') milestonesClaimed = d.milestonesClaimed;
+  if(d.milestonesClaimed) milestonesClaimed = d.milestonesClaimed;
   if(Array.isArray(d.notes)) notes = d.notes;
   if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
-  if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+  if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
   if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
 }
 let sessionCryptoKey = null;
@@ -805,20 +771,11 @@ function canPersistSafely(){
 }
 function persist(){
   if(!canPersistSafely()) return false;
-  let payload;
+  const payload = getStatePayload();
+  // ذخیره همیشه به‌صورت JSON خام و همزمان — تا بعد از Refresh داده برنگردد
+  // (رمزنگاری localStorage باعث از‌دست‌رفتن تغییر با رفرش قبل از اتمام encrypt می‌شد)
   try{
-    payload = getStatePayload();
-  }catch(e){
-    console.error('persist getStatePayload', e);
-    return false;
-  }
-  // ذخیره همزمان JSON — در صورت پر بودن فضای ذخیره‌سازی، دادهٔ قبلی را پاک نکن
-  try{
-    const raw = JSON.stringify(payload);
-    if(!safeStorageSet(STORE_KEY, raw)){
-      showToast('خطا در ذخیره محلی', true);
-      return false;
-    }
+    localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
     console.error(e);
     showToast('خطا در ذخیره محلی', true);
@@ -838,7 +795,6 @@ async function writeStore(payload){
 }
 
 
-// ===== MILESTONES =====
 /* ================= MILESTONES (سرمایه‌گذاری) ================= */
 function buildRoundMilestones(upTo){
   // اهداف رُند: 1M, 2M, 5M, 10M, 20M, 50M, ... تا بالای موجودی
@@ -941,7 +897,6 @@ function ensureCoreAssets(){
   });
 }
 
-// ===== ASSETS / CASH KEYS =====
 function investKeys(){ return ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key); }
 function cashKeys(){ return ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key); }
 function sumKeys(keys){ return keys.reduce((s,k)=> s + (assets[k]||0), 0); }
@@ -949,7 +904,6 @@ function computeInvest(){ return sumKeys(investKeys()); }
 function computeCash(){ return sumKeys(cashKeys()); }
 function computeTotal(){ return computeInvest() + computeCash(); }
 
-// ===== RENDER =====
 /* ================= RENDER ================= */
 let currentTrendRange = 'week'; // پیش‌فرض: ۱ هفته
 function render(){
@@ -995,7 +949,6 @@ function selectDonutAsset(key){
   if(centerVal) centerVal.textContent = fmt(v);
 }
 
-// ===== DONUT / ASSET STATS =====
 function renderDonut(){
   const donut = $('donutChart');
   const legend = $('legendList');
@@ -1232,7 +1185,6 @@ function buildBucketSeries(rangeKey){
   };
 }
 
-// ===== TREND CHART =====
 function renderTrendChart(rangeKey){
   const svg = $('trendSvg');
   const badge = $('trendBadge');
@@ -1338,7 +1290,6 @@ function fillTransferSelects(){
   else if(ASSET_DEFS.length > 1) to.selectedIndex = Math.min(1, ASSET_DEFS.length - 1);
 }
 
-// ===== ASSET CARDS =====
 function renderAssetCards(){
   const el = $('assetCards');
   el.classList.add('rendering');
@@ -1558,7 +1509,6 @@ function renderHistory(){
   }).join('');
 }
 
-// ===== NONCASH =====
 function renderNonCash(){
   const el = $('ncList');
   const totalEl = $('ncTotal');
@@ -1853,7 +1803,6 @@ function sampleStdev(series){
  *   asOfDay: روز شمسی مبنا (پیش‌فرض: امروز اگر ماه جاری، وگرنه آخرین روز ماه)
  *   balanceForResources: موجودی برای توان مالی
  */
-// ===== FORECAST / MONTHLY SPEND =====
 function computeMonthSpendStats(monthKey, opts){
   opts = opts || {};
   const parts = String(monthKey || '').split('-');
@@ -2291,7 +2240,6 @@ function parseISODateLocalMs(iso){
   return new Date(y, mo - 1, d).getTime();
 }
 
-// ===== FINANCIAL GOALS =====
 function computeGoalProjection(goal, capital, model){
   const target = Math.max(0, safeNum(goal && goal.targetAmount, 0));
   // سرمایه فعلی = همان computeTotal() که از بیرون پاس داده می‌شود
@@ -2567,7 +2515,6 @@ function setGoalExpanded(id, open){
   saveGoalCollapseState(map);
 }
 
-// ===== FINANCIAL GOALS UI =====
 function renderFinancialGoals(){
   const listEl = $('goalsList');
   if(!listEl) return;
@@ -2952,7 +2899,6 @@ function renderFinancialAnalysis(){
 }
 
 
-// ===== FORECAST UI =====
 function renderForecast(){
   try{
     if(!$('fcMonth') || !$('fcExpense')) return;
@@ -3175,7 +3121,6 @@ function applyLoanSettlement(entry, settling){
 }
 
 
-// ===== TRANSACTIONS / NOTEBOOK =====
 function renderNotebook(){
   try{ if(typeof renderLoans === 'function') renderLoans(); }catch(e){ console.error(e); }
   const el = $('nbList');
@@ -4057,7 +4002,6 @@ function renderNotesCalendar(){
   });
 }
 
-// ===== NOTES =====
 function renderNotes(){
   const grid = $('notesGrid');
   if(!grid) return;
@@ -4609,7 +4553,6 @@ async function ensureSessionKey(pin){
   sessionCryptoKey = await deriveAesKey(pin, rec.dataSalt);
   return sessionCryptoKey;
 }
-// ===== CRYPTO / PIN =====
 async function encryptPayload(payload, key){
   const rec = loadPinRecord();
   let dataSalt = rec && rec.dataSalt ? rec.dataSalt : randomSaltHex(16);
