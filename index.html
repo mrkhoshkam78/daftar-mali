@@ -2555,6 +2555,87 @@
     font-size:13px; line-height:1; padding:0 2px;
   }
 
+  /* ---- Bank Cards (تراکنش‌ها) ---- */
+  .bc-carousel-wrap{position:relative; margin:10px 0 12px;}
+  .bc-carousel{
+    display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    padding:4px 2px 10px; scroll-behavior:smooth;
+  }
+  .bc-carousel::-webkit-scrollbar{display:none;}
+  .bc-slide{
+    flex:0 0 min(86%, 300px); scroll-snap-align:center;
+    border-radius:16px; padding:16px 16px 14px; min-height:132px;
+    position:relative; overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 10px 28px rgba(0,0,0,.28);
+    color:#f5f7fb;
+    transition:transform .22s ease, box-shadow .22s ease;
+  }
+  html[data-anim="on"] .bc-slide:active{transform:scale(.985);}
+  .bc-slide::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 42%);
+    opacity:.7;
+  }
+  .bc-slide > *{position:relative; z-index:1;}
+  .bc-slide-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:18px;}
+  .bc-slide-name{font-size:14px; font-weight:700; line-height:1.4;}
+  .bc-slide-actions{display:flex; gap:6px;}
+  .bc-icon-btn{
+    width:30px; height:30px; border-radius:9px; border:1px solid rgba(255,255,255,.22);
+    background:rgba(0,0,0,.18); color:#fff; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; padding:0;
+  }
+  .bc-icon-btn:hover{background:rgba(0,0,0,.28);}
+  .bc-slide-num{
+    font-family:'Martian Mono',monospace; font-size:15px; letter-spacing:.12em;
+    direction:ltr; text-align:left; margin-top:auto;
+  }
+  .bc-slide-label{font-size:10px; opacity:.75; margin-bottom:4px;}
+  .bc-nav{
+    display:flex; align-items:center; justify-content:center; gap:10px; margin-top:2px;
+  }
+  .bc-nav button{
+    width:34px; height:34px; border-radius:10px; border:1px solid var(--border);
+    background:var(--bg-2); color:var(--ink); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .bc-nav button:hover{border-color:var(--border-strong); background:var(--blue-soft);}
+  .bc-dots{display:flex; gap:5px; align-items:center;}
+  .bc-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--border-strong);
+    opacity:.45; transition:transform .18s ease, opacity .18s ease, background .18s ease;
+  }
+  .bc-dot.active{opacity:1; background:var(--blue-light); transform:scale(1.25);}
+  .bc-empty{
+    text-align:center; padding:22px 12px; color:var(--ink-dim); font-size:12.5px; line-height:1.8;
+    border:1px dashed var(--border); border-radius:14px; background:var(--card-2);
+  }
+  .bc-form{
+    display:none; margin-top:10px; padding:12px; border-radius:14px;
+    border:1px solid var(--border); background:var(--card-2);
+  }
+  .bc-form.open{display:block;}
+  .bc-color-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+  .bc-color-swatch{
+    width:28px; height:28px; border-radius:50%; border:2px solid transparent;
+    cursor:pointer; padding:0; box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);
+  }
+  .bc-color-swatch.active{border-color:var(--ink); box-shadow:0 0 0 2px var(--blue-soft);}
+  .bc-form-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .bc-form-actions .btn{margin-top:0; flex:1; min-width:100px;}
+  #nbCardWrap{display:none; margin-top:8px;}
+  .nb-card-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:10.5px;
+    padding:2px 8px; border-radius:999px; border:1px solid var(--border);
+    background:var(--blue-soft); color:var(--blue-light); margin-right:4px;
+  }
+  .nb-card-chip .dotc{width:7px; height:7px; border-radius:50%; display:inline-block;}
+  @media (min-width:640px){
+    .bc-slide{flex-basis:min(70%, 320px);}
+  }
+
 </style>
 </head>
 <body>
@@ -2891,14 +2972,46 @@
     </div>
 
     <div class="page" id="page-notebook">
+    <div class="section reveal" id="sec-bank-cards">
+      <div class="section-title"><span class="dot"></span>کارت‌های بانکی</div>
+      <div class="section-sub">فقط نام دلخواه، ۴ رقم آخر و رنگ کارت ذخیره می‌شود — شماره کامل کارت دریافت نمی‌گردد.</div>
+      <div class="bc-carousel-wrap">
+        <div class="bc-carousel" id="bcCarousel" aria-label="کارت‌های بانکی"></div>
+        <div class="bc-nav" id="bcNav" style="display:none;">
+          <button type="button" id="bcPrev" aria-label="کارت قبلی">‹</button>
+          <div class="bc-dots" id="bcDots"></div>
+          <button type="button" id="bcNext" aria-label="کارت بعدی">›</button>
+        </div>
+      </div>
+      <button type="button" class="btn ghost icon-btn-svg" id="bcAddOpenBtn" style="margin-top:0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        افزودن کارت
+      </button>
+      <div class="bc-form" id="bcForm" aria-hidden="true">
+        <input type="hidden" id="bcEditId" value="">
+        <div class="gf-title" id="bcFormTitle" style="font-size:13px;font-weight:700;margin-bottom:8px;">کارت جدید</div>
+        <label class="field">نام کارت</label>
+        <input type="text" id="bcName" placeholder="مثلاً کارت ملت" maxlength="40" autocomplete="off">
+        <label class="field" style="margin-top:8px;">۴ رقم آخر</label>
+        <input type="text" id="bcLast4" inputmode="numeric" placeholder="مثلاً 1234" maxlength="4" autocomplete="off">
+        <label class="field" style="margin-top:8px;">رنگ کارت</label>
+        <div class="bc-color-row" id="bcColorRow" role="group" aria-label="رنگ کارت"></div>
+        <div class="bc-form-actions">
+          <button type="button" class="btn" id="bcSaveBtn">ذخیره</button>
+          <button type="button" class="btn ghost" id="bcCancelBtn">انصراف</button>
+        </div>
+      </div>
+    </div>
+
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>ثبت تراکنش جدید</div>
-      <div class="section-sub">کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.</div>
+      <div class="section-sub">موجودی کارت فقط از این بخش مدیریت می‌شود. با «ثبت موجودی کارت»، مبلغ محاسبه‌شده به‌عنوان موجودی نهایی کارت ذخیره می‌شود.</div>
 
       <label class="field">نوع تراکنش</label>
       <select id="nbType">
         <option value="deposit">دریافتی</option>
         <option value="payment">پرداخت</option>
+        <option value="transfer">انتقال</option>
         <option value="lent">قرض داده</option>
         <option value="borrowed">قرض گرفته</option>
       </select>
@@ -2906,6 +3019,13 @@
       <div id="nbPersonWrap" style="display:none; margin-top:8px;">
         <label class="field">شخص</label>
         <input type="text" id="nbPerson" placeholder="اسم طرف حساب">
+      </div>
+
+      <div id="nbCardWrap">
+        <label class="field">کارت بانکی (اختیاری)</label>
+        <select id="nbCardSelect">
+          <option value="">بدون کارت</option>
+        </select>
       </div>
 
       <div class="grid2" style="margin-top:8px;">
