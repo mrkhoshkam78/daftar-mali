@@ -26,7 +26,7 @@ const FONT_STACKS = {
   'Cairo': "'Cairo',sans-serif"
 };
 const I18N = {
-  'مبحث درآمد':'Income Ledger','انصراف':'Cancel','حذف کن':'Delete','🔒 دفتر مالی قفل است':'🔒 Financial Ledger Locked',
+  'مبحث درآمد':'Income Ledger','انصراف':'Cancel','حذف':'Delete','🔒 دفتر مالی قفل است':'🔒 Financial Ledger Locked',
   'برای ادامه، رمز عبور را وارد کنید':'Enter your password to continue','باز کردن':'Unlock','خانه':'Home','دارایی‌ها':'Assets',
   'دارایی غیرنقد':'Non-cash Assets','سود اسنپ':'Snapp Profit','تراکنش‌ها':'Transactions','تاریخچه':'History','تنظیمات':'Settings',
   'جمع کل دارایی (نقدی + سرمایه‌گذاری)':'Total Assets (Cash + Investments)','سرمایه‌گذاری:':'Investments:','نقدینگی:':'Cash:',
@@ -34,8 +34,8 @@ const I18N = {
   'جمع کل':'Total','روی هر دارایی بزن تا جزئیاتش را ببینی':'Tap an asset to see its details','روند کلی دارایی':'Overall Asset Trend',
   'روند تغییر ارزش کل دارایی را در بازه زمانی انتخاب‌شده دنبال کنید.':'Change in total assets over the selected period',
   '۲۴ ساعت':'24 Hours','۱ هفته':'1 Week','۱ ماه':'1 Month','۱ سال':'1 Year',
-  'داده کافی برای این بازه هنوز ثبت نشده — با هر تغییر دارایی یه نقطه جدید اضافه می‌شه':'Not enough data for this range yet — a new point is added whenever an asset changes',
-  'این نمودار فقط از لحظه‌ای که این ویژگی اضافه شد نقطه ثبت می‌کنه؛ سابقه قبل از اون رو نداره.':'This chart only records points since this feature was added; earlier history is unavailable.',
+  'دادهٔ کافی برای این بازه ثبت نشده است — با هر تغییر دارایی، نقطهٔ جدیدی اضافه می‌شود':'Not enough data for this range yet — a new point is added whenever an asset changes',
+  'این نمودار فقط از زمان افزودن این قابلیت نقطه ثبت می‌کند و سابقهٔ پیش از آن را ندارد.':'This chart only records points since this feature was added; earlier history is unavailable.',
   'پیش‌بینی مالی ماهانه':'Monthly Financial Forecast','برآورد هزینه ماه با میانگین روزانه و احتساب روزهای بدون خرج؛ دریافتی‌ها فقط برای سنجش توان مالی لحاظ می‌شوند.':'Monthly expense uses daily average including zero-spend days; income is used only for financial capacity.',
   'ماه:':'Month:','موجودی:':'Balance:','تراکنش:':'Transactions:','روز داده:':'Data Days:','روز باقی‌مانده:':'Days Remaining:',
   'خرج ماهانه پیش‌بینی‌شده':'Projected Monthly Expense','منابع مالی':'Financial Resources','توان مالی (۸۰٪ منابع)':'Financial Capacity (80% of Resources)',
@@ -49,7 +49,7 @@ const I18N = {
   'طلا':'Gold','نقره':'Silver','دلار':'US Dollar','سکه':'Coin','حساب سپرده':'Deposit Account','بورس':'Stock Market','سایر':'Other',
   'توضیح کوتاه':'Short Description','ارزش تقریبی (تومان)':'Approximate Value (Toman)','افزودن':'Add',
   'ثبت سود روزانه اسنپ':'Record Daily Snapp Profit','تاریخ (شمسی)':'Date (Jalali)','سود آن روز (تومان)':'Daily Profit (Toman)',
-  'ثبت سود، خودکار همین مبلغ رو هم به موجودی اسنپ اضافه می‌کنه.':'Recording profit also automatically adds the same amount to the Snapp balance.',
+  'با ثبت سود، همان مبلغ به‌صورت خودکار به موجودی اسنپ نیز اضافه می‌شود.':'Recording profit also adds the same amount to the Snapp balance automatically.',
   'ثبت سود':'Record Profit','میانگین نرخ روزانه':'Average Daily Rate','نرخ روزانه':'Daily Rate','سود پیش‌بینی فردا':'Projected Tomorrow Profit',
   'سود مرکب ۳۰ روز آینده':'30-Day Compound Profit','موجودی پس از ۳۰ روز':'Balance After 30 Days','ثبت تراکنش جدید':'New Transaction',
   'نوع تراکنش':'Transaction Type','دریافتی':'Income','پرداخت':'Payment','قرض داده':'Lent','قرض گرفته':'Borrowed','شخص':'Person',
@@ -884,7 +884,7 @@ function initMilestonesBaseline(){
 function showMilestoneCelebration(name, amount){
   const el = $('msToast');
   if(!el) return;
-  $('msTitle').textContent = 'هدف رسید';
+  $('msTitle').textContent = 'هدف محقق شد';
   $('msName').textContent = name || 'سرمایه‌گذاری';
   $('msAmt').textContent = fmt(amount) + ' ت';
   el.classList.add('show');
@@ -963,7 +963,7 @@ function selectDonutAsset(key){
     el.classList.toggle('active', el.dataset.key === key);
   });
   if(!def){
-    if(tip) tip.innerHTML = 'روی هر دارایی بزن تا جزئیاتش را ببینی';
+    if(tip) tip.innerHTML = 'برای دیدن جزئیات، روی هر دارایی بزنید';
     if(centerLbl) centerLbl.textContent = 'جمع کل';
     if(centerVal) centerVal.textContent = total ? fmt(total) : '۰';
     return;
@@ -1000,10 +1000,10 @@ function renderDonut(){
 
   if(!(displayTotal > 0)){
     if(donut) donut.style.background = 'var(--card-2)';
-    if(legend) legend.innerHTML = '<div class="empty">دارایی‌ای ثبت نشده</div>';
+    if(legend) legend.innerHTML = '<div class="empty">دارایی‌ای ثبت نشده است</div>';
     if(centerLbl) centerLbl.textContent = 'جمع کل';
     if(centerVal) centerVal.textContent = '۰';
-    if(tip) tip.textContent = 'دارایی‌ای برای نمایش نیست';
+    if(tip) tip.textContent = 'دارایی‌ای برای نمایش وجود ندارد';
     selectedDonutKey = null;
     return;
   }
@@ -1103,7 +1103,7 @@ function renderDonut(){
     selectedDonutKey = null;
     if(centerLbl) centerLbl.textContent = 'جمع کل';
     if(centerVal) centerVal.textContent = fmt(displayTotal);
-    if(tip) tip.innerHTML = 'روی هر دارایی بزن تا جزئیاتش را ببینی';
+    if(tip) tip.innerHTML = 'برای دیدن جزئیات، روی هر دارایی بزنید';
   }
 }
 
@@ -1350,7 +1350,7 @@ function renderAssetCards(){
       const dir = parseInt(btn.dataset.dir);
       const input = el.querySelector(`input[data-amount="${key}"]`);
       const amount = parseMoney(input.value);
-      if(isNaN(amount) || amount<=0){ showToast('یک مبلغ معتبر وارد کن', true); return; }
+      if(isNaN(amount) || amount<=0){ showToast('یک مبلغ معتبر وارد کنید', true); return; }
       const def = ASSET_DEFS.find(d=>d.key===key);
       const prevVal = assets[key]||0;
       assets[key] = prevVal + dir*amount;
@@ -1392,7 +1392,7 @@ function confirmDeleteAsset(key){
   const def = ASSET_DEFS.find(d=>d.key===key);
   if(!def) return;
   showConfirmModal(
-    `آیا مطمئنی می‌خوای دارایی «${def.name}» رو کامل از لیست حذف کنی؟`,
+    `دارایی «${def.name}» از فهرست حذف شود؟`,
     `موجودی فعلی: ${fmt(assets[key]||0)} تومان — این کار قابل بازگشت نیست (فقط با فایل پشتیبان قدیمی).`,
     ()=>{
       ASSET_DEFS = ASSET_DEFS.filter(d=>d.key!==key);
@@ -1408,7 +1408,7 @@ function confirmDeleteAsset(key){
 
 function renderLogs(){
   const el = $('logList');
-  if(logs.length === 0){ el.innerHTML = '<div class="empty">هنوز سودی ثبت نشده</div>'; $('projCard').style.display = 'none'; return; }
+  if(logs.length === 0){ el.innerHTML = '<div class="empty">هنوز سودی ثبت نشده است</div>'; $('projCard').style.display = 'none'; return; }
   const sorted = [...logs].sort((a,b)=> a.date < b.date ? 1 : -1);
   el.classList.toggle('scrollable', sorted.length > 7);
   el.innerHTML = sorted.map(l => {
@@ -1503,7 +1503,7 @@ function renderTxs(){
   el.classList.toggle('scrollable', list.length > 15);
   if(list.length === 0){
     const msg = (txs||[]).length === 0
-      ? 'هنوز تغییری ثبت نشده'
+      ? 'هنوز تغییری ثبت نشده است'
       : 'موردی با این فیلتر پیدا نشد';
     el.innerHTML = `<div class="empty">${msg}</div>`;
     return;
@@ -1528,7 +1528,7 @@ document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
 
 function renderHistory(){
   const el = $('historyList');
-  if(history.length === 0){ el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده</div>'; return; }
+  if(history.length === 0){ el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده است</div>'; return; }
   const sorted = [...history].sort((a,b)=> a.date < b.date ? 1 : -1);
   el.innerHTML = sorted.slice(0,10).map(h=>{
     return `<div class="log-item"><span class="d">${toJalaliStr(h.date)}</span><span class="n"></span><span class="p" style="color:var(--blue-light)">${fmt(h.total)} ت</span></div>`;
@@ -1550,7 +1550,7 @@ function renderNonCash(){
   if(!el) return;
 
   if(list.length === 0){
-    el.innerHTML = '<div class="empty">هنوز دارایی غیرنقدی ثبت نشده</div>';
+    el.innerHTML = '<div class="empty">هنوز دارایی غیرنقدی ثبت نشده است</div>';
     return;
   }
 
@@ -3250,16 +3250,16 @@ if($('ncAddBtn')){
     const addUsd = category === 'usd' ? parseDec($('ncUsdAmount') && $('ncUsdAmount').value) : 0;
     // برای طلا/نقره/دلار یا مقدار واحد یا ارزش دفتری لازم است
     if(category === 'gold' && !(goldTotalGrams(addGram, addSoot) > 0) && !(manualValue > 0)){
-      showToast('وزن طلا (گرم/سوت) یا ارزش دفتری را وارد کن', true); return;
+      showToast('وزن طلا (گرم/سوت) یا ارزش دفتری را وارد کنید', true); return;
     }
     if(category === 'silver' && !(addSilverG > 0) && !(manualValue > 0)){
-      showToast('گرم نقره یا ارزش دفتری را وارد کن', true); return;
+      showToast('گرم نقره یا ارزش دفتری را وارد کنید', true); return;
     }
     if(category === 'usd' && !(addUsd > 0) && !(manualValue > 0)){
-      showToast('مقدار دلار یا ارزش دفتری را وارد کن', true); return;
+      showToast('مقدار دلار یا ارزش دفتری را وارد کنید', true); return;
     }
     if(category !== 'gold' && category !== 'silver' && category !== 'usd' && !(manualValue > 0)){
-      showToast('ارزش تومانی رو وارد کن', true); return;
+      showToast('ارزش تومانی را وارد کنید', true); return;
     }
     const existing = noncash.find(x => x && x.category === category);
     if(existing){
@@ -3312,7 +3312,7 @@ if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
   const profit = parseMoney($('logProfit').value);
-  if(!date || isNaN(profit) || profit<=0){ showToast('تاریخ و سود رو درست وارد کن', true); return; }
+  if(!date || isNaN(profit) || profit<=0){ showToast('تاریخ و سود را به‌درستی وارد کنید', true); return; }
   const balanceBefore = assets.snapp || 0;
   logs.push({date, profit, balanceBefore});
   assets.snapp = balanceBefore + profit;
@@ -3340,31 +3340,34 @@ function snapshotBankCard(card){
   };
 }
 function openBcForm(card){
-  const form = $('bcForm');
+  const form = document.getElementById('bcForm');
   if(!form) return;
   form.classList.add('open');
+  form.style.display = 'block';
   form.setAttribute('aria-hidden', 'false');
   if(card){
-    if($('bcEditId')) $('bcEditId').value = String(card.id);
-    if($('bcFormTitle')) $('bcFormTitle').textContent = 'ویرایش کارت';
-    if($('bcName')) $('bcName').value = card.name || '';
-    if($('bcLast4')) $('bcLast4').value = normalizeBcLast4(card.last4);
+    const eid = document.getElementById('bcEditId'); if(eid) eid.value = String(card.id);
+    const ft = document.getElementById('bcFormTitle'); if(ft) ft.textContent = 'ویرایش کارت';
+    const nm = document.getElementById('bcName'); if(nm) nm.value = card.name || '';
+    const l4 = document.getElementById('bcLast4'); if(l4) l4.value = normalizeBcLast4(card.last4);
     _bcSelectedColor = card.color || BC_COLORS[0];
   } else {
-    if($('bcEditId')) $('bcEditId').value = '';
-    if($('bcFormTitle')) $('bcFormTitle').textContent = 'کارت جدید';
-    if($('bcName')) $('bcName').value = '';
-    if($('bcLast4')) $('bcLast4').value = '';
+    const eid = document.getElementById('bcEditId'); if(eid) eid.value = '';
+    const ft = document.getElementById('bcFormTitle'); if(ft) ft.textContent = 'کارت جدید';
+    const nm = document.getElementById('bcName'); if(nm) nm.value = '';
+    const l4 = document.getElementById('bcLast4'); if(l4) l4.value = '';
     _bcSelectedColor = BC_COLORS[0];
   }
-  renderBcColorRow();
+  if(typeof renderBcColorRow === 'function') renderBcColorRow();
+  try{ form.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
 }
 function closeBcForm(){
-  const form = $('bcForm');
+  const form = document.getElementById('bcForm');
   if(!form) return;
   form.classList.remove('open');
+  form.style.display = 'none';
   form.setAttribute('aria-hidden', 'true');
-  if($('bcEditId')) $('bcEditId').value = '';
+  const eid = document.getElementById('bcEditId'); if(eid) eid.value = '';
 }
 function renderBcColorRow(){
   const row = $('bcColorRow');
@@ -3491,36 +3494,32 @@ function bcScrollBy(dir){
   const dots = $('bcDots');
   if(dots) dots.querySelectorAll('.bc-dot').forEach((d, i)=> d.classList.toggle('active', i === _bcSlideIndex));
 }
-if($('bcAddOpenBtn')) $('bcAddOpenBtn').addEventListener('click', ()=> openBcForm(null));
-if($('bcCancelBtn')) $('bcCancelBtn').addEventListener('click', closeBcForm);
-if($('bcPrev')) $('bcPrev').addEventListener('click', ()=> bcScrollBy(-1));
-if($('bcNext')) $('bcNext').addEventListener('click', ()=> bcScrollBy(1));
-if($('bcColorRow')){
-  $('bcColorRow').addEventListener('click', (e)=>{
-    const btn = e.target.closest && e.target.closest('[data-bc-color]');
-    if(!btn) return;
-    _bcSelectedColor = btn.getAttribute('data-bc-color') || BC_COLORS[0];
+// Event delegation — پایدار حتی اگر عناصر بعداً در DOM ظاهر شوند
+document.addEventListener('click', (e)=>{
+  const t = e.target;
+  if(!t || !t.closest) return;
+  if(t.closest('#bcAddOpenBtn')){ e.preventDefault(); openBcForm(null); return; }
+  if(t.closest('#bcCancelBtn')){ e.preventDefault(); closeBcForm(); return; }
+  if(t.closest('#bcPrev')){ e.preventDefault(); bcScrollBy(-1); return; }
+  if(t.closest('#bcNext')){ e.preventDefault(); bcScrollBy(1); return; }
+  const sw = t.closest('[data-bc-color]');
+  if(sw && sw.closest('#bcColorRow')){
+    e.preventDefault();
+    _bcSelectedColor = sw.getAttribute('data-bc-color') || BC_COLORS[0];
     renderBcColorRow();
-  });
-}
-if($('bcLast4')){
-  $('bcLast4').addEventListener('input', ()=>{
-    const el = $('bcLast4');
-    el.value = normalizeBcLast4(el.value);
-  });
-}
-if($('bcSaveBtn')){
-  $('bcSaveBtn').addEventListener('click', ()=>{
-    const name = (($('bcName') && $('bcName').value) || '').trim();
-    const last4 = normalizeBcLast4($('bcLast4') && $('bcLast4').value);
+    return;
+  }
+  if(t.closest('#bcSaveBtn')){
+    e.preventDefault();
+    const name = ((document.getElementById('bcName') && document.getElementById('bcName').value) || '').trim();
+    const last4 = normalizeBcLast4(document.getElementById('bcLast4') && document.getElementById('bcLast4').value);
     if(!name){ showToast('نام کارت را وارد کنید', true); return; }
     if(last4.length !== 4){ showToast('۴ رقم آخر کارت را وارد کنید', true); return; }
-    const editId = (($('bcEditId') && $('bcEditId').value) || '').trim();
+    const editId = ((document.getElementById('bcEditId') && document.getElementById('bcEditId').value) || '').trim();
     if(!Array.isArray(bankCards)) bankCards = [];
     if(editId){
       const card = findBankCard(editId);
       if(!card){ showToast('کارت پیدا نشد', true); return; }
-      // فقط مشخصات کارت — تراکنش‌های قبلی دست‌نخورده می‌مانند
       card.name = name.slice(0, 40);
       card.last4 = last4;
       card.color = _bcSelectedColor || BC_COLORS[0];
@@ -3533,13 +3532,17 @@ if($('bcSaveBtn')){
       });
       _bcSlideIndex = bankCards.length - 1;
     }
-    if(persist()){
-      showToast(editId ? 'کارت به‌روز شد' : 'کارت اضافه شد');
-      closeBcForm();
-      renderBankCards();
-    }
-  });
-}
+    const saved = typeof persist === 'function' ? persist() : true;
+    showToast(editId ? (saved ? 'کارت به‌روز شد' : 'کارت به‌روز شد (ذخیره پایدار بعداً)') : (saved ? 'کارت اضافه شد' : 'کارت اضافه شد (ذخیره پایدار بعداً)'));
+    closeBcForm();
+    renderBankCards();
+  }
+});
+document.addEventListener('input', (e)=>{
+  if(e.target && e.target.id === 'bcLast4'){
+    e.target.value = normalizeBcLast4(e.target.value);
+  }
+});
 
 /* ---- تراکنش‌ها ---- */
 function updateNbPersonVisibility(){
@@ -3568,8 +3571,8 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     const desc = ($('nbDesc') && $('nbDesc').value || '').trim();
     const needsPerson = (type === 'lent' || type === 'borrowed');
 
-    if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کن', true); return; }
-    if(needsPerson && !person){ showToast('برای قرض، اسم شخص رو وارد کن', true); return; }
+    if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کنید', true); return; }
+    if(needsPerson && !person){ showToast('برای قرض، نام شخص را وارد کنید', true); return; }
 
     const entryId = Date.now() + Math.floor(Math.random()*1000);
     const entry = {
@@ -3620,7 +3623,7 @@ if($('nbSyncBtn')) $('nbSyncBtn').addEventListener('click', ()=>{
   if(btn){ btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'), 650); }
 
   const delta = safeNum(nbDelta(), 0);
-  if(Math.abs(delta) < 0.5){ showToast('تغییری برای ثبت روی کارت نیست'); return; }
+  if(Math.abs(delta) < 0.5){ showToast('تغییری برای ثبت روی کارت وجود ندارد'); return; }
   const prev = safeNum(assets.card, 0);
   const newBase = prev + delta;
   showConfirmModal(
@@ -3728,7 +3731,7 @@ $('importFile').addEventListener('change', (e)=>{
       if(typeof renderForecast === 'function') renderForecast();
       showToast('بازگردانی شد');
       e.target.value = '';
-    }catch(err){ showToast('فایل نامعتبره', true); }
+    }catch(err){ showToast('فایل نامعتبر است', true); }
   };
   reader.readAsText(file);
 });
@@ -3740,9 +3743,9 @@ $('tfBtn').addEventListener('click', ()=>{
   const fromKey = $('tfFrom').value;
   const toKey = $('tfTo').value;
   const amount = parseMoney($('tfAmount').value);
-  if(!fromKey || !toKey){ showToast('مبدأ و مقصد را انتخاب کن', true); return; }
+  if(!fromKey || !toKey){ showToast('مبدأ و مقصد را انتخاب کنید', true); return; }
   if(fromKey === toKey){ showToast('مبدأ و مقصد نباید یکی باشند', true); return; }
-  if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کن', true); return; }
+  if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کنید', true); return; }
   const fromBal = safeNum(assets[fromKey], 0);
   if(amount > fromBal){ showToast('موجودی مبدأ کافی نیست', true); return; }
   const fromDef = ASSET_DEFS.find(d => d.key === fromKey);
@@ -3786,8 +3789,8 @@ $('newAssetBtn').addEventListener('click', ()=>{
   const name = $('newAssetName').value.trim();
   const cat = $('newAssetCat').value;
   const amount = parseMoney($('newAssetAmount').value) || 0;
-  if(!name){ showToast('یه اسم برای دارایی وارد کن', true); return; }
-  if(ASSET_DEFS.some(d=>d.name === name)){ showToast('دارایی‌ای با همین اسم از قبل هست', true); return; }
+  if(!name){ showToast('نامی برای دارایی وارد کنید', true); return; }
+  if(ASSET_DEFS.some(d=>d.name === name)){ showToast('دارایی‌ای با همین نام از قبل وجود دارد', true); return; }
   const key = 'custom_' + Date.now();
   const color = NEW_ASSET_PALETTE[ASSET_DEFS.length % NEW_ASSET_PALETTE.length];
   ASSET_DEFS.push({key, name, cat, color});
@@ -4934,15 +4937,15 @@ async function checkLock(){
 function triggerLoginError(){const box=$('lockBox');if(!box)return;box.classList.remove('login-error');void box.offsetWidth;box.classList.add('login-error');}
 $('lockUnlockBtn').addEventListener('click',async()=>{
   const wait=lockRemainingMs();
-  if(wait>0){$('lockErr').textContent=`تلاش زیاد — ${Math.ceil(wait/1000)} ثانیه صبر کن`;triggerLoginError();return;}
+  if(wait>0){$('lockErr').textContent=`تلاش بیش از حد — ${Math.ceil(wait/1000)} ثانیه صبر کنید`;triggerLoginError();return;}
   const username=String($('lockUsername').value||'').trim(),entered=$('lockInput').value;
-  if(!username||username.length<3){$('lockErr').textContent='نام کاربری را وارد کن';triggerLoginError();return;}
-  if(!entered){$('lockErr').textContent='رمز را وارد کن';triggerLoginError();return;}
+  if(!username||username.length<3){$('lockErr').textContent='نام کاربری را وارد کنید';triggerLoginError();return;}
+  if(!entered){$('lockErr').textContent='رمز عبور را وارد کنید';triggerLoginError();return;}
   try{
     const ok=username.toLowerCase()===getLoginUsername().toLowerCase()&&await verifyPin(entered);
     if(ok){
       try{ await unlockDataLayer(entered); }
-      catch(err){ $('lockErr').textContent='داده رمزشده باز نشد — رمز یا فایل ذخیره را بررسی کن'; triggerLoginError(); return; }
+      catch(err){ $('lockErr').textContent='دادهٔ رمزگذاری‌شده باز نشد — رمز یا فایل ذخیره را بررسی کنید'; triggerLoginError(); return; }
       clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';
       render();
     }

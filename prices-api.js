@@ -80,7 +80,7 @@
 
     return fetchWithRetry(TGJU_URL, timeoutMs, 1).then(function (raw) {
       if (!raw || typeof raw !== 'object' || !raw.current || typeof raw.current !== 'object') {
-        throw new Error('JSON نامعتبر از TGJU');
+        throw new Error('پاسخ نامعتبر از TGJU');
       }
       var current = raw.current;
 
@@ -94,7 +94,7 @@
       var silverPerGramToman = silver999Rial != null ? silver999Rial / 10 : null;
 
       if (goldPerGramToman == null && silverPerGramToman == null && usdToman == null) {
-        throw new Error('هیچ قیمت معتبری در پاسخ TGJU نبود');
+        throw new Error('هیچ قیمت معتبری در پاسخ TGJU یافت نشد');
       }
 
       return {
