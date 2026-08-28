@@ -3412,7 +3412,7 @@ function renderBankCards(){
   car.innerHTML = bankCards.map(c => {
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
-    return `<article class="bc-slide" data-bc-id="${c.id}" style="background:linear-gradient(145deg, ${color} 0%, #0b1220 120%);">
+    return `<article class="bc-slide" data-bc-id="${c.id}" style="--bc-accent:${color}">
       <div class="bc-slide-top">
         <div class="bc-slide-name">${escapeHtml(c.name || 'کارت')}</div>
         <div class="bc-slide-actions">
@@ -3432,10 +3432,11 @@ function renderBankCards(){
   if(dots){
     dots.innerHTML = bankCards.map((_, i) => `<span class="bc-dot${i === _bcSlideIndex ? ' active' : ''}" data-bc-dot="${i}"></span>`).join('');
   }
-  // اتصال یک‌بارهٔ رویدادهای carousel
+  // اتصال یک‌بارهٔ رویدادهای carousel + drag/swipe
   if(!car._bcBound){
     car._bcBound = true;
     car.addEventListener('click', (e)=>{
+      if(car._bcDidDrag){ e.preventDefault(); e.stopPropagation(); return; }
       const editBtn = e.target.closest && e.target.closest('[data-bc-edit]');
       if(editBtn){
         const card = findBankCard(editBtn.getAttribute('data-bc-edit'));
@@ -3450,7 +3451,6 @@ function renderBankCards(){
           'حذف این کارت؟',
           card ? ((card.name || 'کارت') + (card.last4 ? ' · •••• ' + normalizeBcLast4(card.last4) : '')) : '',
           ()=>{
-            // فقط کارت حذف می‌شود — تراکنش‌های قبلی اسنپ‌شات خود را نگه می‌دارند
             bankCards = (bankCards || []).filter(c => String(c.id) !== String(id));
             if(_bcSlideIndex >= bankCards.length) _bcSlideIndex = Math.max(0, bankCards.length - 1);
             if(persist()){ showToast('کارت حذف شد'); renderBankCards(); }
@@ -3470,13 +3470,54 @@ function renderBankCards(){
       });
       if(best !== _bcSlideIndex){
         _bcSlideIndex = best;
-        if(dots){
-          dots.querySelectorAll('.bc-dot').forEach((d, i)=> d.classList.toggle('active', i === best));
+        const dotsEl = $('bcDots');
+        if(dotsEl){
+          dotsEl.querySelectorAll('.bc-dot').forEach((d, i)=> d.classList.toggle('active', i === best));
         }
       }
     }, {passive:true});
+    // Drag / Swipe با ماوس و لمس (pointer events)
+    let _bcPtr = null;
+    car.addEventListener('pointerdown', (e)=>{
+      if(e.target.closest && e.target.closest('.bc-icon-btn')) return;
+      _bcPtr = {id: e.pointerId, x: e.clientX, scroll: car.scrollLeft, moved: false};
+      car._bcDidDrag = false;
+      try{ car.setPointerCapture(e.pointerId); }catch(err){}
+      car.classList.add('is-dragging');
+    });
+    car.addEventListener('pointermove', (e)=>{
+      if(!_bcPtr || e.pointerId !== _bcPtr.id) return;
+      const dx = e.clientX - _bcPtr.x;
+      if(Math.abs(dx) > 4){ _bcPtr.moved = true; car._bcDidDrag = true; }
+      car.scrollLeft = _bcPtr.scroll - dx;
+    });
+    const endPtr = (e)=>{
+      if(!_bcPtr || (e && e.pointerId !== _bcPtr.id)) return;
+      const moved = _bcPtr.moved;
+      _bcPtr = null;
+      car.classList.remove('is-dragging');
+      if(moved){
+        // اسنپ نرم به نزدیک‌ترین کارت
+        const slides = car.querySelectorAll('.bc-slide');
+        if(slides.length){
+          const mid = car.scrollLeft + car.clientWidth / 2;
+          let best = 0, bestDist = Infinity;
+          slides.forEach((s, i)=>{
+            const center = s.offsetLeft + s.offsetWidth / 2;
+            const d = Math.abs(center - mid);
+            if(d < bestDist){ bestDist = d; best = i; }
+          });
+          _bcSlideIndex = best;
+          slides[best].scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
+        }
+        setTimeout(()=>{ car._bcDidDrag = false; }, 80);
+      } else {
+        car._bcDidDrag = false;
+      }
+    };
+    car.addEventListener('pointerup', endPtr);
+    car.addEventListener('pointercancel', endPtr);
   }
-  // اسکرول به اسلاید فعلی بدون پرش ناگهانی پس از رندر
   requestAnimationFrame(()=>{
     const slides = car.querySelectorAll('.bc-slide');
     if(slides[_bcSlideIndex]){
@@ -3484,24 +3525,12 @@ function renderBankCards(){
     }
   });
 }
-function bcScrollBy(dir){
-  const car = $('bcCarousel');
-  if(!car) return;
-  const slides = car.querySelectorAll('.bc-slide');
-  if(!slides.length) return;
-  _bcSlideIndex = Math.max(0, Math.min(slides.length - 1, _bcSlideIndex + dir));
-  slides[_bcSlideIndex].scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
-  const dots = $('bcDots');
-  if(dots) dots.querySelectorAll('.bc-dot').forEach((d, i)=> d.classList.toggle('active', i === _bcSlideIndex));
-}
 // Event delegation — پایدار حتی اگر عناصر بعداً در DOM ظاهر شوند
 document.addEventListener('click', (e)=>{
   const t = e.target;
   if(!t || !t.closest) return;
   if(t.closest('#bcAddOpenBtn')){ e.preventDefault(); openBcForm(null); return; }
   if(t.closest('#bcCancelBtn')){ e.preventDefault(); closeBcForm(); return; }
-  if(t.closest('#bcPrev')){ e.preventDefault(); bcScrollBy(-1); return; }
-  if(t.closest('#bcNext')){ e.preventDefault(); bcScrollBy(1); return; }
   const sw = t.closest('[data-bc-color]');
   if(sw && sw.closest('#bcColorRow')){
     e.preventDefault();
