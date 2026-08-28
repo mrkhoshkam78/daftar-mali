@@ -3413,6 +3413,7 @@ function renderBankCards(){
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
     return `<article class="bc-slide" data-bc-id="${c.id}" style="--bc-accent:${color}">
+      <span class="bc-rings" aria-hidden="true"></span>
       <div class="bc-slide-top">
         <div class="bc-slide-name">${escapeHtml(c.name || 'کارت')}</div>
         <div class="bc-slide-actions">
