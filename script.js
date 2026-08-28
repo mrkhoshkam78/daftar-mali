@@ -3396,6 +3396,45 @@ function updateNbCardVisibility(){
     if($('nbCardWrap')) $('nbCardWrap').style.display = show ? 'block' : 'none';
   }catch(e){}
 }
+/** 3D tilt + glare فقط روی دسکتاپ — موبایل کاملاً غیرفعال */
+function bindBcTilt(car){
+  if(!car || car._bcTiltBound) return;
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const maxTilt = 7; // درجه — نرم و حرفه‌ای
+  function canTilt(){ return fine.matches && !reduce.matches && !car.classList.contains('is-dragging'); }
+  car.addEventListener('pointermove', (e)=>{
+    if(e.pointerType === 'touch' || e.pointerType === 'pen') return;
+    if(!canTilt()) return;
+    const slide = e.target.closest && e.target.closest('.bc-slide');
+    if(!slide || !car.contains(slide)) return;
+    const r = slide.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const ry = (px - 0.5) * 2 * maxTilt;
+    const rx = (0.5 - py) * 2 * maxTilt;
+    slide.style.setProperty('--tilt-x', rx.toFixed(2) + 'deg');
+    slide.style.setProperty('--tilt-y', ry.toFixed(2) + 'deg');
+    slide.style.setProperty('--glare-x', (px * 100).toFixed(1) + '%');
+    slide.style.setProperty('--glare-y', (py * 100).toFixed(1) + '%');
+  });
+  car.addEventListener('pointerleave', ()=>{
+    car.querySelectorAll('.bc-slide').forEach(s=>{
+      s.style.setProperty('--tilt-x', '0deg');
+      s.style.setProperty('--tilt-y', '0deg');
+    });
+  });
+  // وقتی از روی یک کارت خارج می‌شویم
+  car.addEventListener('pointerout', (e)=>{
+    const slide = e.target.closest && e.target.closest('.bc-slide');
+    if(!slide) return;
+    const to = e.relatedTarget;
+    if(to && slide.contains(to)) return;
+    slide.style.setProperty('--tilt-x', '0deg');
+    slide.style.setProperty('--tilt-y', '0deg');
+  });
+  car._bcTiltBound = true;
+}
 function renderBankCards(){
   const car = $('bcCarousel');
   const nav = $('bcNav');
@@ -3413,7 +3452,11 @@ function renderBankCards(){
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
     return `<article class="bc-slide" data-bc-id="${c.id}" style="--bc-accent:${color}">
+      <span class="bc-orb bc-orb-1" aria-hidden="true"></span>
+      <span class="bc-orb bc-orb-2" aria-hidden="true"></span>
+      <span class="bc-orb bc-orb-3" aria-hidden="true"></span>
       <span class="bc-rings" aria-hidden="true"></span>
+      <span class="bc-glare" aria-hidden="true"></span>
       <div class="bc-slide-top">
         <div class="bc-slide-name">${escapeHtml(c.name || 'کارت')}</div>
         <div class="bc-slide-actions">
@@ -3425,14 +3468,18 @@ function renderBankCards(){
           </button>
         </div>
       </div>
-      <div class="bc-slide-label">۴ رقم آخر</div>
-      <div class="bc-slide-num">•••• ${last || '----'}</div>
+      <div class="bc-slide-body">
+        <div class="bc-slide-label">۴ رقم آخر</div>
+        <div class="bc-slide-num">•••• ${last || '----'}</div>
+      </div>
     </article>`;
   }).join('');
   if(nav) nav.style.display = bankCards.length > 1 ? 'flex' : 'none';
   if(dots){
     dots.innerHTML = bankCards.map((_, i) => `<span class="bc-dot${i === _bcSlideIndex ? ' active' : ''}" data-bc-dot="${i}"></span>`).join('');
   }
+  // 3D tilt فقط دسکتاپ (pointer fine)
+  if(typeof bindBcTilt === 'function') bindBcTilt(car);
   // اتصال یک‌بارهٔ رویدادهای carousel + drag/swipe
   if(!car._bcBound){
     car._bcBound = true;
