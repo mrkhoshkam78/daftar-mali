@@ -2679,25 +2679,78 @@
   .bc-slide > *:not(.bc-orb):not(.bc-rings):not(.bc-glare){position:relative; z-index:3;}
   .bc-slide-top{
     display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
-    margin-bottom:auto;
   }
-  .bc-slide-name{
-    font-size:15px; font-weight:650; line-height:1.45; letter-spacing:-.01em;
-    text-shadow:0 1px 2px rgba(0,0,0,.16);
-    max-width:70%;
+  .bc-slide-actions{display:flex; gap:6px; flex-shrink:0; margin-top:2px;}
+  .bc-slide-label{
+    font-size:9.5px; font-weight:600; letter-spacing:.1em;
+    text-transform:none; opacity:.6; margin-bottom:7px;
   }
-  .bc-slide-actions{display:flex; gap:6px; flex-shrink:0;}
+  .bc-slide-num{
+    font-family:'Martian Mono', ui-monospace, monospace;
+    font-size:21px; font-weight:600; letter-spacing:.14em;
+    direction:ltr; text-align:left;
+    text-shadow:0 1px 3px rgba(0,0,0,.16);
+  }
   .bc-icon-btn{
-    width:30px; height:30px; border-radius:10px;
-    border:1px solid rgba(255,255,255,.22);
-    background:rgba(255,255,255,.08);
+    width:27px; height:27px; border-radius:9px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);
     backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    color:#fff; cursor:pointer;
+    color:rgba(255,255,255,.85); cursor:pointer;
     display:inline-flex; align-items:center; justify-content:center; padding:0;
-    transition:background .15s ease;
+    transition:background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
   }
-  .bc-icon-btn:hover{background:rgba(255,255,255,.16);}
-  .bc-slide-body{margin-top:28px;}
+  .bc-icon-btn:hover{background:rgba(255,255,255,.15); border-color:rgba(255,255,255,.26); color:#fff;}
+  .bc-icon-btn:active{transform:scale(.92);}
+  .bc-issuer{display:flex; align-items:center; gap:9px; min-width:0; max-width:72%;}
+  .bc-issuer-badge{
+    flex-shrink:0; width:30px; height:30px; border-radius:9px;
+    display:grid; place-items:center; font-size:13px; font-weight:700;
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22);
+    text-shadow:0 1px 2px rgba(0,0,0,.16);
+  }
+  .bc-issuer-name{
+    font-size:14px; font-weight:650; line-height:1.3; letter-spacing:-.01em;
+    text-shadow:0 1px 2px rgba(0,0,0,.16);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .bc-slide-chip-row{display:flex; align-items:center; gap:12px; margin-top:16px;}
+  .bc-chip{
+    width:34px; height:25px; border-radius:6px; flex-shrink:0;
+    background:linear-gradient(155deg, rgba(255,223,140,.9) 0%, rgba(200,160,70,.75) 55%, rgba(140,105,40,.75) 100%);
+    border:1px solid rgba(255,255,255,.35);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.5), inset 0 -1px 2px rgba(0,0,0,.25);
+    position:relative; overflow:hidden;
+  }
+  .bc-chip::before{
+    content:''; position:absolute; inset:3px; border:1px solid rgba(90,65,20,.4); border-radius:3px;
+    background:
+      linear-gradient(rgba(90,65,20,.35), rgba(90,65,20,.35)) center/100% 1px no-repeat,
+      linear-gradient(90deg, rgba(90,65,20,.35), rgba(90,65,20,.35)) center/1px 100% no-repeat;
+  }
+  .bc-nfc{color:rgba(255,255,255,.55); flex-shrink:0;}
+  .bc-nfc svg{width:18px; height:18px; display:block;}
+  .bc-slide-bottom{display:flex; justify-content:flex-end; margin-top:14px;}
+  .bc-slide-wordmark{
+    font-size:9.5px; font-weight:650; letter-spacing:.12em; opacity:.55;
+    text-shadow:0 1px 2px rgba(0,0,0,.14); max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .bc-slide[data-bc-pattern="p0"]::after{
+    content:''; position:absolute; inset:0; z-index:1; opacity:.07; pointer-events:none;
+    background:repeating-linear-gradient(52deg, #fff 0 1px, transparent 1px 13px);
+  }
+  .bc-slide[data-bc-pattern="p1"]::after{
+    content:''; position:absolute; inset:0; z-index:1; opacity:.08; pointer-events:none;
+    background:radial-gradient(circle, #fff 1px, transparent 1.4px) 0 0/16px 16px;
+  }
+  .bc-slide[data-bc-pattern="p2"]::after{
+    content:''; position:absolute; inset:0; z-index:1; opacity:.06; pointer-events:none;
+    background:
+      repeating-linear-gradient(28deg, #fff 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(-28deg, #fff 0 1px, transparent 1px 22px);
+  }
+  .bc-slide-body{margin-top:14px;}
   .bc-slide-label{
     font-size:10px; font-weight:500; letter-spacing:.06em;
     text-transform:none; opacity:.72; margin-bottom:6px;
@@ -2751,7 +2804,10 @@
   .nb-card-chip .dotc{width:7px; height:7px; border-radius:50%; display:inline-block;}
   @media (min-width:640px){
     .bc-slide{flex-basis:min(78%, 380px); min-height:176px; padding:24px 22px 22px;}
-    .bc-slide-num{font-size:20px; letter-spacing:.2em;}
+    .bc-slide-num{font-size:25px; letter-spacing:.16em;}
+    .bc-issuer-badge{width:34px; height:34px; font-size:14px;}
+    .bc-issuer-name{font-size:15px;}
+    .bc-chip{width:38px; height:28px;}
     .bc-rings{width:200px; height:200px; right:-18%; bottom:-32%;}
   }
   @media (prefers-reduced-motion:reduce){

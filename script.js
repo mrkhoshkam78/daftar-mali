@@ -3490,6 +3490,17 @@ function bindBcTilt(car){
   });
   car._bcTiltBound = true;
 }
+function bcMonogram(name){
+  const clean = String(name || '').trim().replace(/^کارت\s+/, '');
+  return clean ? clean.charAt(0).toUpperCase() : '؟';
+}
+function bcPatternKey(card){
+  const s = String((card && (card.id != null ? card.id : card.name)) || '');
+  let h = 0;
+  for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const patterns = ['p0', 'p1', 'p2', 'none'];
+  return patterns[h % patterns.length];
+}
 function renderBankCards(){
   const car = $('bcCarousel');
   const nav = $('bcNav');
@@ -3506,26 +3517,41 @@ function renderBankCards(){
   car.innerHTML = bankCards.map(c => {
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
-    return `<article class="bc-slide" data-bc-id="${c.id}" style="--bc-accent:${color}">
+    const monogram = escapeHtml(bcMonogram(c.name));
+    const bankName = escapeHtml(c.name || 'کارت');
+    const pattern = bcPatternKey(c);
+    return `<article class="bc-slide" data-bc-id="${c.id}" data-bc-pattern="${pattern}" style="--bc-accent:${color}">
       <span class="bc-orb bc-orb-1" aria-hidden="true"></span>
       <span class="bc-orb bc-orb-2" aria-hidden="true"></span>
       <span class="bc-orb bc-orb-3" aria-hidden="true"></span>
       <span class="bc-rings" aria-hidden="true"></span>
       <span class="bc-glare" aria-hidden="true"></span>
       <div class="bc-slide-top">
-        <div class="bc-slide-name">${escapeHtml(c.name || 'کارت')}</div>
+        <div class="bc-issuer">
+          <span class="bc-issuer-badge">${monogram}</span>
+          <span class="bc-issuer-name">${bankName}</span>
+        </div>
         <div class="bc-slide-actions">
           <button type="button" class="bc-icon-btn" data-bc-edit="${c.id}" title="ویرایش" aria-label="ویرایش">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           </button>
           <button type="button" class="bc-icon-btn" data-bc-del="${c.id}" title="حذف" aria-label="حذف">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
       </div>
+      <div class="bc-slide-chip-row">
+        <span class="bc-chip" aria-hidden="true"></span>
+        <span class="bc-nfc" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M11.5 5.5a9 9 0 0 1 0 13"/><path d="M14.5 2.5a13 13 0 0 1 0 19"/></svg>
+        </span>
+      </div>
       <div class="bc-slide-body">
         <div class="bc-slide-label">۴ رقم آخر</div>
-        <div class="bc-slide-num">•••• ${last || '----'}</div>
+        <div class="bc-slide-num">•••• &nbsp;•••• &nbsp;•••• &nbsp;${last || '----'}</div>
+      </div>
+      <div class="bc-slide-bottom">
+        <span class="bc-slide-wordmark">${bankName}</span>
       </div>
     </article>`;
   }).join('');
