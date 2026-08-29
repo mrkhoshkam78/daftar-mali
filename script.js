@@ -3514,6 +3514,7 @@ function renderBankCards(){
     if(nav) nav.style.display = 'none';
     return;
   }
+  const balStr = fmt(safeNum(assets && assets.card, 0));
   car.innerHTML = bankCards.map(c => {
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
@@ -3528,30 +3529,40 @@ function renderBankCards(){
       <span class="bc-glare" aria-hidden="true"></span>
       <div class="bc-slide-top">
         <div class="bc-issuer">
-          <span class="bc-issuer-badge">${monogram}</span>
-          <span class="bc-issuer-name">${bankName}</span>
+          <span class="bc-issuer-badge" aria-hidden="true">${monogram}</span>
+          <div class="bc-issuer-meta">
+            <span class="bc-issuer-name">${bankName}</span>
+            <span class="bc-issuer-sub">کارت بانکی</span>
+          </div>
         </div>
         <div class="bc-slide-actions">
           <button type="button" class="bc-icon-btn" data-bc-edit="${c.id}" title="ویرایش" aria-label="ویرایش">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           </button>
           <button type="button" class="bc-icon-btn" data-bc-del="${c.id}" title="حذف" aria-label="حذف">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
       </div>
       <div class="bc-slide-chip-row">
         <span class="bc-chip" aria-hidden="true"></span>
         <span class="bc-nfc" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M11.5 5.5a9 9 0 0 1 0 13"/><path d="M14.5 2.5a13 13 0 0 1 0 19"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M11.5 5.5a9 9 0 0 1 0 13"/><path d="M14.5 2.5a13 13 0 0 1 0 19"/></svg>
         </span>
       </div>
-      <div class="bc-slide-body">
-        <div class="bc-slide-label">۴ رقم آخر</div>
-        <div class="bc-slide-num">•••• &nbsp;•••• &nbsp;•••• &nbsp;${last || '----'}</div>
+      <div class="bc-balance">
+        <div class="bc-balance-label">موجودی</div>
+        <div class="bc-balance-amt"><span class="bc-balance-num">${balStr}</span><span class="bc-balance-unit">تومان</span></div>
       </div>
       <div class="bc-slide-bottom">
-        <span class="bc-slide-wordmark">${bankName}</span>
+        <div class="bc-holder">
+          <span class="bc-holder-label">صاحب کارت</span>
+          <span class="bc-holder-name">${bankName}</span>
+        </div>
+        <div class="bc-last4">
+          <span class="bc-last4-label">۴ رقم آخر</span>
+          <span class="bc-last4-num">•••• ${last || '----'}</span>
+        </div>
       </div>
     </article>`;
   }).join('');
