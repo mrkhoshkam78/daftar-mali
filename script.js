@@ -56,6 +56,8 @@ const I18N = {
   'مبلغ (تومان)':'Amount (Toman)','ساعت':'Time','توضیحات':'Description','ثبت تراکنش':'Record Transaction','قرض‌ها':'Loans',
   'قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.':'Lent and borrowed money — mark settlement status',
   'قرض باقی‌مانده (تسویه‌نشده)':'Outstanding Loans','تراکنش‌های ثبت‌شده':'Recorded Transactions','خلاصه دسته‌ها':'Category Summary',
+  'همه':'All','درآمد':'Income','هزینه':'Expense','انتقال':'Transfer','قرض':'Debt',
+  'در این دسته تراکنشی یافت نشد':'No transactions found in this category','تاریخ نامشخص':'Unknown date',
   'محاسبه‌گر پایین صفحه (جدا از دارایی رسمی کارت)':'Calculator Below (Separate from Official Card Asset)','پایه — موجودی فعلی کارت':'Base — Current Card Balance',
   'جمع تراکنش‌های این بخش':'Total Transactions Here','موجودی محاسبه‌شده':'Calculated Balance','ثبت موجودی کارت':'Save Card Balance',
   'تاریخچه تغییرات دارایی':'Asset Change History','تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.':'Filter and sort records — the list becomes scrollable above 15 items',
@@ -1686,6 +1688,24 @@ const NB_TYPES = {
   borrowed: {label:'قرض گرفته',     sign: 1, color:'var(--green)'},
   transfer: {label:'انتقال',        sign: 0, color:'var(--blue-light)'},
 };
+// آیکون‌های SVG کارت‌های فید تراکنش (فقط بصری — بدون اثر روی منطق/داده)
+const NB_ICONS = {
+  deposit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M7 10l5-5 5 5"/></svg>',
+  payment:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M7 14l5 5 5-5"/></svg>',
+  transfer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11M14 3l4 4-4 4"/><path d="M17 17H6M10 21l-4-4 4-4"/></svg>',
+  lent:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H9M17 7v8"/></svg>',
+  borrowed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7L7 17M7 17h8M7 17V9"/></svg>',
+};
+// نگاشت فیلترهای نوع تراکنش (فقط نمایشی — روی nbDelta/محاسبات کارت اثر ندارد)
+let currentNbFilter = 'all';
+function nbFilterMatch(type, filter){
+  if(!filter || filter === 'all') return true;
+  if(filter === 'income') return type === 'deposit';
+  if(filter === 'expense') return type === 'payment';
+  if(filter === 'transfer') return type === 'transfer';
+  if(filter === 'debt') return type === 'lent' || type === 'borrowed';
+  return true;
+}
 function nbEntryInCurrentMonth(e){
   if(!e) return false;
   // بدون تاریخ → ماه جاری (نمایش و دلتا)
@@ -3169,21 +3189,47 @@ function renderNotebook(){
       const ka = (a.date||'') + (a.time||'00:00'), kb = (b.date||'') + (b.time||'00:00');
       return ka < kb ? 1 : -1;
     });
-    el.innerHTML = sorted.map(e=>{
-      const t = NB_TYPES[e.type] || {label: e.type||'?', color: 'var(--ink-dim)', sign: 0};
-      const sign = t.sign > 0 ? '+' : (t.sign < 0 ? '−' : '');
-      const personTxt = e.person ? ' — ' + escapeHtml(e.person) : '';
-      const settledMark = (e.type === 'lent' || e.type === 'borrowed') && e.settled ? ' ✓' : '';
-      const cardChip = (e.cardName || e.cardLast4)
-        ? `<span class="nb-card-chip"><span class="dotc" style="background:${escapeHtml(e.cardColor||'var(--blue-light)')}"></span>${escapeHtml(e.cardName||'کارت')}${e.cardLast4 ? ' · •••• ' + escapeHtml(String(e.cardLast4)) : ''}</span>`
-        : '';
-      return `<div class="log-item">
-        <span class="d">${toJalaliStr(e.date)||'—'} ${e.time||''}</span>
-        <span class="n">${t.label}${personTxt}${e.desc ? ' — '+escapeHtml(e.desc) : ''}${settledMark}${cardChip ? ' ' + cardChip : ''}</span>
-        <span class="p" style="color:${t.color}">${sign}${fmt(e.amount)} ت</span>
-        <button type="button" class="del" data-id="${e.id}">×</button>
+    const filtered = sorted.filter(e => nbFilterMatch(e.type, currentNbFilter));
+    if(filtered.length === 0){
+      el.innerHTML = '<div class="empty">در این دسته تراکنشی یافت نشد</div>';
+    } else {
+      // گروه‌بندی بر اساس روز (تاریخ ISO) — فقط برای نمایش، ترتیب و داده تغییر نمی‌کند
+      let html = '';
+      let lastDayKey = undefined;
+      filtered.forEach(e=>{
+        const dayKey = e.date || '__nodate__';
+        if(dayKey !== lastDayKey){
+          lastDayKey = dayKey;
+          const dayLabel = e.date ? (toJalaliStr(e.date) || 'تاریخ نامشخص') : 'تاریخ نامشخص';
+          html += `<div class="nb-day-divider"><span class="nb-day-label">${dayLabel}</span></div>`;
+        }
+        const t = NB_TYPES[e.type] || {label: e.type||'?', color: 'var(--ink-dim)', sign: 0};
+        const icon = NB_ICONS[e.type] || NB_ICONS.transfer;
+        const sign = t.sign > 0 ? '+' : (t.sign < 0 ? '−' : '');
+        const personTxt = e.person ? ' — ' + escapeHtml(e.person) : '';
+        const settled = (e.type === 'lent' || e.type === 'borrowed') && e.settled;
+        const cardChip = (e.cardName || e.cardLast4)
+          ? `<span class="nb-card-chip2">${escapeHtml(e.cardName||'کارت')}${e.cardLast4 ? ' · •••• ' + escapeHtml(String(e.cardLast4)) : ''}</span>`
+          : '';
+        html += `<div class="nb-card" data-type="${escapeHtml(e.type||'')}" data-id="${e.id}">
+        <span class="nb-card-icon">${icon}</span>
+        <div class="nb-card-body">
+          <div class="nb-card-top">
+            <span class="nb-card-title">${t.label}${personTxt}</span>
+            <span class="nb-card-amount">${sign}${fmt(e.amount)} ت</span>
+          </div>
+          ${e.desc ? `<div class="nb-card-desc">${escapeHtml(e.desc)}</div>` : ''}
+          <div class="nb-card-meta">
+            ${e.time ? `<span class="nb-card-time">${e.time}</span>` : ''}
+            ${cardChip}
+            ${settled ? '<span class="nb-card-settled">تسویه شده</span>' : ''}
+          </div>
+        </div>
+        <button type="button" class="del nb-card-del" data-id="${e.id}" aria-label="حذف">×</button>
       </div>`;
-    }).join('');
+      });
+      el.innerHTML = html;
+    }
     el.querySelectorAll('.del').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
@@ -3222,6 +3268,15 @@ function renderNotebook(){
   if($('nbResult')) $('nbResult').textContent = fmt(base + delta) + ' ت';
   try{ if(typeof renderForecast === 'function') renderForecast(); }catch(e){ console.error(e); }
 }
+
+document.querySelectorAll('#nbFilters .nb-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#nbFilters .nb-filter').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+    currentNbFilter = btn.dataset.nbfilter || 'all';
+    renderNotebook();
+  });
+});
 
 /* ================= EVENTS ================= */
 

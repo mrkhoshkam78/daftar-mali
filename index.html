@@ -2774,6 +2774,98 @@
     }
   }
 
+  /* ================= Transaction Activity Feed (نبList) ================= */
+  .nb-filters{display:flex; gap:6px; overflow-x:auto; padding:1px 1px 6px; margin-bottom:10px; scrollbar-width:none;}
+  .nb-filters::-webkit-scrollbar{display:none;}
+  .nb-filter{
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:6px;
+    padding:7px 13px; border-radius:999px; border:1px solid var(--border);
+    background:linear-gradient(145deg,var(--card-2),var(--bg-2));
+    color:var(--ink-dim); font-family:var(--app-font); font-size:11px; font-weight:600;
+    cursor:pointer; white-space:nowrap;
+    transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+  }
+  .nb-filter .nb-filter-dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; flex-shrink:0;}
+  .nb-filter:hover{color:var(--ink); border-color:var(--border-strong); transform:translateY(-1px);}
+  .nb-filter:active{transform:scale(.97);}
+  .nb-filter.active{
+    background:linear-gradient(145deg,var(--blue-soft),var(--card-2));
+    color:var(--blue-light); border-color:var(--border-strong); box-shadow:0 4px 14px var(--blue-glow);
+  }
+  .nb-filter.active .nb-filter-dot{opacity:1;}
+  html[data-anim="off"] .nb-filter{transition:none;}
+
+  .nb-feed{display:flex; flex-direction:column;}
+  .nb-day-divider{display:flex; align-items:center; gap:9px; margin:14px 0 8px;}
+  .nb-day-divider:first-child{margin-top:2px;}
+  .nb-day-divider::before, .nb-day-divider::after{content:''; flex:1; height:1px; background:var(--border);}
+  .nb-day-label{
+    font-size:10px; font-weight:700; color:var(--ink-dim); white-space:nowrap;
+    background:var(--bg-2); padding:3px 11px; border-radius:999px; border:1px solid var(--border);
+    font-family:var(--app-font);
+  }
+
+  .nb-card{
+    position:relative; display:flex; align-items:flex-start; gap:10px;
+    padding:11px 11px; margin-bottom:8px; border-radius:14px;
+    border:1px solid var(--border);
+    background:linear-gradient(155deg, color-mix(in srgb, var(--card) 88%, transparent) 0%, color-mix(in srgb, var(--card-2) 82%, transparent) 100%);
+    backdrop-filter:blur(7px) saturate(1.08);
+    -webkit-backdrop-filter:blur(7px) saturate(1.08);
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+    transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  }
+  @supports not (background: color-mix(in srgb, red 50%, blue)){
+    .nb-card{background:linear-gradient(155deg, var(--card) 0%, var(--card-2) 100%);}
+  }
+  .nb-card:last-child{margin-bottom:0;}
+  .nb-card:hover{transform:translateY(-1px); border-color:var(--border-strong); box-shadow:0 6px 16px rgba(0,0,0,.08);}
+  .nb-card:active{transform:scale(.995);}
+  html[data-anim="off"] .nb-card{transition:none;}
+
+  .nb-card-icon{
+    flex-shrink:0; width:34px; height:34px; border-radius:10.5px;
+    display:grid; place-items:center;
+    background:var(--nb-accent-soft, var(--blue-soft));
+    border:1px solid var(--border);
+    color:var(--nb-accent, var(--blue-light));
+  }
+  .nb-card-icon svg{width:16px; height:16px;}
+
+  .nb-card-body{flex:1; min-width:0;}
+  .nb-card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
+  .nb-card-title{font-size:12.5px; font-weight:700; color:var(--ink); line-height:1.35;}
+  .nb-card-amount{font-family:'Martian Mono',monospace; font-size:12.5px; font-weight:700; direction:ltr; white-space:nowrap; color:var(--nb-accent, var(--ink));}
+  .nb-card-desc{font-size:11px; color:var(--ink-dim); margin-top:2px; line-height:1.4; word-break:break-word;}
+  .nb-card-meta{display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .nb-card-time{font-family:'Martian Mono',monospace; font-size:9.5px; color:var(--ink-dim); direction:ltr;}
+  .nb-card-chip2{font-size:9.5px; color:var(--ink-dim); background:var(--bg-2); border:1px solid var(--border); padding:2px 7px; border-radius:999px;}
+  .nb-card-settled{font-size:9px; font-weight:700; color:var(--green); background:var(--green-soft); padding:2px 7px; border-radius:999px;}
+
+  .nb-card-del{
+    flex-shrink:0; width:22px; height:22px; margin-top:1px; border-radius:8px; border:1px solid transparent;
+    background:transparent; color:var(--ink-dim); display:grid; place-items:center; cursor:pointer; padding:0;
+    font-family:var(--app-font); font-size:14px; line-height:1;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .nb-card-del:hover{background:var(--red-soft); color:var(--red); border-color:var(--border);}
+
+  .nb-card[data-type="deposit"]{--nb-accent:var(--green); --nb-accent-soft:var(--green-soft);}
+  .nb-card[data-type="payment"]{--nb-accent:var(--red); --nb-accent-soft:var(--red-soft);}
+  .nb-card[data-type="transfer"]{--nb-accent:var(--blue-light); --nb-accent-soft:var(--blue-soft);}
+  .nb-card[data-type="lent"]{--nb-accent:var(--red); --nb-accent-soft:var(--red-soft);}
+  .nb-card[data-type="borrowed"]{--nb-accent:var(--green); --nb-accent-soft:var(--green-soft);}
+
+  @media (min-width:640px){
+    .nb-card{padding:13px 14px; gap:12px; border-radius:16px;}
+    .nb-card-icon{width:40px; height:40px; border-radius:12px;}
+    .nb-card-icon svg{width:18px; height:18px;}
+    .nb-card-title{font-size:13px;}
+    .nb-card-amount{font-size:13.5px;}
+    .nb-card-desc{font-size:11.5px;}
+    .nb-filter{padding:8px 15px; font-size:11.5px;}
+  }
+
 </style>
 </head>
 <body>
@@ -3196,7 +3288,14 @@
 
     <div class="section reveal">
       <div class="section-title"><span class="dot"></span>تراکنش‌های ثبت‌شده</div>
-      <div id="nbList"></div>
+      <div class="nb-filters" id="nbFilters" role="tablist" aria-label="فیلتر تراکنش‌ها">
+        <button type="button" class="nb-filter active" data-nbfilter="all" role="tab" aria-selected="true"><span class="nb-filter-dot"></span>همه</button>
+        <button type="button" class="nb-filter" data-nbfilter="income" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>درآمد</button>
+        <button type="button" class="nb-filter" data-nbfilter="expense" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>هزینه</button>
+        <button type="button" class="nb-filter" data-nbfilter="transfer" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>انتقال</button>
+        <button type="button" class="nb-filter" data-nbfilter="debt" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>قرض</button>
+      </div>
+      <div id="nbList" class="nb-feed"></div>
     </div>
 
     <div class="section reveal">
