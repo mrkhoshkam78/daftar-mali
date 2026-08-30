@@ -1,4 +1,4 @@
-/* APP_BUILD 20260831stable */
+/* APP_BUILD 20260831qa */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);

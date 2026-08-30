@@ -8,6 +8,16 @@ if(d==="original"||d==="glass"||d==="premium")d="classic";
 if(["aurora","neobank","classic"].indexOf(d)<0)d="aurora";
 document.documentElement.setAttribute("data-design",d);}catch(e){}})();
 </script>
+<script>
+(function(){try{
+  var t=localStorage.getItem("daftar-theme")||"light";
+  t=String(t).toLowerCase().replace(/_/g,"-");
+  var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson"];
+  if(ok.indexOf(t)<0)t="light";
+  document.documentElement.setAttribute("data-theme",t);
+  document.documentElement.classList.add("theme-"+t);
+}catch(e){}})();
+</script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3825,7 +3835,7 @@ html[data-design="neobank"] body{
 
   
   html[data-design="neobank"] .topbar{
-    background:rgba(255,255,255,.92) !important;
+    background:color-mix(in srgb, var(--card) 90%, transparent) !important;
     border-bottom:1px solid rgba(15,23,42,.06) !important;
     backdrop-filter:blur(20px) !important;
     -webkit-backdrop-filter:blur(20px) !important;
@@ -4323,6 +4333,26 @@ body.menu-open .bottom-nav{opacity:.35;pointer-events:none;}
 }
 #sec-design-switcher .design-card.active .design-badge{
   background:var(--blue-soft); color:var(--blue);
+}
+
+
+/* Theme contrast: near-white accents need dark text on filled surfaces */
+html[data-theme="black"] .btn:not(.ghost),
+html[data-theme="black"] .hero .hero-num,
+html[data-theme="black"] .hero-num{
+  color:#0a0a0a !important;
+}
+html[data-theme="black"] .hero-label,
+html[data-theme="black"] .hero-num small,
+html[data-theme="black"] .hero-sub .item{
+  color:rgba(0,0,0,.65) !important;
+}
+html[data-theme="gold"] .btn:not(.ghost){
+  color:#1a1508 !important;
+}
+html[data-theme] body{
+  background:var(--bg) !important;
+  color:var(--ink) !important;
 }
 
 </style>
@@ -5160,8 +5190,8 @@ body.menu-open .bottom-nav{opacity:.35;pointer-events:none;}
   </button>
 </nav>
 
-<script src="prices-api.js?v=20260831stable"></script>
-<script src="script.js?v=20260831stable"></script>
+<script src="prices-api.js?v=20260831qa"></script>
+<script src="script.js?v=20260831qa"></script>
 
 </body>
 </html>
