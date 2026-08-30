@@ -180,8 +180,8 @@ function normalizeThemeId(t){
 }
 function applyTheme(t){
   t = normalizeThemeId(t);
-  // اگر نام ناشناخته بود dark — ولی navy-crimson حتماً در لیست است
-  if(!VALID_THEMES.includes(t)) t = 'dark';
+  // اگر نام ناشناخته بود light — تم پیش‌فرض نئوبانک
+  if(!VALID_THEMES.includes(t)) t = 'light';
   const root = document.documentElement;
   root.setAttribute('data-theme', t);
   // حذف همهٔ کلاس‌های theme-* سپس افزودن فعلی
@@ -227,8 +227,8 @@ if($('themeDayNight')){
   });
 }
 (function initTheme(){
-  let saved = 'dark';
-  try{ saved = localStorage.getItem(THEME_KEY) || 'dark'; }catch(e){}
+  let saved = 'light';
+  try{ saved = localStorage.getItem(THEME_KEY) || 'light'; }catch(e){}
   applyTheme(saved);
 })();
 
