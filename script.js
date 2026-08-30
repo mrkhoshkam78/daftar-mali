@@ -2080,6 +2080,12 @@ function ensureNotebookMonth(){
         txs.push({date: todayISO(), key:'card', delta: pending, note:'بستن ماه — ثبت خودکار موجودی کارت'});
         pushSeriesPoint();
       }
+      // اقلام مشارکت‌کننده در دلتا applied می‌شوند تا قرض باز در ماه بعد دوباره وارد nbDelta نشود
+      // (clearNotebook قرض‌های تسویه‌نشده را نگه می‌دارد؛ بدون این پرچم double-count رخ می‌دهد)
+      (notebook || []).forEach(e => {
+        if(!e || e.applied) return;
+        e.applied = true;
+      });
       // ۲) بایگانی نتیجهٔ نهایی پیش‌بینی ماه قبل (تغییرناپذیر)
       archiveMonthEndForecast(saved, assets.card);
       // ۳) پاک کردن لیست تراکنش‌های ماه قبل از UI
@@ -3234,13 +3240,17 @@ function renderNotebook(){
       btn.addEventListener('click', ()=>{
         const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
         showConfirmModal('حذف این تراکنش؟', entry ? `${NB_TYPES[entry.type].label} — ${fmt(entry.amount)} تومان` : '', ()=>{
-          // Reverse اثر مالی دریافتی‌های applied روی موجودی کارت (جلوگیری از double-count)
-          if(entry && entry.type === 'deposit' && entry.applied){
+          // Reverse اثر مالی اقلام applied که قبلاً روی موجودی کارت نشسته (جلوگیری از double-count / داده کهنه)
+          if(entry && entry.applied && (entry.type === 'deposit' || entry.type === 'payment')){
+            const sign = (NB_TYPES[entry.type] && NB_TYPES[entry.type].sign) || 0;
             const amt = safeNum(entry.amount, 0);
-            assets.card = safeNum(assets.card, 0) - amt;
-            if(!Array.isArray(txs)) txs = [];
-            txs.push({date: todayISO(), key:'card', delta: -amt, note: 'حذف دریافتی' + (entry.desc ? ' — ' + entry.desc : '')});
-            if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+            if(sign !== 0 && amt > 0){
+              // اثر اولیه‌ی ثبت: sign * amt روی کارت؛ حذف = منفی همان اثر
+              assets.card = safeNum(assets.card, 0) - (sign * amt);
+              if(!Array.isArray(txs)) txs = [];
+              txs.push({date: todayISO(), key:'card', delta: -(sign * amt), note: 'حذف ' + ((NB_TYPES[entry.type] && NB_TYPES[entry.type].label) || entry.type) + (entry.desc ? ' — ' + entry.desc : '')});
+              if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+            }
           }
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
           // حذف از آرشیو پیش‌بینی زنده — Snapshotهای قبلی دست‌نخورده می‌مانند
