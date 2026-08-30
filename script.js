@@ -1,4 +1,4 @@
-/* APP_BUILD 20260827premium — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260830menu-fix — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -410,34 +410,41 @@ function showPage(pageId){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
   }
 }
-document.querySelectorAll('.menu-item').forEach(item=>{
-  item.addEventListener('click', (e)=>{
-    e.preventDefault();
-    showPage(item.dataset.page);
-  });
-});
-// ناوبری پایین — فقط ظاهر/مسیریابی؛ بدون تغییر منطق
-document.querySelectorAll('.bn-item').forEach(item=>{
-  item.addEventListener('click', (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    const p = item.dataset.page;
-    if(p === '__more__'){
-      try{
-        if(document.body.classList.contains('menu-open')) closeMenu();
-        else openMenu();
-      }catch(_e){
-        document.body.classList.toggle('menu-open');
-      }
-      // حالت فعال دکمه بیشتر
-      document.querySelectorAll('.bn-item').forEach(b=>{
-        b.classList.toggle('active', b.dataset.page === '__more__' && document.body.classList.contains('menu-open'));
-      });
+// Event delegation — کار می‌کند حتی اگر HTML بعد از script بیاید
+function bindNavOnce(){
+  if(window.__navBound) return;
+  window.__navBound = true;
+  document.addEventListener('click', (e)=>{
+    const menuEl = e.target && e.target.closest && e.target.closest('.menu-item');
+    if(menuEl){
+      e.preventDefault();
+      const page = menuEl.getAttribute('data-page') || menuEl.dataset.page;
+      if(page) showPage(page);
       return;
     }
-    showPage(p);
+    const bnEl = e.target && e.target.closest && e.target.closest('.bn-item');
+    if(bnEl){
+      e.preventDefault();
+      e.stopPropagation();
+      const p = bnEl.getAttribute('data-page') || bnEl.dataset.page;
+      if(p === '__more__'){
+        try{
+          if(document.body.classList.contains('menu-open')) closeMenu();
+          else openMenu();
+        }catch(_e){
+          document.body.classList.toggle('menu-open');
+        }
+        document.querySelectorAll('.bn-item').forEach(b=>{
+          const bp = b.getAttribute('data-page') || b.dataset.page;
+          b.classList.toggle('active', bp === '__more__' && document.body.classList.contains('menu-open'));
+        });
+        return;
+      }
+      if(p) showPage(p);
+    }
   });
-});
+}
+bindNavOnce();
 // حالت اولیه: صفحه خانه فعال است
 try{ document.body.classList.add('home-immersive'); }catch(e){}
 
