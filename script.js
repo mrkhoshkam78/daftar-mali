@@ -1,4 +1,4 @@
-/* APP_BUILD 20260830menu-fix — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260830theme-fix — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -198,16 +198,23 @@ function applyTheme(t){
     const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
     c.classList.toggle('active', val === t);
   });
-  // همگام‌سازی رنگ متن/پس‌زمینه بدون شکستن استایل Aurora
+  // پاک‌سازی استایل اینلاین تا توکن‌های تم کامل اعمال شوند
   try{
     if(document.body){
       document.body.style.background = '';
       document.body.style.color = '';
     }
+    const bar = document.querySelector('.topbar');
+    if(bar){ bar.style.background=''; bar.style.borderColor=''; bar.style.boxShadow=''; }
+    const bn = document.querySelector('.bottom-nav');
+    if(bn){ bn.style.background=''; bn.style.borderColor=''; }
   }catch(_e){}
-  // به‌روزرسانی ظاهر ناوبری پایین پس از تغییر تم
+  // علامت‌گذاری کارت تم فعال
   try{
-    document.querySelectorAll('.bn-item').forEach(b=>{ b.style.color=''; });
+    document.querySelectorAll('.theme-card').forEach(c=>{
+      const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
+      c.classList.toggle('active', val === t);
+    });
   }catch(_e){}
 }
 function onThemeCardActivate(e){
@@ -386,7 +393,7 @@ function showPage(pageId){
     m.classList.toggle('active', m.dataset.page === pageId);
   });
   // همگام‌سازی ناوبری پایین (فقط UI)
-  const primary = new Set(['page-dashboard','page-notebook','page-assets','page-goals']);
+  const primary = new Set(['page-dashboard','page-notebook','page-assets','page-history','page-settings']);
   document.querySelectorAll('.bn-item').forEach(b=>{
     const bp = b.dataset.page;
     if(bp === '__more__'){
@@ -447,6 +454,19 @@ function bindNavOnce(){
 bindNavOnce();
 // حالت اولیه: صفحه خانه فعال است
 try{ document.body.classList.add('home-immersive'); }catch(e){}
+
+/* Header glass on scroll — UI only */
+(function bindTopbarScroll(){
+  const bar = document.querySelector('.topbar');
+  if(!bar) return;
+  const onScroll = ()=>{
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    bar.classList.toggle('is-scrolled', y > 8);
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
 
 /* ================= JALALI DATES ================= */
 function gregorianToJalali(gy, gm, gd){
@@ -1568,7 +1588,16 @@ function updateTxFilterCounts(){
   Object.keys(counts).forEach(k=>{const el=document.querySelector(`[data-count-for="${k}"]`);if(el)el.textContent=counts[k];});
 }
 document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
-  btn.addEventListener('click',()=>{document.querySelectorAll('#txFilters .hist-filter').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});btn.classList.add('active');btn.setAttribute('aria-selected','true');currentTxFilter=btn.dataset.filter||'newest';renderTxs();});
+  btn.addEventListener('click',(e)=>{
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    document.querySelectorAll('#txFilters .hist-filter').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
+    btn.classList.add('active');btn.setAttribute('aria-selected','true');
+    currentTxFilter=btn.dataset.filter||'newest';
+    renderTxs();
+    try{ window.scrollTo(0, y); }catch(_e){}
+    requestAnimationFrame(()=>{ try{ window.scrollTo(0, y); }catch(_e){} });
+  });
 });
 
 
@@ -3332,11 +3361,16 @@ function renderNotebook(){
 }
 
 document.querySelectorAll('#nbFilters .nb-filter').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', (e)=>{
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
     document.querySelectorAll('#nbFilters .nb-filter').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
     btn.classList.add('active'); btn.setAttribute('aria-selected','true');
-    currentNbFilter = btn.dataset.nbfilter || 'all';
+    currentNbFilter = btn.dataset.nbfilter || btn.getAttribute('data-nbfilter') || 'all';
     renderNotebook();
+    // جلوگیری از پرش اسکرول به بالا هنگام تعویض دسته
+    try{ window.scrollTo(0, y); }catch(_e){}
+    requestAnimationFrame(()=>{ try{ window.scrollTo(0, y); }catch(_e){} });
   });
 });
 
@@ -3710,7 +3744,12 @@ function renderBankCards(){
             if(d < bestDist){ bestDist = d; best = i; }
           });
           _bcSlideIndex = best;
-          slides[best].scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
+          try{
+            const left = slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2;
+            car.scrollTo({left: Math.max(0, left), behavior:'smooth'});
+          }catch(_e){
+            try{ car.scrollLeft = Math.max(0, slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2); }catch(__e){}
+          }
         }
         setTimeout(()=>{ car._bcDidDrag = false; }, 80);
       } else {
@@ -3722,8 +3761,13 @@ function renderBankCards(){
   }
   requestAnimationFrame(()=>{
     const slides = car.querySelectorAll('.bc-slide');
-    if(slides[_bcSlideIndex]){
-      slides[_bcSlideIndex].scrollIntoView({inline:'center', block:'nearest', behavior:'auto'});
+    const slide = slides[_bcSlideIndex];
+    if(slide && car){
+      // فقط اسکرول افقی کاروسل — بدون تغییر اسکرول عمودی صفحه
+      try{
+        const left = slide.offsetLeft - (car.clientWidth - slide.clientWidth) / 2;
+        car.scrollLeft = Math.max(0, left);
+      }catch(_e){}
     }
   });
 }
