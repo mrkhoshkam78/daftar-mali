@@ -9,6 +9,8 @@
 <meta name="app-build" content="20260827premium">
 <!-- BUILD_STAMP 20260827premium goals-checkbox-donut-copy -->
 <title>مبحث درآمد</title>
+<link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
+<link rel="apple-touch-icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -841,7 +843,16 @@
   .nc-edit-panel.open{display:block;}
   .nc-edit-panel .grid2{margin-bottom:8px;}
 
-  .topbar-main{display:flex; align-items:center; min-width:0; flex:1;}
+  .topbar-main{display:flex; align-items:center; min-width:0; flex:1; gap:12px;}
+  .app-logo{
+    width:32px; height:32px; object-fit:contain; flex-shrink:0;
+    border-radius:8px; display:block;
+  }
+  .app-logo-sm{
+    width:26px; height:26px; object-fit:contain; flex-shrink:0;
+    border-radius:6px; display:block;
+  }
+  .sd-brand{display:flex; align-items:center; gap:8px; min-width:0;}
   .topbar-date{
     display:inline-flex; align-items:center; gap:7px;
     font-size:13px; font-weight:600; color:var(--ink-dim); line-height:1.3;
@@ -2993,6 +3004,7 @@
 
 <div class="topbar">
   <div class="topbar-main">
+    <img src="logo.png" alt="مبحث درآمد" class="app-logo" width="32" height="32">
     <div class="topbar-date"><span class="live-dot" aria-hidden="true"></span><div class="topbar-date-stack"><span id="topbarDate">—</span><span id="topbarDateGreg" class="topbar-date-greg">—</span></div></div>
   </div>
   <button type="button" class="theme-dn-btn" id="themeDayNight" aria-label="حالت روز و شب" title="روز / شب">
@@ -3005,7 +3017,10 @@
 <div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
 <div class="side-drawer" id="dropdownMenu" role="dialog" aria-modal="true" aria-label="منوی اصلی">
   <div class="side-drawer-head">
-    <span class="sd-title">منو</span>
+    <div class="sd-brand">
+      <img src="logo.png" alt="" class="app-logo-sm" width="26" height="26" aria-hidden="true">
+      <span class="sd-title">منو</span>
+    </div>
     <button type="button" class="side-drawer-close" id="menuCloseBtn" aria-label="بستن منو">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
