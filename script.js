@@ -181,7 +181,7 @@ function normalizeThemeId(t){
 function applyTheme(t){
   t = normalizeThemeId(t);
   // اگر نام ناشناخته بود light — تم پیش‌فرض نئوبانک
-  if(!VALID_THEMES.includes(t)) t = 'dark';
+  if(!VALID_THEMES.includes(t)) t = 'light';
   const root = document.documentElement;
   root.setAttribute('data-theme', t);
   // حذف همهٔ کلاس‌های theme-* سپس افزودن فعلی
@@ -227,8 +227,8 @@ if($('themeDayNight')){
   });
 }
 (function initTheme(){
-  let saved = 'dark';
-  try{ saved = localStorage.getItem(THEME_KEY) || 'dark'; }catch(e){}
+  let saved = 'light';
+  try{ saved = localStorage.getItem(THEME_KEY) || 'light'; }catch(e){}
   applyTheme(saved);
 })();
 
@@ -384,6 +384,16 @@ function showPage(pageId){
   document.querySelectorAll('.menu-item').forEach(m=>{
     m.classList.toggle('active', m.dataset.page === pageId);
   });
+  // همگام‌سازی ناوبری پایین (فقط UI)
+  const primary = new Set(['page-dashboard','page-notebook','page-assets','page-goals']);
+  document.querySelectorAll('.bn-item').forEach(b=>{
+    const bp = b.dataset.page;
+    if(bp === '__more__'){
+      b.classList.toggle('active', !primary.has(pageId));
+    }else{
+      b.classList.toggle('active', bp === pageId);
+    }
+  });
   // فقط برای ظاهر immersive صفحه خانه — بدون اثر روی منطق/داده
   try{ document.body.classList.toggle('home-immersive', pageId === 'page-dashboard'); }catch(e){}
   window.scrollTo(0, 0);
@@ -403,6 +413,22 @@ document.querySelectorAll('.menu-item').forEach(item=>{
   item.addEventListener('click', (e)=>{
     e.preventDefault();
     showPage(item.dataset.page);
+  });
+});
+// ناوبری پایین — فقط ظاهر/مسیریابی؛ بدون تغییر منطق
+document.querySelectorAll('.bn-item').forEach(item=>{
+  item.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const p = item.dataset.page;
+    if(p === '__more__'){
+      try{
+        if(typeof openMenu === 'function') openMenu();
+        else if(typeof toggleMenu === 'function') toggleMenu();
+        else document.body.classList.add('menu-open');
+      }catch(_e){ document.body.classList.add('menu-open'); }
+      return;
+    }
+    showPage(p);
   });
 });
 // حالت اولیه: صفحه خانه فعال است
