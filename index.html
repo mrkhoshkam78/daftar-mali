@@ -32,29 +32,44 @@
     --shadow-md: 0 18px 50px rgba(60,30,80,.1);
   }
   html[data-theme="light"]{
-    --bg:#F3F4F6; --bg-2:#EAECEF;
-    --card:#FFFFFF; --card-2:#F7F8FA;
-    --border:rgba(15,23,42,.08); --border-strong:rgba(15,23,42,.14);
-    --ink:#0F172A; --ink-dim:#64748B;
-    --blue:#2563EB; --blue-light:#3B82F6; --blue-deep:#1D4ED8;
-    --blue-soft:rgba(37,99,235,.08); --blue-glow:rgba(37,99,235,.12);
-    --green:#059669; --green-soft:rgba(5,150,105,.1);
+    --bg:#F6F1EA; --bg-2:#EDE6DC;
+    --card:#FFFCFA; --card-2:#F8F3EC;
+    --border:rgba(60,40,30,.1); --border-strong:rgba(124,58,237,.35);
+    --ink:#1A1420; --ink-dim:#6B5E6E;
+    --blue:#7C3AED; --blue-light:#A78BFA; --blue-deep:#5B21B6;
+    --blue-soft:rgba(124,58,237,.12); --blue-glow:rgba(124,58,237,.18);
+    --green:#059669; --green-soft:rgba(5,150,105,.12);
     --red:#DC2626; --red-soft:rgba(220,38,38,.1);
     --orange:#D97706; --orange-soft:rgba(217,119,6,.1);
-    --shadow: 0 4px 16px rgba(15,23,42,.06);
-    --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
-    --shadow-md: 0 8px 24px rgba(15,23,42,.08);
+    --shadow: 0 12px 40px rgba(60,30,80,.08);
+    --shadow-sm: 0 4px 14px rgba(60,30,80,.05);
+    --shadow-md: 0 18px 50px rgba(60,30,80,.1);
+  }
+  /* dark theme tokens (used by day/night toggle) */
+  html[data-theme="dark"]{
+    --bg:#120F16; --bg-2:#1A1622;
+    --card:#221C2C; --card-2:#2A2336;
+    --border:rgba(255,255,255,.08); --border-strong:rgba(167,139,250,.35);
+    --ink:#F5F0FA; --ink-dim:#A89BB0;
+    --blue:#A78BFA; --blue-light:#C4B5FD; --blue-deep:#7C3AED;
+    --blue-soft:rgba(167,139,250,.14); --blue-glow:rgba(167,139,250,.2);
+    --green:#34D399; --green-soft:rgba(52,211,153,.12);
+    --red:#F87171; --red-soft:rgba(248,113,113,.12);
+    --orange:#FBBF24; --orange-soft:rgba(251,191,36,.12);
+    --shadow: 0 12px 40px rgba(0,0,0,.35);
+    --shadow-sm: 0 4px 14px rgba(0,0,0,.25);
+    --shadow-md: 0 18px 50px rgba(0,0,0,.45);
   }
   html[data-theme="warm-sand"]{
-    --bg:#F6F1EA; --bg-2:#EFE8DF;
-    --card:#FFFCFA; --card-2:#F8F3EC;
-    --border:rgba(90,70,50,.1); --border-strong:rgba(90,70,50,.18);
+    --bg:#F7F2EA; --bg-2:#EFE6DA;
+    --card:#FFFDF9; --card-2:#F9F3EA;
+    --border:rgba(90,70,50,.1); --border-strong:rgba(180,120,60,.3);
     --ink:#1C1712; --ink-dim:#7A6E62;
-    --blue:#C1782C; --blue-light:#D4924A; --blue-deep:#9A5E1E;
-    --blue-soft:rgba(193,120,44,.1); --blue-glow:rgba(193,120,44,.12);
+    --blue:#B45309; --blue-light:#D97706; --blue-deep:#92400E;
+    --blue-soft:rgba(180,83,9,.1); --blue-glow:rgba(180,83,9,.14);
     --green:#3D8B5F; --green-soft:rgba(61,139,95,.1);
     --red:#C44B3C; --red-soft:rgba(196,75,60,.1);
-    --shadow: 0 4px 16px rgba(60,40,20,.06);
+    --shadow: 0 12px 36px rgba(60,40,20,.07);
   }
   html[data-theme="black"]{
     --bg:#000000; --bg-2:#0A0A0A;
@@ -3429,6 +3444,133 @@
     --blue-light:#C4B5FD;
     --blue-deep:#7C3AED;
     --blue-soft:rgba(167,139,250,.14);
+  }
+
+
+  /* ========== AURORA BUGFIXES (interaction + themes) ========== */
+  /* Backdrop full-screen for bottom sheet (was left: sidebar-w) */
+  .menu-backdrop{
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    bottom:0 !important;
+    z-index:65 !important;
+    background:rgba(20,12,28,.42) !important;
+  }
+  html[data-theme="light"] body.menu-open .menu-backdrop,
+  html[data-theme="warm-sand"] body.menu-open .menu-backdrop{
+    background:rgba(40,24,50,.28) !important;
+  }
+
+  /* Bottom sheet stacking + scroll */
+  .side-drawer{
+    z-index:80 !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .side-drawer-nav{
+    overflow:visible !important;
+    flex:none !important;
+  }
+  .side-drawer .menu-item,
+  .menu-item{
+    display:flex !important;
+    text-decoration:none !important;
+    color:var(--ink-dim) !important;
+    box-sizing:border-box !important;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .menu-item:hover{color:var(--ink) !important;}
+  .menu-item.active{color:var(--blue) !important;}
+
+  /* Prevent layout shift when sheet opens */
+  body.menu-open .topbar,
+  body.menu-open .layout,
+  body.menu-open .bottom-nav{
+    transform:none !important;
+  }
+  /* Dim bottom nav under sheet; block accidental clicks */
+  body.menu-open .bottom-nav{
+    opacity:.35 !important;
+    pointer-events:none !important;
+    z-index:40 !important;
+  }
+  .bottom-nav{
+    z-index:55 !important;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+    pointer-events:auto !important;
+  }
+  .bn-item{
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    user-select:none;
+  }
+  .bn-item svg{pointer-events:none;}
+
+  /* Kill navy-crimson cut-corner that breaks Aurora hero */
+  html[data-theme="navy-crimson"] .hero,
+  html.theme-navy-crimson .hero,
+  html[data-theme="finverse-violet"] .hero,
+  html.theme-finverse-violet .hero{
+    clip-path:none !important;
+    -webkit-clip-path:none !important;
+    border-radius:32px !important;
+  }
+  html[data-theme="navy-crimson"] .hero::before,
+  html.theme-navy-crimson .hero::before,
+  html[data-theme="finverse-violet"] .hero::before,
+  html.theme-finverse-violet .hero::before{
+    inset:auto !important;
+    top:16px !important;
+    left:18px !important;
+    width:48px !important;
+    height:6px !important;
+    background:linear-gradient(90deg, var(--blue), var(--blue-light)) !important;
+    opacity:1 !important;
+  }
+
+  /* Topbar must adapt on ALL themes (not hardcoded paper rgba) */
+  .topbar{
+    background:color-mix(in srgb, var(--bg) 88%, transparent) !important;
+  }
+  .bottom-nav{
+    background:color-mix(in srgb, var(--card) 94%, transparent) !important;
+    border-color:var(--border) !important;
+  }
+  html[data-theme="light"] .bottom-nav,
+  html[data-theme="warm-sand"] .bottom-nav{
+    box-shadow:0 12px 40px rgba(60,30,80,.14) !important;
+  }
+
+  /* Safe area for body padding */
+  body{
+    padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Theme cards remain clickable above overlays */
+  .theme-card{cursor:pointer; -webkit-tap-highlight-color:transparent;}
+
+  /* Ensure page content not under bottom nav */
+  .main{padding-bottom:12px !important;}
+
+
+
+  /* Force theme body backgrounds to respect tokens under Aurora */
+  html[data-theme="finverse-violet"] body,
+  html.theme-finverse-violet body,
+  html[data-theme="navy-crimson"] body,
+  html.theme-navy-crimson body,
+  html[data-theme="teal-navy"] body{
+    background:var(--bg) !important;
+  }
+  html[data-theme="finverse-violet"] .topbar,
+  html.theme-finverse-violet .topbar,
+  html[data-theme="navy-crimson"] .topbar,
+  html.theme-navy-crimson .topbar{
+    background:color-mix(in srgb, var(--bg) 88%, transparent) !important;
+    border-bottom:none !important;
   }
 
 </style>

@@ -198,15 +198,16 @@ function applyTheme(t){
     const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
     c.classList.toggle('active', val === t);
   });
-  // اجبار به‌روزرسانی پس‌زمینه body (بعضی مرورگرهای موبایل var را دیر اعمال می‌کنند)
+  // همگام‌سازی رنگ متن/پس‌زمینه بدون شکستن استایل Aurora
   try{
-    const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#070b16';
-    const glow = getComputedStyle(root).getPropertyValue('--blue-glow').trim() || 'transparent';
     if(document.body){
-      document.body.style.background =
-        'radial-gradient(900px 400px at 15% -5%, ' + glow + ', transparent 60%), ' + bg;
-      document.body.style.color = getComputedStyle(root).getPropertyValue('--ink').trim() || '';
+      document.body.style.background = '';
+      document.body.style.color = '';
     }
+  }catch(_e){}
+  // به‌روزرسانی ظاهر ناوبری پایین پس از تغییر تم
+  try{
+    document.querySelectorAll('.bn-item').forEach(b=>{ b.style.color=''; });
   }catch(_e){}
 }
 function onThemeCardActivate(e){
@@ -218,7 +219,7 @@ function onThemeCardActivate(e){
   applyTheme(val);
 }
 document.addEventListener('click', onThemeCardActivate);
-document.addEventListener('touchend', onThemeCardActivate, {passive:false});
+// touchend جدا باعث double-fire می‌شد؛ فقط click کافی است
 if($('themeDayNight')){
   $('themeDayNight').addEventListener('click', ()=>{
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -419,13 +420,19 @@ document.querySelectorAll('.menu-item').forEach(item=>{
 document.querySelectorAll('.bn-item').forEach(item=>{
   item.addEventListener('click', (e)=>{
     e.preventDefault();
+    e.stopPropagation();
     const p = item.dataset.page;
     if(p === '__more__'){
       try{
-        if(typeof openMenu === 'function') openMenu();
-        else if(typeof toggleMenu === 'function') toggleMenu();
-        else document.body.classList.add('menu-open');
-      }catch(_e){ document.body.classList.add('menu-open'); }
+        if(document.body.classList.contains('menu-open')) closeMenu();
+        else openMenu();
+      }catch(_e){
+        document.body.classList.toggle('menu-open');
+      }
+      // حالت فعال دکمه بیشتر
+      document.querySelectorAll('.bn-item').forEach(b=>{
+        b.classList.toggle('active', b.dataset.page === '__more__' && document.body.classList.contains('menu-open'));
+      });
       return;
     }
     showPage(p);
