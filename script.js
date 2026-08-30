@@ -1,4 +1,4 @@
-/* APP_BUILD 20260830perf-theme — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260827premium — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -198,7 +198,7 @@ function applyTheme(t){
     const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
     c.classList.toggle('active', val === t);
   });
-  // پاک‌سازی استایل اینلاین تا توکن‌های تم کامل اعمال شوند
+  // پاک‌سازی استایل اینلاین تا CSS Variables تم کامل اعمال شوند
   try{
     if(document.body){
       document.body.style.background = '';
@@ -206,15 +206,6 @@ function applyTheme(t){
     }
     const bar = document.querySelector('.topbar');
     if(bar){ bar.style.background=''; bar.style.borderColor=''; bar.style.boxShadow=''; }
-    const bn = document.querySelector('.bottom-nav');
-    if(bn){ bn.style.background=''; bn.style.borderColor=''; }
-  }catch(_e){}
-  // علامت‌گذاری کارت تم فعال
-  try{
-    document.querySelectorAll('.theme-card').forEach(c=>{
-      const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
-      c.classList.toggle('active', val === t);
-    });
   }catch(_e){}
 }
 function onThemeCardActivate(e){
@@ -226,7 +217,7 @@ function onThemeCardActivate(e){
   applyTheme(val);
 }
 document.addEventListener('click', onThemeCardActivate);
-// touchend جدا باعث double-fire می‌شد؛ فقط click کافی است
+// touchend حذف شد — باعث double-apply می‌شد
 if($('themeDayNight')){
   $('themeDayNight').addEventListener('click', ()=>{
     const cur = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -238,6 +229,22 @@ if($('themeDayNight')){
   let saved = 'light';
   try{ saved = localStorage.getItem(THEME_KEY) || 'light'; }catch(e){}
   applyTheme(saved);
+})();
+(function bindTopbarScroll(){
+  const bar = document.querySelector('.topbar');
+  if(!bar) return;
+  let ticking = false;
+  const onScroll = ()=>{
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      bar.classList.toggle('is-scrolled', y > 8);
+      ticking = false;
+    });
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
 })();
 
 function applyAnimPref(on){
@@ -392,16 +399,6 @@ function showPage(pageId){
   document.querySelectorAll('.menu-item').forEach(m=>{
     m.classList.toggle('active', m.dataset.page === pageId);
   });
-  // همگام‌سازی ناوبری پایین (فقط UI)
-  const primary = new Set(['page-dashboard','page-notebook','page-assets','page-history','page-settings']);
-  document.querySelectorAll('.bn-item').forEach(b=>{
-    const bp = b.dataset.page;
-    if(bp === '__more__'){
-      b.classList.toggle('active', !primary.has(pageId));
-    }else{
-      b.classList.toggle('active', bp === pageId);
-    }
-  });
   // فقط برای ظاهر immersive صفحه خانه — بدون اثر روی منطق/داده
   try{ document.body.classList.toggle('home-immersive', pageId === 'page-dashboard'); }catch(e){}
   window.scrollTo(0, 0);
@@ -417,62 +414,14 @@ function showPage(pageId){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
   }
 }
-// Event delegation — کار می‌کند حتی اگر HTML بعد از script بیاید
-function bindNavOnce(){
-  if(window.__navBound) return;
-  window.__navBound = true;
-  document.addEventListener('click', (e)=>{
-    const menuEl = e.target && e.target.closest && e.target.closest('.menu-item');
-    if(menuEl){
-      e.preventDefault();
-      const page = menuEl.getAttribute('data-page') || menuEl.dataset.page;
-      if(page) showPage(page);
-      return;
-    }
-    const bnEl = e.target && e.target.closest && e.target.closest('.bn-item');
-    if(bnEl){
-      e.preventDefault();
-      e.stopPropagation();
-      const p = bnEl.getAttribute('data-page') || bnEl.dataset.page;
-      if(p === '__more__'){
-        try{
-          if(document.body.classList.contains('menu-open')) closeMenu();
-          else openMenu();
-        }catch(_e){
-          document.body.classList.toggle('menu-open');
-        }
-        document.querySelectorAll('.bn-item').forEach(b=>{
-          const bp = b.getAttribute('data-page') || b.dataset.page;
-          b.classList.toggle('active', bp === '__more__' && document.body.classList.contains('menu-open'));
-        });
-        return;
-      }
-      if(p) showPage(p);
-    }
+document.querySelectorAll('.menu-item').forEach(item=>{
+  item.addEventListener('click', (e)=>{
+    e.preventDefault();
+    showPage(item.dataset.page);
   });
-}
-bindNavOnce();
+});
 // حالت اولیه: صفحه خانه فعال است
 try{ document.body.classList.add('home-immersive'); }catch(e){}
-
-/* Header glass on scroll — UI only */
-(function bindTopbarScroll(){
-  const bar = document.querySelector('.topbar');
-  if(!bar) return;
-  let ticking = false;
-  const onScroll = ()=>{
-    if(ticking) return;
-    ticking = true;
-    requestAnimationFrame(()=>{
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
-      bar.classList.toggle('is-scrolled', y > 8);
-      ticking = false;
-    });
-  };
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll();
-})();
-
 
 /* ================= JALALI DATES ================= */
 function gregorianToJalali(gy, gm, gd){
@@ -1594,16 +1543,7 @@ function updateTxFilterCounts(){
   Object.keys(counts).forEach(k=>{const el=document.querySelector(`[data-count-for="${k}"]`);if(el)el.textContent=counts[k];});
 }
 document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
-  btn.addEventListener('click',(e)=>{
-    if(e){ e.preventDefault(); e.stopPropagation(); }
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    document.querySelectorAll('#txFilters .hist-filter').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
-    btn.classList.add('active');btn.setAttribute('aria-selected','true');
-    currentTxFilter=btn.dataset.filter||'newest';
-    renderTxs();
-    try{ window.scrollTo(0, y); }catch(_e){}
-    requestAnimationFrame(()=>{ try{ window.scrollTo(0, y); }catch(_e){} });
-  });
+  btn.addEventListener('click',()=>{document.querySelectorAll('#txFilters .hist-filter').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});btn.classList.add('active');btn.setAttribute('aria-selected','true');currentTxFilter=btn.dataset.filter||'newest';renderTxs();});
 });
 
 
@@ -3367,16 +3307,11 @@ function renderNotebook(){
 }
 
 document.querySelectorAll('#nbFilters .nb-filter').forEach(btn=>{
-  btn.addEventListener('click', (e)=>{
-    if(e) { e.preventDefault(); e.stopPropagation(); }
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
+  btn.addEventListener('click', ()=>{
     document.querySelectorAll('#nbFilters .nb-filter').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
     btn.classList.add('active'); btn.setAttribute('aria-selected','true');
-    currentNbFilter = btn.dataset.nbfilter || btn.getAttribute('data-nbfilter') || 'all';
+    currentNbFilter = btn.dataset.nbfilter || 'all';
     renderNotebook();
-    // جلوگیری از پرش اسکرول به بالا هنگام تعویض دسته
-    try{ window.scrollTo(0, y); }catch(_e){}
-    requestAnimationFrame(()=>{ try{ window.scrollTo(0, y); }catch(_e){} });
   });
 });
 
@@ -3750,12 +3685,7 @@ function renderBankCards(){
             if(d < bestDist){ bestDist = d; best = i; }
           });
           _bcSlideIndex = best;
-          try{
-            const left = slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2;
-            car.scrollTo({left: Math.max(0, left), behavior:'smooth'});
-          }catch(_e){
-            try{ car.scrollLeft = Math.max(0, slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2); }catch(__e){}
-          }
+          slides[best].scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
         }
         setTimeout(()=>{ car._bcDidDrag = false; }, 80);
       } else {
@@ -3767,13 +3697,8 @@ function renderBankCards(){
   }
   requestAnimationFrame(()=>{
     const slides = car.querySelectorAll('.bc-slide');
-    const slide = slides[_bcSlideIndex];
-    if(slide && car){
-      // فقط اسکرول افقی کاروسل — بدون تغییر اسکرول عمودی صفحه
-      try{
-        const left = slide.offsetLeft - (car.clientWidth - slide.clientWidth) / 2;
-        car.scrollLeft = Math.max(0, left);
-      }catch(_e){}
+    if(slides[_bcSlideIndex]){
+      slides[_bcSlideIndex].scrollIntoView({inline:'center', block:'nearest', behavior:'auto'});
     }
   });
 }
