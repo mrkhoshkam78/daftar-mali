@@ -82,7 +82,7 @@ const I18N = {
   I18N['مبلغ تغییر را وارد کنید و با + یا − موجودی را به‌روزرسانی کنید؛ حذف با × انجام می‌شود.']='Enter the change and use + or − to update the balance; remove with ×.';
   I18N['یک دارایی جدید به فهرست نقدینگی یا سرمایه‌گذاری اضافه کنید.']='Add a new cash or investment asset to your ledger.';
   I18N['افزودن مورد جدید از فرم پایین؛ برای اصلاح همان مورد از دکمه ویرایش استفاده کنید (جایگزین می‌شود، نه اضافه).']='Estimated value of assets excluded from the official cash-asset total.';
-  I18N['کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.']='Card is managed only here. “Save Card Balance” stores the calculated amount as the final card balance.';
+  I18N['کارت از لیست دارایی‌ها حذف شده؛ موجودی آن فقط از این بخش مدیریت می‌شود. «ثبت موجودی کارت» عدد محاسبه‌شده را به‌عنوان موجودی نهایی کارت ذخیره می‌کند.']='Card is managed only here. Deposits update the card balance immediately.';
   I18N['قرض‌های داده‌شده و گرفته‌شده را ثبت کنید و وضعیت تسویه هر مورد را مشخص کنید.']='Track money lent or borrowed and mark each item when it is settled.';
   I18N['تغییرات دارایی را بر اساس زمان یا نوع تغییر فیلتر کنید؛ لیست‌های طولانی قابل اسکرول هستند.']='Filter asset changes by time or type; long lists can be scrolled.';
   I18N['ظاهر موردعلاقه‌تان را انتخاب کنید؛ انتخاب شما ذخیره می‌شود.']='Choose your preferred appearance; your selection is saved.';
@@ -3234,6 +3234,14 @@ function renderNotebook(){
       btn.addEventListener('click', ()=>{
         const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
         showConfirmModal('حذف این تراکنش؟', entry ? `${NB_TYPES[entry.type].label} — ${fmt(entry.amount)} تومان` : '', ()=>{
+          // Reverse اثر مالی دریافتی‌های applied روی موجودی کارت (جلوگیری از double-count)
+          if(entry && entry.type === 'deposit' && entry.applied){
+            const amt = safeNum(entry.amount, 0);
+            assets.card = safeNum(assets.card, 0) - amt;
+            if(!Array.isArray(txs)) txs = [];
+            txs.push({date: todayISO(), key:'card', delta: -amt, note: 'حذف دریافتی' + (entry.desc ? ' — ' + entry.desc : '')});
+            if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+          }
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
           // حذف از آرشیو پیش‌بینی زنده — Snapshotهای قبلی دست‌نخورده می‌مانند
           fcEvents = fcEvents.filter(x=>String(x.id)!==btn.dataset.id);
@@ -3767,6 +3775,15 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
       }
     }
     if(!Array.isArray(notebook)) notebook = [];
+    // دریافتی: بلافاصله روی موجودی کارت اعمال شود (یک‌بار، با پرچم applied)
+    if(type === 'deposit'){
+      const amt = safeNum(amount, 0);
+      assets.card = safeNum(assets.card, 0) + amt;
+      entry.applied = true;
+      if(!Array.isArray(txs)) txs = [];
+      txs.push({date: date || todayISO(), key:'card', delta: amt, note: 'دریافتی' + (desc ? ' — ' + desc : '')});
+      if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+    }
     notebook.push(entry);
     if(type === 'payment' || type === 'deposit'){
       if(!Array.isArray(fcEvents)) fcEvents = [];
@@ -3777,7 +3794,7 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     if($('nbPerson')) $('nbPerson').value = '';
     if($('nbDesc')) $('nbDesc').value = '';
     const saved = persist();
-    showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد (ذخیره پایدار بعداً همگام می‌شود)');
+    showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد');
     if(typeof renderNotebook === 'function') renderNotebook();
     else if(typeof render === 'function') render();
     if(typeof renderForecast === 'function') renderForecast();
@@ -3785,35 +3802,6 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     console.error('nbAdd', err);
     showToast('خطا در ثبت تراکنش: ' + (err && err.message ? err.message : err), true);
   }
-});
-
-if($('nbSyncBtn')) $('nbSyncBtn').addEventListener('click', ()=>{
-  const btn = $('nbSyncBtn');
-  if(btn){ btn.classList.remove('spinning'); void btn.offsetWidth; btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'), 650); }
-
-  const delta = safeNum(nbDelta(), 0);
-  if(Math.abs(delta) < 0.5){ showToast('تغییری برای ثبت روی کارت وجود ندارد'); return; }
-  const prev = safeNum(assets.card, 0);
-  const newBase = prev + delta;
-  showConfirmModal(
-    'ثبت موجودی کارت؟',
-    'موجودی کارت از ' + fmt(prev) + ' به ' + fmt(newBase) + ' تومان ثبت می‌شود. لیست تراکنش‌ها پاک نمی‌شود.',
-    ()=>{
-      assets.card = newBase;
-      txs.push({date: todayISO(), key:'card', delta, note:'ثبت موجودی کارت'});
-      // همهٔ اقلام (از جمله قرض‌های باز) applied می‌شوند تا مبلغ فقط یک‌بار روی کارت بنشیند
-      // وضعیت settled جدا است و بعداً قابل تغییر می‌ماند بدون محاسبهٔ دوباره
-      (notebook || []).forEach(e => {
-        if(!e) return;
-        e.applied = true;
-      });
-      pushSeriesPoint();
-      const saved = persist();
-      showToast(saved ? 'موجودی کارت ثبت شد' : 'موجودی کارت به‌روز شد (ذخیره پایدار بعداً)');
-      if(typeof render === 'function') render();
-      else if(typeof renderNotebook === 'function') renderNotebook();
-    }
-  );
 });
 
 $('snapshotBtn').addEventListener('click', ()=>{
