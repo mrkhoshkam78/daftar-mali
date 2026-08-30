@@ -1,4 +1,4 @@
-/* APP_BUILD 20260830theme-fix — goals/donut/copy/cache-bust */
+/* APP_BUILD 20260830perf-theme — goals/donut/copy/cache-bust */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -459,9 +459,15 @@ try{ document.body.classList.add('home-immersive'); }catch(e){}
 (function bindTopbarScroll(){
   const bar = document.querySelector('.topbar');
   if(!bar) return;
+  let ticking = false;
   const onScroll = ()=>{
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    bar.classList.toggle('is-scrolled', y > 8);
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      bar.classList.toggle('is-scrolled', y > 8);
+      ticking = false;
+    });
   };
   window.addEventListener('scroll', onScroll, {passive:true});
   onScroll();
