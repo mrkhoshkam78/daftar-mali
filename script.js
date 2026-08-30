@@ -384,8 +384,6 @@ function showPage(pageId){
   document.querySelectorAll('.menu-item').forEach(m=>{
     m.classList.toggle('active', m.dataset.page === pageId);
   });
-  // فقط برای ظاهر immersive صفحه خانه — بدون اثر روی منطق/داده
-  try{ document.body.classList.toggle('home-immersive', pageId === 'page-dashboard'); }catch(e){}
   window.scrollTo(0, 0);
   closeMenu();
   if(pageId === 'page-noncash' && typeof ensureMarketPrices === 'function'){
@@ -405,8 +403,6 @@ document.querySelectorAll('.menu-item').forEach(item=>{
     showPage(item.dataset.page);
   });
 });
-// حالت اولیه: صفحه خانه فعال است
-try{ document.body.classList.add('home-immersive'); }catch(e){}
 
 /* ================= JALALI DATES ================= */
 function gregorianToJalali(gy, gm, gd){
