@@ -4668,29 +4668,24 @@ function renderNotes(){
     const delay = Math.min(i, 8) * 30;
     const tags = uniqTags(n.tags||[]).slice(0,5).map(t=>`<span class="note-mini-tag">#${escapeHtml(t)}</span>`).join('');
     const when = formatNoteStamp(n);
-    const bodyPreview = escapeHtml(stripMd(n.body||''));
-    const hasBody = !!(n.body && String(n.body).trim());
+    const bodyTxt = escapeHtml(stripMd(n.body||''));
     return `<article class="note-card${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
-      <div class="note-card-accent" aria-hidden="true"></div>
-      <div class="note-card-inner">
-        <div class="note-card-toprow">
-          <span class="note-cat-pill"><i style="background:${cat.color}"></i>${escapeHtml(cat.label)}</span>
-          <div class="note-card-actions">
-            <button type="button" class="note-copy-btn" data-copy="${n.id}" title="کپی محتوا" aria-label="کپی محتوا">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
-            </button>
-            <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
-            </button>
-          </div>
+      <div class="note-card-head">
+        <div class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</div>
+        <div class="note-card-actions">
+          <button type="button" class="note-copy-btn" data-copy="${n.id}" title="کپی محتوا" aria-label="کپی محتوا">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+          <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
+          </button>
         </div>
-        <h3 class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</h3>
-        ${hasBody ? `<p class="note-card-body">${bodyPreview}</p>` : ''}
-        ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
-        <div class="note-card-foot">
-          <time class="note-card-when">${when}</time>
-          ${n.pinned ? '<span class="note-pinned-flag">سنجاق‌شده</span>' : ''}
-        </div>
+      </div>
+      <div class="note-card-body">${bodyTxt}</div>
+      ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
+      <div class="note-card-foot">
+        <span class="note-badge"><span class="note-badge-dot" style="background:${cat.color}"></span>${escapeHtml(cat.label)}</span>
+        <span class="note-card-when">${when}</span>
       </div>
     </article>`;
   }).join('');
