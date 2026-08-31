@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-design="aurora" lang="fa" dir="rtl" data-theme="dark" data-anim="on">
+<html data-design="aurora" lang="fa" dir="rtl" data-theme="light" data-anim="on">
 <head>
 <script>
 (function(){try{var d=localStorage.getItem("daftar-design")||"aurora";d=String(d).toLowerCase();
@@ -10,10 +10,10 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
 </script>
 <script>
 (function(){try{
-  var t=localStorage.getItem("daftar-theme")||"dark";
+  var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
   var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson"];
-  if(ok.indexOf(t)<0)t="dark";
+  if(ok.indexOf(t)<0)t="light";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
 }catch(e){}})();
@@ -49,7 +49,7 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
     --shadow-sm: 0 2px 10px rgba(15,40,70,.05);
     --shadow-md: 0 12px 36px rgba(15,40,70,.08);
   }
-  html[data-theme="dark"]{
+  html[data-theme="light"]{
     --bg:#F0F4F8; --bg-2:#E4EAF1;
     --card:#FFFFFF; --card-2:#F5F8FC;
     --border:rgba(15,40,70,.1); --border-strong:rgba(37,99,235,.28);
@@ -4205,59 +4205,6 @@ html[data-design="neobank"] .section::after{opacity:.35;}
 
 
 
-
-/* Metrics inside hero card — Neo-Bank & Classic */
-html[data-design="neobank"] .hero .dash-metrics,
-html[data-design="classic"] .hero .dash-metrics{
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:8px !important;
-  margin:14px 0 0 !important;
-  padding-top:12px !important;
-  border-top:1px solid rgba(255,255,255,.18) !important;
-}
-html[data-design="classic"] .hero .dash-metrics{
-  border-top:1px solid var(--border) !important;
-}
-html[data-design="neobank"] .hero .dash-metric,
-html[data-design="classic"] .hero .dash-metric{
-  background:rgba(255,255,255,.12) !important;
-  border:1px solid rgba(255,255,255,.14) !important;
-  border-radius:14px !important;
-  padding:10px 12px !important;
-  box-shadow:none !important;
-  min-height:auto !important;
-  gap:4px !important;
-}
-html[data-design="classic"] .hero .dash-metric{
-  background:var(--bg-2) !important;
-  border:1px solid var(--border) !important;
-}
-html[data-design="neobank"] .hero .dash-metric .dm-l{
-  color:rgba(255,255,255,.75) !important;
-  font-size:11px !important;
-  margin:0 !important;
-}
-html[data-design="neobank"] .hero .dash-metric b{
-  color:#fff !important;
-  font-size:13px !important;
-  text-align:start !important;
-}
-html[data-design="classic"] .hero .dash-metric .dm-l{
-  color:var(--ink-dim) !important;
-  font-size:11px !important;
-  margin:0 !important;
-}
-html[data-design="classic"] .hero .dash-metric b{
-  color:var(--ink) !important;
-  font-size:13px !important;
-  text-align:start !important;
-}
-/* Aurora: metrics stay as soft cards under total inside hero */
-html[data-design="aurora"] .hero .dash-metrics{
-  margin-top:12px !important;
-}
-
 /* dash-metrics — Neo-Bank & Classic (were aurora-only → invisible/broken) */
 html[data-design="neobank"] .dash-metrics,
 html[data-design="classic"] .dash-metrics{
@@ -4535,15 +4482,15 @@ html[data-theme] body{
     <div class="hero reveal" id="sec-dashboard">
       <div class="hero-label">جمع کل دارایی</div>
       <div class="hero-num" id="totalNet">—</div>
-      <div class="dash-metrics reveal">
-        <div class="dash-metric">
-          <span class="dm-l">سرمایه‌گذاری</span>
-          <b id="sumInvest">—</b>
-        </div>
-        <div class="dash-metric">
-          <span class="dm-l">نقدینگی</span>
-          <b id="sumCash">—</b>
-        </div>
+    </div>
+    <div class="dash-metrics reveal">
+      <div class="dash-metric">
+        <span class="dm-l">سرمایه‌گذاری</span>
+        <b id="sumInvest">—</b>
+      </div>
+      <div class="dash-metric">
+        <span class="dm-l">نقدینگی</span>
+        <b id="sumCash">—</b>
       </div>
     </div>
 
@@ -5283,7 +5230,7 @@ html[data-theme] body{
 </nav>
 
 <script src="prices-api.js?v=20260831qa"></script>
-<script src="script.js?v=20260831defaults"></script>
+<script src="script.js?v=20260831ds-min"></script>
 
 </body>
 </html>
