@@ -4751,3 +4751,75 @@ html[data-design="neobank"] #logList .log-item{
 /* note modal: ensure edit foot visible in edit mode */
 .note-modal.mode-edit .note-modal-foot-edit{display:flex !important;}
 .note-modal.mode-read .note-modal-foot-read{display:flex !important;}
+
+
+/* کارت پیش‌فرض + کاروسل پایدار */
+.bc-carousel{direction:ltr !important;}
+.bc-slide{direction:rtl !important;}
+.bc-default-badge{
+  position:absolute; top:12px; left:12px; z-index:4;
+  font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px;
+  background:rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.25);
+  backdrop-filter:blur(6px);
+}
+.bc-slide.is-default{
+  box-shadow:0 10px 28px rgba(0,0,0,.2), 0 0 0 2px rgba(255,255,255,.25) !important;
+}
+
+
+/* یادداشت‌ها — فشرده + چیدمان عمودی/افقی */
+.notes-layout-toggle{
+  display:inline-flex; border:1px solid var(--border); border-radius:12px;
+  overflow:hidden; background:var(--bg-2);
+}
+.notes-layout-toggle button{
+  border:none; background:transparent; color:var(--ink-dim);
+  padding:9px 12px; font-size:11.5px; font-weight:600; cursor:pointer;
+  font-family:var(--app-font); transition:background .15s, color .15s;
+}
+.notes-layout-toggle button.active{
+  background:var(--blue-soft); color:var(--blue-light);
+}
+.note-card--compact{
+  padding:10px 12px 8px !important;
+  border-radius:14px !important;
+}
+.note-card--compact .note-card-title{
+  font-size:13px !important;
+  margin-bottom:4px !important;
+  -webkit-line-clamp:1 !important;
+}
+.note-card--compact .note-card-body{
+  font-size:11.5px !important;
+  line-height:1.55 !important;
+  -webkit-line-clamp:2 !important;
+  margin:0 !important;
+}
+.note-card--compact .note-card-foot{
+  margin-top:8px !important;
+  padding-top:6px !important;
+  font-size:10px !important;
+}
+.note-card--compact .note-card-tags{margin-top:6px !important; gap:4px !important;}
+.note-card--compact .note-mini-tag{font-size:9px !important; padding:2px 6px !important;}
+.notes-grid.notes-layout-vertical{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+}
+.notes-grid.notes-layout-horizontal{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:8px !important;
+}
+@media (min-width:560px){
+  .notes-grid.notes-layout-horizontal{
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+  }
+}
+@media (min-width:900px){
+  .notes-grid.notes-layout-horizontal{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+}

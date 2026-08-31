@@ -489,7 +489,23 @@ function renderLogs(){
       showConfirmModal(
         'حذف این ثبت سود؟',
         row ? (toJalaliStr(row.date) || '') + ' — +' + fmt(safeNum(row.profit)) + ' تومان' : '',
-        ()=>{ logs.splice(idx, 1); if(persist()) render(); }
+        ()=>{
+          if(row){
+            const p = safeNum(row.profit, 0);
+            assets.snapp = Math.max(0, safeNum(assets.snapp, 0) - p);
+            if(Array.isArray(txs)){
+              // حذف اولین تراکنش متناظر سود اسنپ با همان تاریخ و مبلغ (در صورت وجود)
+              const ti = txs.findIndex(t => t && t.key === 'snapp' && t.date === row.date && safeNum(t.delta) === p);
+              if(ti >= 0) txs.splice(ti, 1);
+            }
+            if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+          }
+          logs.splice(idx, 1);
+          let ok = false;
+          try{ ok = !!persist(); }catch(e){ console.error(e); }
+          try{ if(typeof render === 'function') render(); }catch(e){ console.error(e); }
+          showToast(ok ? 'حذف شد' : 'حذف اعمال شد', !ok);
+        }
       );
     });
   });
@@ -2363,7 +2379,19 @@ function renderNotebook(){
           }
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
           fcEvents = fcEvents.filter(x=>String(x.id)!==btn.dataset.id);
-          if(persist()){ renderNotebook(); if(typeof renderForecast==='function') renderForecast(); }
+          let ok = false;
+          try{ ok = !!persist(); }catch(e){ console.error(e); }
+          // به‌روزرسانی فوری تمام UI وابسته (داشبورد، دارایی، کارت، پیش‌بینی، …)
+          try{
+            if(typeof render === 'function') render();
+            else {
+              if(typeof renderNotebook === 'function') renderNotebook();
+              if(typeof renderForecast === 'function') renderForecast();
+              if(typeof renderBankCards === 'function') renderBankCards();
+              if(typeof renderAssetCards === 'function') renderAssetCards();
+            }
+          }catch(e){ console.error(e); }
+          showToast(ok ? 'تراکنش حذف شد' : 'حذف اعمال شد', !ok);
         });
       });
     });
@@ -2497,21 +2525,71 @@ if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 
 if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
-  const profit = parseMoney($('logProfit').value);
+  const profit = parseMoney($('logProfit') && $('logProfit').value);
   if(!date || isNaN(profit) || profit<=0){ showToast('تاریخ و سود را به‌درستی وارد کنید', true); return; }
-  const balanceBefore = assets.snapp || 0;
+  if(!Array.isArray(logs)) logs = [];
+  if(!Array.isArray(txs)) txs = [];
+  if(!assets || typeof assets !== 'object') assets = {};
+  const balanceBefore = safeNum(assets.snapp, 0);
   logs.push({date, profit, balanceBefore});
   assets.snapp = balanceBefore + profit;
   txs.push({date, key:'snapp', delta: profit, note: 'سود روزانه اسنپ'});
-  pushSeriesPoint();
-  checkMilestones('snapp', balanceBefore, assets.snapp);
-  if(persist()){ $('logProfit').value=''; showToast('ثبت شد'); render(); }
+  if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+  if(typeof checkMilestones === 'function') checkMilestones('snapp', balanceBefore, assets.snapp);
+  let ok = false;
+  try{ ok = !!persist(); }catch(e){ console.error(e); }
+  if(!ok){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload())); ok = true; }catch(e2){ console.error(e2); }
+  }
+  if($('logProfit')) $('logProfit').value = '';
+  showToast(ok ? 'سود ثبت شد' : 'سود اعمال شد (ذخیره پایدار ناموفق)', !ok);
+  // فوراً UI و محاسبات را به‌روز کن
+  try{ if(typeof render === 'function') render(); }catch(e){ console.error(e); }
 });
 
 /* ---- کارت‌های بانکی (فقط بخش تراکنش‌ها) ---- */
 function normalizeBcLast4(v){
   return String(v == null ? '' : v).replace(/\D/g, '').slice(-4);
 }
+
+function ensureDefaultBankCard(){
+  if(!Array.isArray(bankCards)) bankCards = [];
+  if(!bankCards.length){ window.defaultBankCardId = null; return null; }
+  let defs = bankCards.filter(c => c && c.isDefault);
+  if(defs.length > 1){
+    defs.slice(1).forEach(c => { c.isDefault = false; });
+    defs = [defs[0]];
+  }
+  if(!defs.length){
+    bankCards[0].isDefault = true;
+    defs = [bankCards[0]];
+  }
+  window.defaultBankCardId = defs[0].id;
+  return defs[0];
+}
+function isDefaultBankCard(cardOrId){
+  if(cardOrId == null) return false;
+  const id = (typeof cardOrId === 'object') ? cardOrId.id : cardOrId;
+  const c = findBankCard(id);
+  if(!c) return false;
+  return !!(c.isDefault || String(c.id) === String(window.defaultBankCardId || ''));
+}
+function getBankCardDisplayBalance(card){
+  if(!card) return 0;
+  if(isDefaultBankCard(card)) return safeNum(assets && assets.card, 0);
+  return safeNum(card.balance, 0);
+}
+function setDefaultBankCard(id){
+  if(!Array.isArray(bankCards)) return;
+  const target = findBankCard(id);
+  if(!target){ showToast('کارت پیدا نشد', true); return; }
+  bankCards.forEach(c => { c.isDefault = String(c.id) === String(id); });
+  window.defaultBankCardId = target.id;
+  // محاسبات اصلی همچنان assets.card — بدون جابه‌جایی موجودی
+  if(persist()){ showToast('کارت پیش‌فرض تنظیم شد'); renderBankCards(); if(typeof renderNotebook==='function') renderNotebook(); }
+  else { showToast('کارت پیش‌فرض تنظیم شد'); renderBankCards(); }
+}
+
 function findBankCard(id){
   if(id == null || id === '') return null;
   return (bankCards || []).find(c => String(c.id) === String(id)) || null;
@@ -2545,6 +2623,20 @@ function openBcForm(card){
     _bcSelectedColor = BC_COLORS[0];
   }
   if(typeof renderBcColorRow === 'function') renderBcColorRow();
+  const isDef = card ? (typeof isDefaultBankCard === 'function' && isDefaultBankCard(card)) : (!(bankCards||[]).length);
+  if($('bcIsDefault')) $('bcIsDefault').checked = !!isDef;
+  if($('bcBalance')){
+    if(card && !isDef){
+      const b = safeNum(card.balance, 0);
+      $('bcBalance').value = b ? Number(b).toLocaleString('en-US') : '';
+    } else if(card && isDef){
+      const b = safeNum(assets && assets.card, 0);
+      $('bcBalance').value = b ? Number(b).toLocaleString('en-US') : '';
+    } else {
+      $('bcBalance').value = '';
+    }
+  }
+  if($('bcBalanceWrap')) $('bcBalanceWrap').style.opacity = isDef ? '0.75' : '1';
   try{ form.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
 }
 function closeBcForm(){
@@ -2645,14 +2737,18 @@ function renderBankCards(){
     if(nav) nav.style.display = 'none';
     return;
   }
-  const balStr = fmt(safeNum(assets && assets.card, 0));
+  ensureDefaultBankCard();
   car.innerHTML = bankCards.map(c => {
     const last = normalizeBcLast4(c.last4);
     const color = c.color || BC_COLORS[0];
     const monogram = escapeHtml(bcMonogram(c.name));
     const bankName = escapeHtml(c.name || 'کارت');
     const pattern = bcPatternKey(c);
-    return `<article class="bc-slide" data-bc-id="${c.id}" data-bc-pattern="${pattern}" style="--bc-accent:${color}">
+    const isDef = isDefaultBankCard(c);
+    const balStr = fmt(getBankCardDisplayBalance(c));
+    const defBadge = isDef ? '<span class="bc-default-badge">پیش‌فرض</span>' : '';
+    const defBtn = isDef ? '' : `<button type="button" class="bc-icon-btn" data-bc-default="${c.id}" title="تنظیم به‌عنوان پیش‌فرض" aria-label="پیش‌فرض"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.2 6.6H21l-5.4 4 2.1 6.5L12 16.6 6.3 20l2.1-6.5L3 9.6h6.8L12 3z"/></svg></button>`;
+    return `<article class="bc-slide${isDef ? ' is-default' : ''}" data-bc-id="${c.id}" data-bc-pattern="${pattern}" style="--bc-accent:${color}">
       <span class="bc-orb bc-orb-1" aria-hidden="true"></span>
       <span class="bc-orb bc-orb-2" aria-hidden="true"></span>
       <span class="bc-orb bc-orb-3" aria-hidden="true"></span>
@@ -2667,6 +2763,7 @@ function renderBankCards(){
           </div>
         </div>
         <div class="bc-slide-actions">
+          ${defBtn}
           <button type="button" class="bc-icon-btn" data-bc-edit="${c.id}" title="ویرایش" aria-label="ویرایش">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           </button>
@@ -2674,6 +2771,7 @@ function renderBankCards(){
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
+        ${defBadge}
       </div>
       <div class="bc-slide-chip-row">
         <span class="bc-chip" aria-hidden="true"></span>
@@ -2703,7 +2801,37 @@ function renderBankCards(){
   }
   // 3D tilt فقط دسکتاپ (pointer fine)
   if(typeof bindBcTilt === 'function') bindBcTilt(car);
-  // اتصال یک‌بارهٔ رویدادهای carousel + drag/swipe
+
+  function bcSnapToIndex(carEl, index, smooth){
+    const slides = carEl.querySelectorAll('.bc-slide');
+    if(!slides.length) return;
+    const i = Math.max(0, Math.min(index|0, slides.length - 1));
+    _bcSlideIndex = i;
+    const slide = slides[i];
+    const left = slide.offsetLeft - (carEl.clientWidth - slide.offsetWidth) / 2;
+    const target = Math.max(0, left);
+    try{
+      if(smooth) carEl.scrollTo({left: target, behavior: 'smooth'});
+      else carEl.scrollLeft = target;
+    }catch(_e){ try{ carEl.scrollLeft = target; }catch(__e){} }
+    const dotsEl = $('bcDots');
+    if(dotsEl){
+      dotsEl.querySelectorAll('.bc-dot').forEach((d, di)=> d.classList.toggle('active', di === i));
+    }
+  }
+  function bcNearestIndex(carEl){
+    const slides = carEl.querySelectorAll('.bc-slide');
+    if(!slides.length) return 0;
+    const mid = carEl.scrollLeft + carEl.clientWidth / 2;
+    let best = 0, bestDist = Infinity;
+    slides.forEach((s, i)=>{
+      const center = s.offsetLeft + s.offsetWidth / 2;
+      const d = Math.abs(center - mid);
+      if(d < bestDist){ bestDist = d; best = i; }
+    });
+    return best;
+  }
+
   if(!car._bcBound){
     car._bcBound = true;
     car.addEventListener('click', (e)=>{
@@ -2722,90 +2850,99 @@ function renderBankCards(){
           'حذف این کارت؟',
           card ? ((card.name || 'کارت') + (card.last4 ? ' · •••• ' + normalizeBcLast4(card.last4) : '')) : '',
           ()=>{
+            const wasDefault = card && (card.isDefault || String(card.id) === String(window.defaultBankCardId || ''));
             bankCards = (bankCards || []).filter(c => String(c.id) !== String(id));
+            if(wasDefault && bankCards.length){
+              bankCards[0].isDefault = true;
+              window.defaultBankCardId = bankCards[0].id;
+              // موجودی اصلی بدون تغییر می‌ماند
+            } else if(!bankCards.length){
+              window.defaultBankCardId = null;
+            }
             if(_bcSlideIndex >= bankCards.length) _bcSlideIndex = Math.max(0, bankCards.length - 1);
             if(persist()){ showToast('کارت حذف شد'); renderBankCards(); }
           }
         );
+        return;
+      }
+      const defBtn = e.target.closest && e.target.closest('[data-bc-default]');
+      if(defBtn){
+        e.preventDefault(); e.stopPropagation();
+        const id = defBtn.getAttribute('data-bc-default');
+        if(typeof setDefaultBankCard === 'function') setDefaultBankCard(id);
+        return;
+      }
+      const dot = e.target.closest && e.target.closest('[data-bc-dot]');
+      if(dot && car.contains(dot) === false){
+        // dots are outside carousel sometimes
       }
     });
-    car.addEventListener('scroll', ()=>{
-      const slides = car.querySelectorAll('.bc-slide');
-      if(!slides.length) return;
-      const mid = car.scrollLeft + car.clientWidth / 2;
-      let best = 0, bestDist = Infinity;
-      slides.forEach((s, i)=>{
-        const center = s.offsetLeft + s.offsetWidth / 2;
-        const d = Math.abs(center - mid);
-        if(d < bestDist){ bestDist = d; best = i; }
-      });
-      if(best !== _bcSlideIndex){
-        _bcSlideIndex = best;
-        const dotsEl = $('bcDots');
-        if(dotsEl){
-          dotsEl.querySelectorAll('.bc-dot').forEach((d, i)=> d.classList.toggle('active', i === best));
-        }
-      }
-    }, {passive:true});
-    // Drag / Swipe با ماوس و لمس (pointer events)
-    let _bcPtr = null;
+    // dots click (nav is sibling)
+    document.addEventListener('click', (e)=>{
+      const dot = e.target.closest && e.target.closest('#bcDots [data-bc-dot]');
+      if(!dot) return;
+      const i = parseInt(dot.getAttribute('data-bc-dot'), 10);
+      if(!isFinite(i)) return;
+      const carEl = $('bcCarousel');
+      if(carEl) bcSnapToIndex(carEl, i, true);
+    });
+
+    // Drag/swipe — pointer events, RTL-safe (carousel direction:ltr)
+    let ptr = null;
     car.addEventListener('pointerdown', (e)=>{
-      if(e.target.closest && e.target.closest('.bc-icon-btn')) return;
-      _bcPtr = {id: e.pointerId, x: e.clientX, scroll: car.scrollLeft, moved: false};
+      if(e.button != null && e.button !== 0) return;
+      if(e.target.closest && (e.target.closest('button') || e.target.closest('a') || e.target.closest('input'))) return;
+      ptr = {id: e.pointerId, x: e.clientX, scroll: car.scrollLeft, moved: false};
       car._bcDidDrag = false;
-      try{ car.setPointerCapture(e.pointerId); }catch(err){}
+      try{ car.setPointerCapture(e.pointerId); }catch(_e){}
       car.classList.add('is-dragging');
     });
     car.addEventListener('pointermove', (e)=>{
-      if(!_bcPtr || e.pointerId !== _bcPtr.id) return;
-      const dx = e.clientX - _bcPtr.x;
-      if(Math.abs(dx) > 4){ _bcPtr.moved = true; car._bcDidDrag = true; }
-      car.scrollLeft = _bcPtr.scroll - dx;
+      if(!ptr || e.pointerId !== ptr.id) return;
+      const dx = e.clientX - ptr.x;
+      if(Math.abs(dx) > 6){
+        ptr.moved = true;
+        car._bcDidDrag = true;
+      }
+      if(ptr.moved){
+        car.scrollLeft = ptr.scroll - dx;
+      }
     });
     const endPtr = (e)=>{
-      if(!_bcPtr || (e && e.pointerId !== _bcPtr.id)) return;
-      const moved = _bcPtr.moved;
-      _bcPtr = null;
+      if(!ptr || (e && e.pointerId !== ptr.id)) return;
+      const moved = ptr.moved;
+      ptr = null;
       car.classList.remove('is-dragging');
+      try{ if(e) car.releasePointerCapture(e.pointerId); }catch(_e){}
       if(moved){
-        // اسنپ نرم به نزدیک‌ترین کارت
-        const slides = car.querySelectorAll('.bc-slide');
-        if(slides.length){
-          const mid = car.scrollLeft + car.clientWidth / 2;
-          let best = 0, bestDist = Infinity;
-          slides.forEach((s, i)=>{
-            const center = s.offsetLeft + s.offsetWidth / 2;
-            const d = Math.abs(center - mid);
-            if(d < bestDist){ bestDist = d; best = i; }
-          });
-          _bcSlideIndex = best;
-          try{
-            const left = slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2;
-            car.scrollTo({left: Math.max(0, left), behavior:'smooth'});
-          }catch(_e){
-            try{ car.scrollLeft = Math.max(0, slides[best].offsetLeft - (car.clientWidth - slides[best].clientWidth) / 2); }catch(__e){}
-          }
-        }
-        setTimeout(()=>{ car._bcDidDrag = false; }, 80);
+        const best = bcNearestIndex(car);
+        bcSnapToIndex(car, best, true);
+        setTimeout(()=>{ car._bcDidDrag = false; }, 120);
       } else {
         car._bcDidDrag = false;
       }
     };
     car.addEventListener('pointerup', endPtr);
     car.addEventListener('pointercancel', endPtr);
+    car.addEventListener('lostpointercapture', endPtr);
   }
+
+  // فقط در صورت نیاز اسکرول کن (جلوگیری از پرش هنگام re-render)
   requestAnimationFrame(()=>{
     const slides = car.querySelectorAll('.bc-slide');
+    if(!slides.length) return;
+    if(_bcSlideIndex >= slides.length) _bcSlideIndex = slides.length - 1;
     const slide = slides[_bcSlideIndex];
-    if(slide && car){
-      // فقط اسکرول افقی کاروسل — بدون تغییر اسکرول عمودی صفحه
-      try{
-        const left = slide.offsetLeft - (car.clientWidth - slide.clientWidth) / 2;
-        car.scrollLeft = Math.max(0, left);
-      }catch(_e){}
+    if(!slide) return;
+    const left = slide.offsetLeft - (car.clientWidth - slide.offsetWidth) / 2;
+    const target = Math.max(0, left);
+    if(Math.abs(car.scrollLeft - target) > 8){
+      try{ car.scrollLeft = target; }catch(_e){}
     }
   });
+
 }
+
 // Event delegation — پایدار حتی اگر عناصر بعداً در DOM ظاهر شوند
 document.addEventListener('click', (e)=>{
   const t = e.target;
@@ -2827,21 +2964,46 @@ document.addEventListener('click', (e)=>{
     if(last4.length !== 4){ showToast('۴ رقم آخر کارت را وارد کنید', true); return; }
     const editId = ((document.getElementById('bcEditId') && document.getElementById('bcEditId').value) || '').trim();
     if(!Array.isArray(bankCards)) bankCards = [];
+    const makeDefault = !!( $('bcIsDefault') && $('bcIsDefault').checked );
+    const balInput = parseMoney(($('bcBalance') && $('bcBalance').value) || '');
+    const balVal = (isFinite(balInput) && !isNaN(balInput) && balInput >= 0) ? balInput : 0;
     if(editId){
       const card = findBankCard(editId);
       if(!card){ showToast('کارت پیدا نشد', true); return; }
       card.name = name.slice(0, 40);
       card.last4 = last4;
       card.color = _bcSelectedColor || BC_COLORS[0];
+      if(makeDefault){
+        bankCards.forEach(c => { c.isDefault = String(c.id) === String(card.id); });
+        window.defaultBankCardId = card.id;
+        // موجودی اصلی سیستم تغییر نمی‌کند مگر کاربر در UI دارایی‌ها تغییر دهد
+      } else {
+        card.isDefault = false;
+        card.balance = balVal;
+        if(!(bankCards || []).some(c => c.isDefault) && bankCards.length){
+          const other = bankCards.find(c => String(c.id) !== String(card.id));
+          if(other){ other.isDefault = true; window.defaultBankCardId = other.id; }
+          else { card.isDefault = true; window.defaultBankCardId = card.id; }
+        }
+      }
     } else {
+      const newId = Date.now() + Math.floor(Math.random() * 1000);
+      const isFirst = !(bankCards || []).length;
       bankCards.push({
-        id: Date.now() + Math.floor(Math.random() * 1000),
+        id: newId,
         name: name.slice(0, 40),
         last4,
-        color: _bcSelectedColor || BC_COLORS[0]
+        color: _bcSelectedColor || BC_COLORS[0],
+        balance: (makeDefault || isFirst) ? 0 : balVal,
+        isDefault: makeDefault || isFirst
       });
+      if(makeDefault || isFirst){
+        bankCards.forEach(c => { c.isDefault = String(c.id) === String(newId); });
+        window.defaultBankCardId = newId;
+      }
       _bcSlideIndex = bankCards.length - 1;
     }
+    ensureDefaultBankCard();
     const saved = typeof persist === 'function' ? persist() : true;
     showToast(editId ? (saved ? 'کارت به‌روز شد' : 'کارت به‌روز شد (ذخیره پایدار بعداً)') : (saved ? 'کارت اضافه شد' : 'کارت اضافه شد (ذخیره پایدار بعداً)'));
     closeBcForm();
@@ -3010,8 +3172,11 @@ $('importFile').addEventListener('change', (e)=>{
         id: c.id,
         name: String(c.name || '').slice(0, 40),
         last4: String(c.last4 || '').replace(/\D/g, '').slice(-4),
-        color: String(c.color || BC_COLORS[0])
+        color: String(c.color || BC_COLORS[0]),
+        balance: safeNum(c.balance, 0),
+        isDefault: !!c.isDefault
       })) : [];
+      if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard();
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
       ensureCoreAssets();
       initMilestonesBaseline();

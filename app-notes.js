@@ -13,6 +13,7 @@ let notesQuery = '';
 let notesSortMode = 'updated';
 let notesPinnedOnly = false;
 let notesViewMode = 'list'; // list | cal
+let notesLayoutMode = 'vertical'; // vertical | horizontal
 let notesCalCursor = null; // Date for calendar month
 let notesCalSelectedISO = null;
 let noteDraftTags = [];
@@ -29,6 +30,7 @@ function loadNotesUiState(){
     if(typeof o.pinned === 'boolean') notesPinnedOnly = o.pinned;
     if(typeof o.sort === 'string') notesSortMode = o.sort;
     if(typeof o.view === 'string') notesViewMode = o.view;
+    if(o.layout === 'horizontal' || o.layout === 'vertical') notesLayoutMode = o.layout;
   }catch(e){}
 }
 function saveNotesUiState(){
@@ -39,7 +41,8 @@ function saveNotesUiState(){
       tags: notesFilterTags,
       pinned: notesPinnedOnly,
       sort: notesSortMode,
-      view: notesViewMode
+      view: notesViewMode,
+      layout: notesLayoutMode
     }));
   }catch(e){}
 }
@@ -464,6 +467,13 @@ function renderNotesCalendar(){
 function renderNotes(){
   const grid = $('notesGrid');
   if(!grid) return;
+  grid.classList.toggle('notes-layout-horizontal', notesLayoutMode === 'horizontal');
+  grid.classList.toggle('notes-layout-vertical', notesLayoutMode !== 'horizontal');
+  const layoutBtnV = $('notesLayoutVertical');
+  const layoutBtnH = $('notesLayoutHorizontal');
+  if(layoutBtnV) layoutBtnV.classList.toggle('active', notesLayoutMode !== 'horizontal');
+  if(layoutBtnH) layoutBtnH.classList.toggle('active', notesLayoutMode === 'horizontal');
+
   // همگام‌سازی UI جستجو با state
   if($('notesSearch') && document.activeElement !== $('notesSearch')){
     $('notesSearch').value = notesQuery || '';
@@ -493,7 +503,7 @@ function renderNotes(){
     const tags = uniqTags(n.tags||[]).slice(0,5).map(t=>`<span class="note-mini-tag">#${escapeHtml(t)}</span>`).join('');
     const when = formatNoteStamp(n);
     const bodyTxt = escapeHtml(stripMd(n.body||''));
-    return `<article class="note-card${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
+    return `<article class="note-card note-card--compact${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
       <div class="note-card-head">
         <div class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</div>
         <div class="note-card-actions">

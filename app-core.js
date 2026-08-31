@@ -824,7 +824,7 @@ let fcSnapshots = []; // {id, date, pressure, setKey, monthKey} — سوابق �
 let notes = []; // {id,title,body,cat,pinned,createdAt,updatedAt}
 let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف ثبت‌شده
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
-let bankCards = []; // {id, name, last4, color} — فقط نام، ۴ رقم آخر و رنگ
+let bankCards = []; // {id, name, last4, color, balance, isDefault} — موجودی اصلی = assets.card روی کارت پیش‌فرض
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 const BC_COLORS = ['#1d4ed8','#0f766e','#7c3aed','#b91c1c','#a16207','#334155','#0e7490','#be185d'];
 let _bcSelectedColor = BC_COLORS[0];
@@ -859,8 +859,12 @@ function loadAll(){
           id: c.id,
           name: String(c.name || '').slice(0, 40),
           last4: String(c.last4 || '').replace(/\D/g, '').slice(-4),
-          color: String(c.color || BC_COLORS[0])
+          color: String(c.color || BC_COLORS[0]),
+          balance: (typeof safeNum === 'function' ? safeNum(c.balance, 0) : Number(c.balance)||0),
+          isDefault: !!c.isDefault
         }));
+        try{ if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard(); }catch(e){}
+
         if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
         ensureCoreAssets();
       }
@@ -916,8 +920,17 @@ function applyStatePayload(d){
     id: c.id,
     name: String(c.name || '').slice(0, 40),
     last4: String(c.last4 || '').replace(/\D/g, '').slice(-4),
-    color: String(c.color || BC_COLORS[0])
+    color: String(c.color || BC_COLORS[0]),
+    balance: safeNum(c.balance, 0),
+    isDefault: !!c.isDefault
   }));
+  // همگام‌سازی کارت پیش‌فرض
+  if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard();
+  else {
+    const defs = (bankCards || []).filter(c => c.isDefault);
+    if(defs.length > 1) defs.slice(1).forEach(c => { c.isDefault = false; });
+    if((bankCards || []).length && !(bankCards || []).some(c => c.isDefault)) bankCards[0].isDefault = true;
+  }
   if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
   if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
 }

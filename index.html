@@ -31,7 +31,7 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
 <link rel="apple-touch-icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260831r1">
+<link rel="stylesheet" href="styles.css?v=20260901f1">
 </head>
 <body>
 
@@ -398,6 +398,14 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
         <input type="text" id="bcLast4" inputmode="numeric" placeholder="مثلاً 1234" maxlength="4" autocomplete="off">
         <label class="field" style="margin-top:8px;">رنگ کارت</label>
         <div class="bc-color-row" id="bcColorRow" role="group" aria-label="رنگ کارت"></div>
+        <div id="bcBalanceWrap" style="margin-top:8px;">
+          <label class="field">موجودی این کارت (تومان)</label>
+          <input type="text" inputmode="numeric" id="bcBalance" class="money-input" placeholder="مثلاً 500,000" autocomplete="off">
+          <div class="note" id="bcBalanceHint" style="margin-top:6px;">اگر کارت پیش‌فرض باشد، موجودی اصلی سیستم (assets.card) استفاده می‌شود و این فیلد فقط برای کارت‌های فرعی است.</div>
+        </div>
+        <label class="chk" style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="bcIsDefault"> کارت پیش‌فرض (مبنای محاسبات اصلی)
+        </label>
         <div class="bc-form-actions">
           <button type="button" class="btn" id="bcSaveBtn">ذخیره</button>
           <button type="button" class="btn ghost" id="bcCancelBtn">انصراف</button>
@@ -534,6 +542,10 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
           <div class="notes-view-toggle" role="group" aria-label="نمایش">
             <button type="button" class="active" id="notesViewList">لیست</button>
             <button type="button" id="notesViewCal">تقویم</button>
+          </div>
+          <div class="notes-layout-toggle" role="group" aria-label="چیدمان">
+            <button type="button" class="active" id="notesLayoutVertical" title="عمودی">عمودی</button>
+            <button type="button" id="notesLayoutHorizontal" title="افقی">افقی</button>
           </div>
           <button type="button" class="btn icon-btn-svg" id="notesNewBtn" style="margin-top:0;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -848,12 +860,12 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   </button>
 </nav>
 
-<script src="prices-api.js?v=20260831r1"></script>
-<script src="app-core.js?v=20260831r1"></script>
-<script src="app-ui.js?v=20260831r1"></script>
-<script src="app-notes.js?v=20260831r1"></script>
-<script src="app-boot.js?v=20260831r1"></script>
-<script src="tests.js?v=20260831r1"></script>
+<script src="prices-api.js?v=20260901f1"></script>
+<script src="app-core.js?v=20260901f1"></script>
+<script src="app-ui.js?v=20260901f1"></script>
+<script src="app-notes.js?v=20260901f1"></script>
+<script src="app-boot.js?v=20260901f1"></script>
+<script src="tests.js?v=20260901f1"></script>
 
 </body>
 </html>
