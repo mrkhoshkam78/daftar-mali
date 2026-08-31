@@ -1846,6 +1846,7 @@ const NB_ICONS = {
 };
 // نگاشت فیلترهای نوع تراکنش (فقط نمایشی — روی nbDelta/محاسبات کارت اثر ندارد)
 let currentNbFilter = 'all';
+let nbDayCollapsed = (function(){try{const r=JSON.parse(localStorage.getItem("nb-day-collapsed")||"[]");return new Set(Array.isArray(r)?r:[]);}catch(e){return new Set();}})();
 function nbFilterMatch(type, filter){
   if(!filter || filter === 'all') return true;
   if(filter === 'income') return type === 'deposit';
@@ -3336,72 +3337,98 @@ function renderNotebook(){
     if(!k) return true;
     return k === monthKey;
   });
-  const updateNbCollapseMeta = (count)=>{
-    const meta = $('nbCollapseMeta');
-    if(!meta) return;
-    if(count <= 0) meta.textContent = 'تراکنشی نیست';
-    else meta.textContent = count + ' تراکنش — برای مشاهده لمس کنید';
-  };
   if(visibleNb.length === 0){
     el.innerHTML = '<div class="empty">در این ماه تراکنشی ثبت نشده</div>';
-    updateNbCollapseMeta(0);
   } else {
     const sorted = [...visibleNb].sort((a,b)=>{
       const ka = (a.date||'') + (a.time||'00:00'), kb = (b.date||'') + (b.time||'00:00');
       return ka < kb ? 1 : -1;
     });
     const filtered = sorted.filter(e => nbFilterMatch(e.type, currentNbFilter));
-    updateNbCollapseMeta(filtered.length);
     if(filtered.length === 0){
       el.innerHTML = '<div class="empty">در این دسته تراکنشی یافت نشد</div>';
     } else {
-      // گروه‌بندی بر اساس روز (تاریخ ISO) — فقط برای نمایش، ترتیب و داده تغییر نمی‌کند
-      let html = '';
-      let lastDayKey = undefined;
+      // گروه‌بندی بر اساس روز — هر تاریخ قابل collapse با کلیک روی خود تاریخ
+      const groups = [];
+      let cur = null;
       filtered.forEach(e=>{
         const dayKey = e.date || '__nodate__';
-        if(dayKey !== lastDayKey){
-          lastDayKey = dayKey;
-          const dayLabel = e.date ? (toJalaliStr(e.date) || 'تاریخ نامشخص') : 'تاریخ نامشخص';
-          html += `<div class="nb-day-divider"><span class="nb-day-label">${dayLabel}</span></div>`;
+        if(!cur || cur.key !== dayKey){
+          cur = {key: dayKey, label: e.date ? (toJalaliStr(e.date) || 'تاریخ نامشخص') : 'تاریخ نامشخص', items: []};
+          groups.push(cur);
         }
-        const t = NB_TYPES[e.type] || {label: e.type||'?', color: 'var(--ink-dim)', sign: 0};
-        const icon = NB_ICONS[e.type] || NB_ICONS.transfer;
-        const sign = t.sign > 0 ? '+' : (t.sign < 0 ? '−' : '');
-        const personTxt = e.person ? ' — ' + escapeHtml(e.person) : '';
-        const settled = (e.type === 'lent' || e.type === 'borrowed') && e.settled;
-        const cardChip = (e.cardName || e.cardLast4)
-          ? `<span class="nb-card-chip2">${escapeHtml(e.cardName||'کارت')}${e.cardLast4 ? ' · •••• ' + escapeHtml(String(e.cardLast4)) : ''}</span>`
-          : '';
-        html += `<div class="nb-card" data-type="${escapeHtml(e.type||'')}" data-id="${e.id}">
-        <span class="nb-card-icon">${icon}</span>
-        <div class="nb-card-body">
-          <div class="nb-card-top">
-            <span class="nb-card-title">${t.label}${personTxt}</span>
-            <span class="nb-card-amount">${sign}${fmt(e.amount)} ت</span>
+        cur.items.push(e);
+      });
+      let html = '';
+      groups.forEach(g=>{
+        const collapsed = nbDayCollapsed && nbDayCollapsed.has(g.key);
+        const cnt = g.items.length;
+        const countTxt = cnt === 1 ? '۱ تراکنش' : (cnt.toLocaleString('fa-IR') + ' تراکنش');
+        html += `<div class="nb-day-group${collapsed ? ' is-collapsed' : ''}" data-day="${escapeHtml(g.key)}">
+          <div class="nb-day-head" role="button" tabindex="0" aria-expanded="${collapsed ? 'false' : 'true'}">
+            <span class="nb-day-head-main">
+              <span class="nb-day-chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span>
+              <span class="nb-day-label">${escapeHtml(g.label)}</span>
+            </span>
+            <span class="nb-day-count">${countTxt}</span>
           </div>
-          ${e.desc ? `<div class="nb-card-desc">${escapeHtml(e.desc)}</div>` : ''}
-          <div class="nb-card-meta">
-            ${e.time ? `<span class="nb-card-time">${e.time}</span>` : ''}
-            ${cardChip}
-            ${settled ? '<span class="nb-card-settled">تسویه شده</span>' : ''}
+          <div class="nb-day-body">`;
+        g.items.forEach(e=>{
+          const t = NB_TYPES[e.type] || {label: e.type||'?', color: 'var(--ink-dim)', sign: 0};
+          const icon = NB_ICONS[e.type] || NB_ICONS.transfer;
+          const sign = t.sign > 0 ? '+' : (t.sign < 0 ? '−' : '');
+          const personTxt = e.person ? ' — ' + escapeHtml(e.person) : '';
+          const settled = (e.type === 'lent' || e.type === 'borrowed') && e.settled;
+          const cardChip = (e.cardName || e.cardLast4)
+            ? `<span class="nb-card-chip2">${escapeHtml(e.cardName||'کارت')}${e.cardLast4 ? ' · •••• ' + escapeHtml(String(e.cardLast4)) : ''}</span>`
+            : '';
+          html += `<div class="nb-card" data-type="${escapeHtml(e.type||'')}" data-id="${e.id}">
+          <span class="nb-card-icon">${icon}</span>
+          <div class="nb-card-body">
+            <div class="nb-card-top">
+              <span class="nb-card-title">${t.label}${personTxt}</span>
+              <span class="nb-card-amount">${sign}${fmt(e.amount)} ت</span>
+            </div>
+            ${e.desc ? `<div class="nb-card-desc">${escapeHtml(e.desc)}</div>` : ''}
+            <div class="nb-card-meta">
+              ${e.time ? `<span class="nb-card-time">${e.time}</span>` : ''}
+              ${cardChip}
+              ${settled ? '<span class="nb-card-settled">تسویه شده</span>' : ''}
+            </div>
           </div>
-        </div>
-        <button type="button" class="del nb-card-del" data-id="${e.id}" aria-label="حذف">×</button>
-      </div>`;
+          <button type="button" class="del nb-card-del" data-id="${e.id}" aria-label="حذف">×</button>
+        </div>`;
+        });
+        html += `</div></div>`;
       });
       el.innerHTML = html;
+      // کلیک روی تاریخ → collapse/expand
+      el.querySelectorAll('.nb-day-head').forEach(head=>{
+        const toggle = ()=>{
+          const group = head.closest('.nb-day-group');
+          if(!group) return;
+          const key = group.getAttribute('data-day') || '';
+          const nowCollapsed = group.classList.toggle('is-collapsed');
+          head.setAttribute('aria-expanded', nowCollapsed ? 'false' : 'true');
+          if(typeof nbDayCollapsed !== 'undefined'){
+            if(nowCollapsed) nbDayCollapsed.add(key); else nbDayCollapsed.delete(key);
+            try{ localStorage.setItem('nb-day-collapsed', JSON.stringify([...nbDayCollapsed])); }catch(e){}
+          }
+        };
+        head.addEventListener('click', (e)=>{ e.preventDefault(); toggle(); });
+        head.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+        });
+      });
     }
     el.querySelectorAll('.del').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
         showConfirmModal('حذف این تراکنش؟', entry ? `${NB_TYPES[entry.type].label} — ${fmt(entry.amount)} تومان` : '', ()=>{
-          // Reverse اثر مالی اقلام applied که قبلاً روی موجودی کارت نشسته (جلوگیری از double-count / داده کهنه)
           if(entry && entry.applied && (entry.type === 'deposit' || entry.type === 'payment')){
             const sign = (NB_TYPES[entry.type] && NB_TYPES[entry.type].sign) || 0;
             const amt = safeNum(entry.amount, 0);
             if(sign !== 0 && amt > 0){
-              // اثر اولیه‌ی ثبت: sign * amt روی کارت؛ حذف = منفی همان اثر
               assets.card = safeNum(assets.card, 0) - (sign * amt);
               if(!Array.isArray(txs)) txs = [];
               txs.push({date: todayISO(), key:'card', delta: -(sign * amt), note: 'حذف ' + ((NB_TYPES[entry.type] && NB_TYPES[entry.type].label) || entry.type) + (entry.desc ? ' — ' + entry.desc : '')});
@@ -3409,7 +3436,6 @@ function renderNotebook(){
             }
           }
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
-          // حذف از آرشیو پیش‌بینی زنده — Snapshotهای قبلی دست‌نخورده می‌مانند
           fcEvents = fcEvents.filter(x=>String(x.id)!==btn.dataset.id);
           if(persist()){ renderNotebook(); if(typeof renderForecast==='function') renderForecast(); }
         });
@@ -4642,23 +4668,29 @@ function renderNotes(){
     const delay = Math.min(i, 8) * 30;
     const tags = uniqTags(n.tags||[]).slice(0,5).map(t=>`<span class="note-mini-tag">#${escapeHtml(t)}</span>`).join('');
     const when = formatNoteStamp(n);
+    const bodyPreview = escapeHtml(stripMd(n.body||''));
+    const hasBody = !!(n.body && String(n.body).trim());
     return `<article class="note-card${pinCls}" data-id="${n.id}" style="--note-accent:${cat.color};animation-delay:${delay}ms">
-      <div class="note-card-head">
-        <div class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</div>
-        <div class="note-card-actions">
-          <button type="button" class="note-copy-btn" data-copy="${n.id}" title="کپی محتوا" aria-label="کپی محتوا">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
-          </button>
-          <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
-          </button>
+      <div class="note-card-accent" aria-hidden="true"></div>
+      <div class="note-card-inner">
+        <div class="note-card-toprow">
+          <span class="note-cat-pill"><i style="background:${cat.color}"></i>${escapeHtml(cat.label)}</span>
+          <div class="note-card-actions">
+            <button type="button" class="note-copy-btn" data-copy="${n.id}" title="کپی محتوا" aria-label="کپی محتوا">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
+            </button>
+            <button type="button" class="note-pin${pinOn}" data-pin="${n.id}" title="سنجاق" aria-label="سنجاق">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${n.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"><path d="M12 17v5M8 3h8l-1 7h3l-6 6-6-6h3L8 3z"/></svg>
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="note-card-body">${escapeHtml(stripMd(n.body||''))}</div>
-      ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
-      <div class="note-card-foot">
-        <span class="note-badge"><span style="background:${cat.color};width:6px;height:6px;border-radius:50%;display:inline-block;"></span>${cat.label}</span>
-        <span>${when}</span>
+        <h3 class="note-card-title">${escapeHtml(n.title || 'بدون عنوان')}</h3>
+        ${hasBody ? `<p class="note-card-body">${bodyPreview}</p>` : ''}
+        ${tags ? `<div class="note-card-tags">${tags}</div>` : ''}
+        <div class="note-card-foot">
+          <time class="note-card-when">${when}</time>
+          ${n.pinned ? '<span class="note-pinned-flag">سنجاق‌شده</span>' : ''}
+        </div>
       </div>
     </article>`;
   }).join('');
@@ -4767,23 +4799,6 @@ if($('analysisToggle') && $('analysisBody')){
   });
 }
 
-if($('nbCollapseToggle') && $('nbCollapseBody')){
-  try{
-    const saved = localStorage.getItem('nb-txs-expanded');
-    if(saved === '1'){
-      $('nbCollapseBody').classList.add('open');
-      $('nbCollapseToggle').setAttribute('aria-expanded','true');
-    }
-  }catch(e){}
-  $('nbCollapseToggle').addEventListener('click', ()=>{
-    const body = $('nbCollapseBody');
-    const btn = $('nbCollapseToggle');
-    const open = !body.classList.contains('open');
-    body.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    try{ localStorage.setItem('nb-txs-expanded', open ? '1' : '0'); }catch(e){}
-  });
-}
 
 if($('notesNewBtn')){
   $('notesNewBtn').addEventListener('click', ()=> openNoteEditor(null));

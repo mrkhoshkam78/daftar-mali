@@ -547,79 +547,105 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   }
   @media (min-width:640px){.notes-grid{grid-template-columns:1fr 1fr;}}
   @media (min-width:960px){.notes-grid{grid-template-columns:1fr 1fr 1fr;}}
+  .notes-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  @media (min-width:640px){.notes-grid{grid-template-columns:1fr 1fr; gap:14px;}}
+  @media (min-width:960px){.notes-grid{grid-template-columns:1fr 1fr 1fr; gap:14px;}}
   .note-card{
     position:relative;
     border:1px solid var(--border);
-    border-radius:18px;
+    border-radius:20px;
     background:var(--card);
     padding:0;
     cursor:pointer;
-    box-shadow:0 1px 4px rgba(0,0,0,.04);
-    transition:transform .22s ease, border-color .18s ease, box-shadow .22s ease;
-    animation: noteIn .22s ease both;
+    box-shadow:0 1px 2px rgba(0,0,0,.03);
+    transition:border-color .18s ease, box-shadow .2s ease, transform .2s ease;
+    animation: noteIn .2s ease both;
     overflow:hidden;
     display:flex;
-    flex-direction:column;
+    flex-direction:row;
+    align-items:stretch;
+    contain:content;
   }
   html[data-anim="off"] .note-card{animation:none;}
   @keyframes noteIn{
-    from{opacity:0; transform:translateY(10px) scale(.98);}
+    from{opacity:0; transform:translateY(8px);}
     to{opacity:1; transform:none;}
   }
   .note-card:hover{
-    border-color:var(--border-strong);
-    transform:translateY(-3px);
-    box-shadow:0 12px 28px rgba(0,0,0,.09);
+    border-color:color-mix(in srgb, var(--note-accent, var(--blue)) 35%, var(--border));
+    box-shadow:0 10px 28px rgba(0,0,0,.07);
+    transform:translateY(-2px);
   }
   html[data-anim="off"] .note-card:hover{transform:none;}
   .note-card.pinned{
-    border-color:color-mix(in srgb, var(--note-accent, var(--blue)) 40%, var(--border));
-    box-shadow:0 4px 18px color-mix(in srgb, var(--note-accent, var(--blue)) 12%, transparent);
+    border-color:color-mix(in srgb, var(--note-accent, var(--blue)) 45%, var(--border));
+    background:linear-gradient(135deg, var(--card) 0%, color-mix(in srgb, var(--note-accent, var(--blue)) 6%, var(--card)) 100%);
   }
-  .note-card::before{
-    content:''; position:absolute; top:0; right:0; width:4px; height:100%;
-    border-radius:0;
-    background:var(--note-accent, var(--blue-light)); opacity:1;
+  .note-card::before{display:none !important; content:none !important;}
+  .note-card-accent{
+    width:5px; flex-shrink:0;
+    background:var(--note-accent, var(--blue-light));
   }
-  .note-card-head{
-    display:flex; align-items:flex-start; gap:10px;
-    padding:14px 14px 0 18px; margin-bottom:0;
+  .note-card-inner{
+    flex:1; min-width:0;
+    display:flex; flex-direction:column; gap:0;
+    padding:14px 14px 12px 14px;
+  }
+  .note-card-toprow{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin-bottom:8px;
+  }
+  .note-cat-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:10.5px; font-weight:700; color:var(--ink-dim);
+    padding:4px 10px; border-radius:999px;
+    background:var(--bg-2); border:1px solid var(--border);
+    max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .note-cat-pill i{
+    width:7px; height:7px; border-radius:50%; flex-shrink:0; display:block;
   }
   .note-card-title{
-    flex:1; font-size:14px; font-weight:750; color:var(--ink); line-height:1.45;
-    letter-spacing:-.01em;
+    margin:0 0 6px; font-size:14.5px; font-weight:750; color:var(--ink);
+    line-height:1.4; letter-spacing:-.015em;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
   .note-pin{
     background:none; border:none; color:var(--ink-dim); cursor:pointer;
-    padding:5px; border-radius:10px; display:inline-flex;
+    padding:6px; border-radius:10px; display:inline-flex;
     transition:color .15s, background .15s;
   }
   .note-pin:hover{background:var(--blue-soft); color:var(--blue-light);}
   .note-pin.on{color:var(--note-accent, var(--blue-light));}
   .note-card-body{
-    font-size:12.5px; color:var(--ink-dim); line-height:1.75;
+    margin:0; font-size:12.5px; color:var(--ink-dim); line-height:1.7;
     display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
     overflow:hidden; word-break:break-word;
-    padding:8px 14px 0 18px;
   }
-  .note-card-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; padding:0 14px 0 18px;}
+  .note-card-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:10px;}
   .note-mini-tag{
-    font-size:10px; padding:3px 9px; border-radius:8px;
-    background:var(--bg-2); border:none; color:var(--ink-dim); font-weight:600;
+    font-size:10px; padding:3px 8px; border-radius:6px;
+    background:color-mix(in srgb, var(--note-accent, var(--blue)) 10%, var(--bg-2));
+    border:none; color:var(--ink-dim); font-weight:600;
   }
   .note-card-foot{
     display:flex; justify-content:space-between; align-items:center; gap:8px;
-    margin-top:auto; padding:12px 14px 12px 18px;
+    margin-top:12px; padding-top:10px;
     border-top:1px solid var(--border);
-    font-size:10.5px; color:var(--ink-dim); flex-wrap:wrap;
-    background:color-mix(in srgb, var(--bg-2) 55%, transparent);
+    font-size:11px; color:var(--ink-dim); flex-wrap:wrap;
+    background:transparent;
   }
-  .note-badge{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:4px 10px; border-radius:8px; font-size:10.5px; font-weight:700;
-    background:color-mix(in srgb, var(--note-accent, var(--blue-light)) 14%, transparent);
-    color:var(--ink); border:none;
+  .note-card-when{font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:plaintext;}
+  .note-pinned-flag{
+    font-size:10px; font-weight:700; color:var(--note-accent, var(--blue-light));
+    background:color-mix(in srgb, var(--note-accent, var(--blue)) 12%, transparent);
+    padding:2px 8px; border-radius:6px;
   }
+  .note-badge{display:none;}
   .notes-empty{
     text-align:center; padding:40px 16px; color:var(--ink-dim); font-size:13px; line-height:1.9;
     border:1px dashed var(--border); border-radius:14px; background:var(--card-2);
@@ -1439,33 +1465,41 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   }
 
 
-  /* ---- Collapse: تراکنش‌های ثبت‌شده ---- */
-  .nb-collapse-toggle{
-    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
-    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
-    color:var(--ink); cursor:pointer; font-family:var(--app-font); text-align:right;
-    transition:border-color .15s ease, background .15s ease;
+  /* ---- Day-group collapse (تراکنش‌ها بر اساس تاریخ) ---- */
+  .nb-day-group{margin-bottom:6px;}
+  .nb-day-group:last-child{margin-bottom:0;}
+  .nb-day-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    width:100%; padding:8px 10px; margin:4px 0 6px;
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--bg-2); color:var(--ink);
+    cursor:pointer; font-family:var(--app-font); text-align:right;
+    transition:background .15s ease, border-color .15s ease;
+    -webkit-tap-highlight-color:transparent; user-select:none;
   }
-  .nb-collapse-toggle:hover{border-color:var(--border-strong);}
-  .nb-collapse-left{display:flex; flex-direction:column; gap:3px; min-width:0; text-align:right;}
-  .nb-collapse-toggle .section-title{font-size:14px;}
-  .nb-collapse-meta{font-size:11px; color:var(--ink-dim); font-weight:500;}
-  .nb-collapse-chev{
-    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
-    display:inline-flex; align-items:center; justify-content:center; color:var(--ink-dim);
-    transition:transform .25s ease; flex-shrink:0; background:var(--bg-2);
+  .nb-day-head:hover{border-color:var(--border-strong); background:var(--card-2);}
+  .nb-day-head:active{transform:scale(.99);}
+  .nb-day-head-main{display:flex; align-items:center; gap:8px; min-width:0;}
+  .nb-day-chev{
+    width:18px; height:18px; flex-shrink:0; color:var(--ink-dim);
+    transition:transform .2s ease; display:inline-flex; align-items:center; justify-content:center;
   }
-  .nb-collapse-toggle[aria-expanded="true"] .nb-collapse-chev{transform:rotate(180deg);}
-  .nb-collapse-body{display:none; margin-top:12px;}
-  .nb-collapse-body.open{display:block;}
-  html[data-design="neobank"] .nb-collapse-toggle{
-    border:none !important; border-radius:18px !important;
-    background:var(--card-2) !important; box-shadow:none !important;
+  .nb-day-group.is-collapsed .nb-day-chev{transform:rotate(-90deg);}
+  .nb-day-label{
+    font-size:12px; font-weight:700; color:var(--ink); white-space:nowrap;
   }
-  html[data-design="classic"] .nb-collapse-toggle{
-    border-radius:10px !important; background:var(--card) !important;
+  .nb-day-count{
+    font-size:10.5px; font-weight:600; color:var(--ink-dim);
+    background:var(--card); border:1px solid var(--border);
+    padding:2px 8px; border-radius:999px; flex-shrink:0;
+    font-family:var(--app-font);
   }
+  .nb-day-body{display:flex; flex-direction:column;}
+  .nb-day-group.is-collapsed .nb-day-body{display:none;}
+  html[data-design="neobank"] .nb-day-head{
+    border:none !important; border-radius:14px !important; background:var(--card-2) !important;
+  }
+  html[data-design="classic"] .nb-day-head{border-radius:8px !important;}
 
   .analysis-toggle{
     width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -3050,14 +3084,9 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   html[data-anim="off"] .nb-filter{transition:none;}
 
   .nb-feed{display:flex; flex-direction:column;}
-  .nb-day-divider{display:flex; align-items:center; gap:9px; margin:14px 0 8px;}
-  .nb-day-divider:first-child{margin-top:2px;}
-  .nb-day-divider::before, .nb-day-divider::after{content:''; flex:1; height:1px; background:var(--border);}
-  .nb-day-label{
-    font-size:10px; font-weight:700; color:var(--ink-dim); white-space:nowrap;
-    background:var(--bg-2); padding:3px 11px; border-radius:999px; border:1px solid var(--border);
-    font-family:var(--app-font);
-  }
+  /* legacy divider kept inert — day groups use .nb-day-head */
+  .nb-day-divider{display:none;}
+
 
   .nb-card{
     position:relative; display:flex; align-items:flex-start; gap:10px;
@@ -4367,22 +4396,19 @@ html[data-design="neobank"] .notes-shell{
 }
 html[data-design="neobank"] .note-card{
   border:none !important;
-  border-radius:20px !important;
+  border-radius:22px !important;
   background:var(--card-2) !important;
   box-shadow:none !important;
 }
 html[data-design="neobank"] .note-card:hover{
-  box-shadow:0 10px 28px rgba(15,23,42,.12) !important;
-  transform:translateY(-3px) !important;
+  box-shadow:0 12px 32px rgba(15,23,42,.12) !important;
+  transform:translateY(-2px) !important;
 }
-html[data-design="neobank"] .note-card::before{
-  width:5px !important;
-  border-radius:0 4px 4px 0 !important;
+html[data-design="neobank"] .note-card-accent{width:6px !important; border-radius:0 !important;}
+html[data-design="neobank"] .note-cat-pill{
+  border:none !important; background:var(--bg) !important;
 }
-html[data-design="neobank"] .note-card-foot{
-  background:rgba(0,0,0,.04) !important;
-  border-top:none !important;
-}
+html[data-design="neobank"] .note-card-foot{border-top-color:rgba(0,0,0,.06) !important;}
 html[data-design="neobank"] .notes-toolbar .notes-search,
 html[data-design="neobank"] .notes-sort,
 html[data-design="neobank"] .notes-view-toggle{
@@ -4402,13 +4428,14 @@ html[data-design="aurora"] .notes-shell{
 }
 html[data-design="aurora"] .note-card{
   border-radius:18px !important;
-  background:linear-gradient(155deg, var(--card) 0%, var(--card-2) 100%) !important;
-  box-shadow:0 2px 14px rgba(0,0,0,.05) !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.04) !important;
 }
-html[data-design="aurora"] .note-card::before{
-  width:100% !important; height:3px !important; right:0 !important; top:0 !important;
-  border-radius:18px 18px 0 0 !important;
+html[data-design="aurora"] .note-card-accent{
+  width:100% !important; height:3px !important;
+  position:absolute !important; top:0 !important; right:0 !important; left:0 !important;
 }
+html[data-design="aurora"] .note-card{flex-direction:column !important;}
+html[data-design="aurora"] .note-card-inner{padding-top:16px !important;}
 
 html[data-design="classic"] .notes-shell{
   border-radius:12px !important;
@@ -4422,18 +4449,14 @@ html[data-design="classic"] .note-card{
   box-shadow:none !important;
   border:1px solid var(--border) !important;
 }
-html[data-design="classic"] .note-card::before{
-  width:3px !important;
-}
+html[data-design="classic"] .note-card-accent{width:3px !important;}
 html[data-design="classic"] .note-card:hover{
   border-color:var(--border-strong) !important;
   box-shadow:0 2px 8px rgba(0,0,0,.05) !important;
   transform:none !important;
 }
-html[data-design="classic"] .note-card-foot{
-  background:var(--bg-2) !important;
-  border-radius:0 0 9px 9px !important;
-}
+html[data-design="classic"] .note-card-title{font-size:13.5px !important; font-weight:700 !important;}
+
 
 /* Bank cards — minimal redesign (all designs) */
 .bc-slide{
@@ -4714,6 +4737,18 @@ html[data-theme] body{
   background:var(--bg) !important;
   color:var(--ink) !important;
 }
+
+
+  /* ---- Perf helpers ---- */
+  .nb-feed, #txList, .notes-grid, #assetCards, #loanList{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 320px;
+  }
+  .bc-slide{will-change:auto !important;}
+  html[data-anim="off"] *{
+    transition:none !important;
+    animation:none !important;
+  }
 
 </style>
 </head>
@@ -5146,25 +5181,15 @@ html[data-theme] body{
     </div>
 
     <div class="section reveal" id="sec-nb-txs">
-      <button type="button" class="nb-collapse-toggle" id="nbCollapseToggle" aria-expanded="false" aria-controls="nbCollapseBody">
-        <span class="nb-collapse-left">
-          <span class="section-title" style="margin:0;"><span class="dot"></span>تراکنش‌های ثبت‌شده</span>
-          <span class="nb-collapse-meta" id="nbCollapseMeta">برای مشاهده لمس کنید</span>
-        </span>
-        <span class="nb-collapse-chev" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-        </span>
-      </button>
-      <div class="nb-collapse-body" id="nbCollapseBody">
-        <div class="nb-filters" id="nbFilters" role="tablist" aria-label="فیلتر تراکنش‌ها">
-          <button type="button" class="nb-filter active" data-nbfilter="all" role="tab" aria-selected="true"><span class="nb-filter-dot"></span>همه</button>
-          <button type="button" class="nb-filter" data-nbfilter="income" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>درآمد</button>
-          <button type="button" class="nb-filter" data-nbfilter="expense" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>هزینه</button>
-          <button type="button" class="nb-filter" data-nbfilter="transfer" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>انتقال</button>
-          <button type="button" class="nb-filter" data-nbfilter="debt" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>قرض</button>
-        </div>
-        <div id="nbList" class="nb-feed"></div>
+      <div class="section-title"><span class="dot"></span>تراکنش‌های ثبت‌شده</div>
+      <div class="nb-filters" id="nbFilters" role="tablist" aria-label="فیلتر تراکنش‌ها">
+        <button type="button" class="nb-filter active" data-nbfilter="all" role="tab" aria-selected="true"><span class="nb-filter-dot"></span>همه</button>
+        <button type="button" class="nb-filter" data-nbfilter="income" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>درآمد</button>
+        <button type="button" class="nb-filter" data-nbfilter="expense" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>هزینه</button>
+        <button type="button" class="nb-filter" data-nbfilter="transfer" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>انتقال</button>
+        <button type="button" class="nb-filter" data-nbfilter="debt" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>قرض</button>
       </div>
+      <div id="nbList" class="nb-feed"></div>
     </div>
 
     <div class="section reveal">
