@@ -3336,14 +3336,22 @@ function renderNotebook(){
     if(!k) return true;
     return k === monthKey;
   });
+  const updateNbCollapseMeta = (count)=>{
+    const meta = $('nbCollapseMeta');
+    if(!meta) return;
+    if(count <= 0) meta.textContent = 'تراکنشی نیست';
+    else meta.textContent = count + ' تراکنش — برای مشاهده لمس کنید';
+  };
   if(visibleNb.length === 0){
     el.innerHTML = '<div class="empty">در این ماه تراکنشی ثبت نشده</div>';
+    updateNbCollapseMeta(0);
   } else {
     const sorted = [...visibleNb].sort((a,b)=>{
       const ka = (a.date||'') + (a.time||'00:00'), kb = (b.date||'') + (b.time||'00:00');
       return ka < kb ? 1 : -1;
     });
     const filtered = sorted.filter(e => nbFilterMatch(e.type, currentNbFilter));
+    updateNbCollapseMeta(filtered.length);
     if(filtered.length === 0){
       el.innerHTML = '<div class="empty">در این دسته تراکنشی یافت نشد</div>';
     } else {
@@ -4756,6 +4764,24 @@ if($('analysisToggle') && $('analysisBody')){
     body.classList.toggle('open', open);
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if(open && typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
+  });
+}
+
+if($('nbCollapseToggle') && $('nbCollapseBody')){
+  try{
+    const saved = localStorage.getItem('nb-txs-expanded');
+    if(saved === '1'){
+      $('nbCollapseBody').classList.add('open');
+      $('nbCollapseToggle').setAttribute('aria-expanded','true');
+    }
+  }catch(e){}
+  $('nbCollapseToggle').addEventListener('click', ()=>{
+    const body = $('nbCollapseBody');
+    const btn = $('nbCollapseToggle');
+    const open = !body.classList.contains('open');
+    body.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    try{ localStorage.setItem('nb-txs-expanded', open ? '1' : '0'); }catch(e){}
   });
 }
 

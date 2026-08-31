@@ -550,61 +550,75 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   .note-card{
     position:relative;
     border:1px solid var(--border);
-    border-radius:16px;
+    border-radius:18px;
     background:var(--card);
-    padding:16px 15px 13px;
+    padding:0;
     cursor:pointer;
-    box-shadow:0 2px 12px rgba(0,0,0,.04);
-    transition:transform .2s ease, border-color .18s ease, box-shadow .2s ease;
-    animation: noteIn .2s ease both;
+    box-shadow:0 1px 4px rgba(0,0,0,.04);
+    transition:transform .22s ease, border-color .18s ease, box-shadow .22s ease;
+    animation: noteIn .22s ease both;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
   }
   html[data-anim="off"] .note-card{animation:none;}
   @keyframes noteIn{
-    from{opacity:0; transform:translateY(8px);}
+    from{opacity:0; transform:translateY(10px) scale(.98);}
     to{opacity:1; transform:none;}
   }
   .note-card:hover{
     border-color:var(--border-strong);
-    transform:translateY(-2px);
-    box-shadow:0 8px 24px rgba(0,0,0,.08);
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(0,0,0,.09);
   }
   html[data-anim="off"] .note-card:hover{transform:none;}
-  .note-card.pinned{border-color:var(--border-strong); box-shadow:0 4px 16px rgba(0,0,0,.06);}
-  .note-card::before{
-    content:''; position:absolute; top:0; right:0; left:0; height:3px;
-    border-radius:16px 16px 0 0;
-    background:var(--note-accent, var(--blue-light)); opacity:.95;
+  .note-card.pinned{
+    border-color:color-mix(in srgb, var(--note-accent, var(--blue)) 40%, var(--border));
+    box-shadow:0 4px 18px color-mix(in srgb, var(--note-accent, var(--blue)) 12%, transparent);
   }
-  .note-card-head{display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;}
+  .note-card::before{
+    content:''; position:absolute; top:0; right:0; width:4px; height:100%;
+    border-radius:0;
+    background:var(--note-accent, var(--blue-light)); opacity:1;
+  }
+  .note-card-head{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:14px 14px 0 18px; margin-bottom:0;
+  }
   .note-card-title{
-    flex:1; font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.55;
+    flex:1; font-size:14px; font-weight:750; color:var(--ink); line-height:1.45;
+    letter-spacing:-.01em;
   }
   .note-pin{
     background:none; border:none; color:var(--ink-dim); cursor:pointer;
-    padding:4px; border-radius:8px; display:inline-flex;
+    padding:5px; border-radius:10px; display:inline-flex;
     transition:color .15s, background .15s;
   }
-  .note-pin:hover{background:var(--blue-soft);}
-  .note-pin.on{color:var(--blue-light);}
+  .note-pin:hover{background:var(--blue-soft); color:var(--blue-light);}
+  .note-pin.on{color:var(--note-accent, var(--blue-light));}
   .note-card-body{
-    font-size:12px; color:var(--ink-dim); line-height:1.85;
+    font-size:12.5px; color:var(--ink-dim); line-height:1.75;
     display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
     overflow:hidden; word-break:break-word;
+    padding:8px 14px 0 18px;
   }
-  .note-card-tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;}
+  .note-card-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; padding:0 14px 0 18px;}
   .note-mini-tag{
-    font-size:9.5px; padding:2px 7px; border-radius:999px;
-    background:var(--blue-soft); border:1px solid var(--border); color:var(--blue-light);
+    font-size:10px; padding:3px 9px; border-radius:8px;
+    background:var(--bg-2); border:none; color:var(--ink-dim); font-weight:600;
   }
   .note-card-foot{
     display:flex; justify-content:space-between; align-items:center; gap:8px;
-    margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);
-    font-size:10px; color:var(--ink-dim); flex-wrap:wrap;
+    margin-top:auto; padding:12px 14px 12px 18px;
+    border-top:1px solid var(--border);
+    font-size:10.5px; color:var(--ink-dim); flex-wrap:wrap;
+    background:color-mix(in srgb, var(--bg-2) 55%, transparent);
   }
   .note-badge{
-    display:inline-flex; align-items:center; gap:5px;
-    padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700;
-    background:var(--blue-soft); color:var(--blue-light); border:1px solid var(--border);
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px; border-radius:8px; font-size:10.5px; font-weight:700;
+    background:color-mix(in srgb, var(--note-accent, var(--blue-light)) 14%, transparent);
+    color:var(--ink); border:none;
   }
   .notes-empty{
     text-align:center; padding:40px 16px; color:var(--ink-dim); font-size:13px; line-height:1.9;
@@ -1422,6 +1436,35 @@ document.documentElement.setAttribute("data-design",d);}catch(e){}})();
   }
   @media (prefers-reduced-motion: reduce){
     html[data-anim="on"] .section-title .dot{animation:none;}
+  }
+
+
+  /* ---- Collapse: تراکنش‌های ثبت‌شده ---- */
+  .nb-collapse-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
+    background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+    color:var(--ink); cursor:pointer; font-family:var(--app-font); text-align:right;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .nb-collapse-toggle:hover{border-color:var(--border-strong);}
+  .nb-collapse-left{display:flex; flex-direction:column; gap:3px; min-width:0; text-align:right;}
+  .nb-collapse-toggle .section-title{font-size:14px;}
+  .nb-collapse-meta{font-size:11px; color:var(--ink-dim); font-weight:500;}
+  .nb-collapse-chev{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--border);
+    display:inline-flex; align-items:center; justify-content:center; color:var(--ink-dim);
+    transition:transform .25s ease; flex-shrink:0; background:var(--bg-2);
+  }
+  .nb-collapse-toggle[aria-expanded="true"] .nb-collapse-chev{transform:rotate(180deg);}
+  .nb-collapse-body{display:none; margin-top:12px;}
+  .nb-collapse-body.open{display:block;}
+  html[data-design="neobank"] .nb-collapse-toggle{
+    border:none !important; border-radius:18px !important;
+    background:var(--card-2) !important; box-shadow:none !important;
+  }
+  html[data-design="classic"] .nb-collapse-toggle{
+    border-radius:10px !important; background:var(--card) !important;
   }
 
   .analysis-toggle{
@@ -4324,13 +4367,21 @@ html[data-design="neobank"] .notes-shell{
 }
 html[data-design="neobank"] .note-card{
   border:none !important;
-  border-radius:18px !important;
+  border-radius:20px !important;
   background:var(--card-2) !important;
   box-shadow:none !important;
 }
 html[data-design="neobank"] .note-card:hover{
-  box-shadow:0 8px 24px rgba(15,23,42,.1) !important;
-  transform:translateY(-2px) !important;
+  box-shadow:0 10px 28px rgba(15,23,42,.12) !important;
+  transform:translateY(-3px) !important;
+}
+html[data-design="neobank"] .note-card::before{
+  width:5px !important;
+  border-radius:0 4px 4px 0 !important;
+}
+html[data-design="neobank"] .note-card-foot{
+  background:rgba(0,0,0,.04) !important;
+  border-top:none !important;
 }
 html[data-design="neobank"] .notes-toolbar .notes-search,
 html[data-design="neobank"] .notes-sort,
@@ -4346,12 +4397,17 @@ html[data-design="neobank"] .notes-view-toggle button.active{
 }
 
 html[data-design="aurora"] .notes-shell{
-  border-radius:18px !important;
+  border-radius:20px !important;
   background:linear-gradient(165deg, var(--card) 0%, color-mix(in srgb, var(--card-2) 80%, var(--blue-soft)) 100%) !important;
 }
 html[data-design="aurora"] .note-card{
-  border-radius:16px !important;
-  background:linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%) !important;
+  border-radius:18px !important;
+  background:linear-gradient(155deg, var(--card) 0%, var(--card-2) 100%) !important;
+  box-shadow:0 2px 14px rgba(0,0,0,.05) !important;
+}
+html[data-design="aurora"] .note-card::before{
+  width:100% !important; height:3px !important; right:0 !important; top:0 !important;
+  border-radius:18px 18px 0 0 !important;
 }
 
 html[data-design="classic"] .notes-shell{
@@ -4366,53 +4422,112 @@ html[data-design="classic"] .note-card{
   box-shadow:none !important;
   border:1px solid var(--border) !important;
 }
+html[data-design="classic"] .note-card::before{
+  width:3px !important;
+}
 html[data-design="classic"] .note-card:hover{
   border-color:var(--border-strong) !important;
   box-shadow:0 2px 8px rgba(0,0,0,.05) !important;
+  transform:none !important;
+}
+html[data-design="classic"] .note-card-foot{
+  background:var(--bg-2) !important;
+  border-radius:0 0 9px 9px !important;
 }
 
-/* Bank cards section — proportional to each design */
-html[data-design="neobank"] .bc-carousel-wrap{
-  margin:4px 0 8px !important;
+/* Bank cards — minimal redesign (all designs) */
+.bc-slide{
+  flex:0 0 min(88%, 300px) !important;
+  min-height:148px !important;
+  padding:16px 16px 14px !important;
+  border-radius:16px !important;
+  background:linear-gradient(145deg,
+    color-mix(in srgb, var(--bc-accent, #3b82f6) 78%, #0c1220) 0%,
+    color-mix(in srgb, var(--bc-accent, #3b82f6) 45%, #121826) 100%) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:0 8px 24px rgba(0,0,0,.18) !important;
+  transform:none !important;
+  gap:0 !important;
 }
+.bc-slide::before{
+  background:linear-gradient(120deg, rgba(255,255,255,.14) 0%, transparent 42%) !important;
+  opacity:.7 !important;
+}
+.bc-slide::after{display:none !important;}
+.bc-orb, .bc-rings, .bc-glare{display:none !important;}
+.bc-slide-chip-row{display:none !important;}
+.bc-issuer-badge{
+  width:32px !important; height:32px !important;
+  border-radius:10px !important; font-size:12px !important;
+}
+.bc-issuer-name{font-size:13px !important; font-weight:700 !important;}
+.bc-issuer-sub{display:none !important;}
+.bc-balance{margin:14px 0 0 !important; padding:0 !important;}
+.bc-balance-label{font-size:9px !important; opacity:.55 !important; letter-spacing:.06em !important;}
+.bc-balance-num{
+  font-size:20px !important; font-weight:700 !important;
+  text-shadow:none !important;
+  background:none !important;
+  -webkit-text-fill-color:#fff !important;
+  color:#fff !important;
+}
+.bc-balance-unit{font-size:10px !important; opacity:.65 !important;}
+.bc-slide-bottom{
+  margin-top:12px !important; padding-top:10px !important;
+  border-top:1px solid rgba(255,255,255,.12) !important;
+}
+.bc-holder-label, .bc-last4-label{font-size:8px !important; opacity:.5 !important;}
+.bc-holder-name{font-size:11.5px !important;}
+.bc-last4-num{font-size:12px !important; letter-spacing:.1em !important;}
+.bc-icon-btn{
+  width:28px !important; height:28px !important;
+  border-radius:8px !important;
+  background:rgba(255,255,255,.1) !important;
+  border:none !important;
+}
+.bc-carousel{gap:10px !important; padding:4px 2px 8px !important;}
+html[data-anim="on"] .bc-slide:active{
+  transform:scale(.98) !important;
+}
+@media (hover:hover) and (pointer:fine){
+  .bc-slide:hover{
+    transform:translateY(-2px) !important;
+    box-shadow:0 12px 28px rgba(0,0,0,.22) !important;
+    border-color:rgba(255,255,255,.2) !important;
+  }
+  .bc-slide:hover .bc-glare{opacity:0 !important;}
+}
+
+/* design tweaks */
+html[data-design="neobank"] .bc-carousel-wrap{margin:4px 0 8px !important;}
 html[data-design="neobank"] .bc-slide{
-  border-radius:22px !important;
-  box-shadow:0 12px 32px rgba(15,23,42,.14) !important;
+  border-radius:20px !important;
+  box-shadow:0 10px 28px rgba(15,23,42,.16) !important;
+  min-height:152px !important;
 }
 html[data-design="neobank"] .bc-add-icon{
-  border-radius:16px !important;
-  border:none !important;
-  background:var(--bg-2) !important;
-  width:44px !important;
-  height:44px !important;
+  border-radius:14px !important; border:none !important;
+  background:var(--bg-2) !important; width:42px !important; height:42px !important;
 }
 html[data-design="neobank"] .bc-form{
-  border:none !important;
-  border-radius:20px !important;
-  background:var(--card-2) !important;
-  padding:16px !important;
+  border:none !important; border-radius:18px !important;
+  background:var(--card-2) !important; padding:16px !important;
 }
 
-html[data-design="aurora"] .bc-slide{
-  border-radius:18px !important;
-}
-html[data-design="aurora"] .bc-add-icon{
-  border-radius:14px !important;
-}
-html[data-design="aurora"] .bc-form{
-  border-radius:16px !important;
-}
+html[data-design="aurora"] .bc-slide{border-radius:16px !important;}
+html[data-design="aurora"] .bc-add-icon{border-radius:12px !important;}
+html[data-design="aurora"] .bc-form{border-radius:14px !important;}
 
 html[data-design="classic"] .bc-slide{
-  border-radius:12px !important;
-  box-shadow:0 4px 16px rgba(0,0,0,.1) !important;
-}
-html[data-design="classic"] .bc-add-icon{
-  border-radius:8px !important;
-}
-html[data-design="classic"] .bc-form{
   border-radius:10px !important;
-  border:1px solid var(--border) !important;
+  box-shadow:0 3px 12px rgba(0,0,0,.12) !important;
+  min-height:140px !important;
+}
+html[data-design="classic"] .bc-add-icon{border-radius:8px !important;}
+html[data-design="classic"] .bc-form{
+  border-radius:8px !important; border:1px solid var(--border) !important;
 }
 
 /* ========== FINAL MENU AUTHORITY BY DESIGN ========== */
@@ -5030,16 +5145,26 @@ html[data-theme] body{
       <div id="loanList"></div>
     </div>
 
-    <div class="section reveal">
-      <div class="section-title"><span class="dot"></span>تراکنش‌های ثبت‌شده</div>
-      <div class="nb-filters" id="nbFilters" role="tablist" aria-label="فیلتر تراکنش‌ها">
-        <button type="button" class="nb-filter active" data-nbfilter="all" role="tab" aria-selected="true"><span class="nb-filter-dot"></span>همه</button>
-        <button type="button" class="nb-filter" data-nbfilter="income" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>درآمد</button>
-        <button type="button" class="nb-filter" data-nbfilter="expense" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>هزینه</button>
-        <button type="button" class="nb-filter" data-nbfilter="transfer" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>انتقال</button>
-        <button type="button" class="nb-filter" data-nbfilter="debt" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>قرض</button>
+    <div class="section reveal" id="sec-nb-txs">
+      <button type="button" class="nb-collapse-toggle" id="nbCollapseToggle" aria-expanded="false" aria-controls="nbCollapseBody">
+        <span class="nb-collapse-left">
+          <span class="section-title" style="margin:0;"><span class="dot"></span>تراکنش‌های ثبت‌شده</span>
+          <span class="nb-collapse-meta" id="nbCollapseMeta">برای مشاهده لمس کنید</span>
+        </span>
+        <span class="nb-collapse-chev" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="nb-collapse-body" id="nbCollapseBody">
+        <div class="nb-filters" id="nbFilters" role="tablist" aria-label="فیلتر تراکنش‌ها">
+          <button type="button" class="nb-filter active" data-nbfilter="all" role="tab" aria-selected="true"><span class="nb-filter-dot"></span>همه</button>
+          <button type="button" class="nb-filter" data-nbfilter="income" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>درآمد</button>
+          <button type="button" class="nb-filter" data-nbfilter="expense" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>هزینه</button>
+          <button type="button" class="nb-filter" data-nbfilter="transfer" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>انتقال</button>
+          <button type="button" class="nb-filter" data-nbfilter="debt" role="tab" aria-selected="false"><span class="nb-filter-dot"></span>قرض</button>
+        </div>
+        <div id="nbList" class="nb-feed"></div>
       </div>
-      <div id="nbList" class="nb-feed"></div>
     </div>
 
     <div class="section reveal">
