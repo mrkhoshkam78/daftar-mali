@@ -1,4 +1,4 @@
-/* APP_BUILD 20260831qa */
+/* APP_BUILD 20260831defaults */
 const $ = id => document.getElementById(id);
 const fmt = n => {
   const v = Number(n);
@@ -181,7 +181,7 @@ function normalizeThemeId(t){
 function applyTheme(t){
   t = normalizeThemeId(t);
   // اگر نام ناشناخته بود light — تم پیش‌فرض نئوبانک
-  if(!VALID_THEMES.includes(t)) t = 'light';
+  if(!VALID_THEMES.includes(t)) t = 'dark';
   const root = document.documentElement;
   root.setAttribute('data-theme', t);
   // حذف همهٔ کلاس‌های theme-* سپس افزودن فعلی
@@ -235,8 +235,8 @@ if($('themeDayNight')){
   });
 }
 (function initTheme(){
-  let saved = 'light';
-  try{ saved = localStorage.getItem(THEME_KEY) || 'light'; }catch(e){}
+  let saved = 'dark';
+  try{ saved = localStorage.getItem(THEME_KEY) || 'dark'; }catch(e){}
   applyTheme(saved);
 })();
 
