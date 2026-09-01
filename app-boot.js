@@ -394,7 +394,7 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
 });
 
 /* --- Startup sequence (order fixed) --- */
-// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
+// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
 ['daftar-gh-owner','daftar-gh-repo','daftar-gh-token'].forEach(k=>{
   try{ localStorage.removeItem(k); }catch(e){}
 });

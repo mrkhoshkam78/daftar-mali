@@ -4,16 +4,18 @@
  * منبع: https://call5.tgju.org/ajax.json  (CORS: Access-Control-Allow-Origin: *)
  *
  * فیلدهای استخراج‌شده از Response واقعی (current):
- *   - geram18        → طلای ۱۸ عیار — ریال / گرم
+ *   - geram18         → طلای ۱۸ عیار — ریال / گرم
  *   - price_dollar_rl → دلار آزاد — ریال / دلار
- *   - silver_999     → نقره ۹۹۹ — ریال / گرم
+ *   - silver_999      → نقره ۹۹۹ — ریال / گرم
  *
  * تبدیل: تومان = ریال ÷ ۱۰
  * هیچ Field فرضی ساخته نمی‌شود؛ در نبود قیمت، null برمی‌گردد.
+ * رفتار Request/Retry/Timeout و شکل خروجی عمداً ثابت است.
  */
 (function (global) {
   'use strict';
 
+  /* --- config --- */
   var TGJU_URL = 'https://call5.tgju.org/ajax.json';
 
   /** کلیدهای تأییدشده از Response واقعی — تغییر نده بدون بررسی JSON */
@@ -23,6 +25,7 @@
     silver: 'silver_999'
   };
 
+  /* --- parse helpers --- */
   function toLatinDigits(s) {
     return String(s == null ? '' : s)
       .replace(/[۰-۹]/g, function (d) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); })
@@ -46,6 +49,7 @@
     return parsePrice(row.p);
   }
 
+  /* --- network (timeout / retry موجود — بدون تغییر رفتار) --- */
   function fetchJson(url, timeoutMs) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeoutMs || 14000);
@@ -71,6 +75,7 @@
     });
   }
 
+  /* --- public API --- */
   /**
    * @returns {Promise<object>}
    */
