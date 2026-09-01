@@ -1,4 +1,10 @@
-/* auto-split from script.js — global scope shared */
+/* ==========================================================================
+   app-ui.js — رندر UI، نمودارها، دارایی، اسنپ، تراکنش، اهداف، کارت بانکی
+   وابستگی: بعد از app-core.js | قبل از app-notes.js و app-boot.js
+   scope سراسری؛ نام توابع عمومی و رفتار DOM نباید تغییر کند.
+   ========================================================================== */
+
+/* --- Orchestrator: refresh all visible panels --- */
 function render(){
   $('sumInvest').textContent = fmt(computeInvest());
   $('sumCash').textContent = fmt(computeCash());
@@ -42,6 +48,7 @@ function selectDonutAsset(key){
   if(centerVal) centerVal.textContent = fmt(v);
 }
 
+/* --- Dashboard: donut + legend --- */
 function renderDonut(){
   const donut = $('donutChart');
   const legend = $('legendList');
@@ -278,6 +285,7 @@ function buildBucketSeries(rangeKey){
   };
 }
 
+/* --- Dashboard: trend chart --- */
 function renderTrendChart(rangeKey){
   const svg = $('trendSvg');
   const badge = $('trendBadge');
@@ -383,6 +391,7 @@ function fillTransferSelects(){
   else if(ASSET_DEFS.length > 1) to.selectedIndex = Math.min(1, ASSET_DEFS.length - 1);
 }
 
+/* --- Assets: cards, transfer, CRUD --- */
 function renderAssetCards(){
   const el = $('assetCards');
   el.classList.add('rendering');
@@ -473,6 +482,7 @@ function confirmDeleteAsset(key){
   );
 }
 
+/* --- Snapp daily profit list + projections --- */
 function renderLogs(){
   const el = $('logList');
   if(logs.length === 0){ el.innerHTML = '<div class="empty">هنوز سودی ثبت نشده است</div>'; $('projCard').style.display = 'none'; return; }
@@ -578,6 +588,7 @@ function getFilteredTxs(){
   return list;
 }
 
+/* --- History page: transaction filters/list --- */
 function renderTxs(){
   updateTxFilterCounts();
   const el = $('txList');
@@ -618,6 +629,7 @@ document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
 });
 
 
+/* --- Net-worth history snapshots --- */
 function renderHistory(){
   const el = $('historyList');
   if(history.length === 0){ el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده است</div>'; return; }
@@ -627,6 +639,7 @@ function renderHistory(){
   }).join('');
 }
 
+/* --- Non-cash assets --- */
 function renderNonCash(){
   const el = $('ncList');
   const totalEl = $('ncTotal');
@@ -814,6 +827,7 @@ function loanRemaining(e){
   return Math.max(0, total - paid);
 }
 
+/* --- Notebook math helpers --- */
 function nbDelta(){
   // هر مبلغ فقط یک‌بار: applied → دیگر در دلتا نیست
   // قرض باز (تسویه‌نشده و applied نشده) با باقی‌مانده در دلتا می‌آید
@@ -1658,6 +1672,7 @@ function setGoalExpanded(id, open){
   saveGoalCollapseState(map);
 }
 
+/* --- Financial goals --- */
 function renderFinancialGoals(){
   const listEl = $('goalsList');
   if(!listEl) return;
@@ -1863,6 +1878,7 @@ if(document.readyState === 'loading'){
 }
 
 
+/* --- Forecast / analysis --- */
 function renderForecastSnapshots(){
   const el = $('fcSnapList');
   if(!el) return;
@@ -2264,6 +2280,7 @@ function applyLoanSettlement(entry, settling){
 }
 
 
+/* --- Notebook (تراکنش‌های ثبت‌شده) --- */
 function renderNotebook(){
   try{ if(typeof renderBankCards === 'function') renderBankCards(); }catch(e){ console.error(e); }
   try{ if(typeof renderLoans === 'function') renderLoans(); }catch(e){ console.error(e); }
@@ -2523,6 +2540,7 @@ if($('ncCategory')){
 if($('ncGoldGram')) $('ncGoldGram').addEventListener('input', updateGoldSumUI);
 if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 
+/* --- Event: Snapp profit submit --- */
 if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
   const date = selectedLogDateISO();
   const profit = parseMoney($('logProfit') && $('logProfit').value);
@@ -2552,6 +2570,7 @@ function normalizeBcLast4(v){
   return String(v == null ? '' : v).replace(/\D/g, '').slice(-4);
 }
 
+/* --- Bank cards: default, balance display, carousel --- */
 function ensureDefaultBankCard(){
   if(!Array.isArray(bankCards)) bankCards = [];
   if(!bankCards.length){ window.defaultBankCardId = null; return null; }
@@ -3017,6 +3036,7 @@ document.addEventListener('input', (e)=>{
   }
 });
 
+/* --- Event: notebook form / filters --- */
 /* ---- تراکنش‌ها ---- */
 function updateNbPersonVisibility(){
   try{

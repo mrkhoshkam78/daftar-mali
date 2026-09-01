@@ -1,4 +1,14 @@
-/* auto-split from script.js — global scope shared */
+/* ==========================================================================
+   app-boot.js — قیمت‌ها، PIN/قفل، initialization نهایی
+   وابستگی: آخرین ماژول (بعد از core / ui / notes)
+   ترتیب startup در انتهای فایل عمداً ثابت است — تغییر ندهید.
+   ========================================================================== */
+
+/* --- Market prices (shared state; used by non-cash UI) --- */
+let _marketPrices = null;
+let _pricesApiLoading = null;
+
+/* --- Prices API load & cache --- */
 function loadPricesApiScript(){
   if(window.PricesAPI) return Promise.resolve(window.PricesAPI);
   if(_pricesApiLoading) return _pricesApiLoading;
@@ -143,6 +153,7 @@ async function legacySha256(pin){
   const buf = await crypto.subtle.digest('SHA-256', enc);
   return bufToHex(buf);
 }
+/* --- PIN / lock crypto helpers --- */
 function loadPinRecord(){
   const raw = localStorage.getItem(PIN_KEY);
   if(!raw) return null;
@@ -294,6 +305,7 @@ function saveLoginUsername(value){
   try{localStorage.setItem(USERNAME_KEY,username);}catch(e){return false;}
   return true;
 }
+/* --- Lock screen & session gate --- */
 function refreshPinStatus(){
   const rec=loadPinRecord(),username=getLoginUsername();
   if($('loginUsername'))$('loginUsername').value=username;
@@ -381,11 +393,13 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
   );
 });
 
-// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
+/* --- Startup sequence (order fixed) --- */
+// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب// پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
 ['daftar-gh-owner','daftar-gh-repo','daftar-gh-token'].forEach(k=>{
   try{ localStorage.removeItem(k); }catch(e){}
 });
 
+/* init: PIN UI → lock gate → load state → assets → date clock */
 refreshPinStatus();
 checkLock();
 loadAll();

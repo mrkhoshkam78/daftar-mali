@@ -1,4 +1,10 @@
-/* auto-split from script.js — global scope shared */
+/* ==========================================================================
+   app-notes.js — دفترچه یادداشت (state UI، فیلتر، تقویم، مودال، Markdown)
+   وابستگی: بعد از app-core.js و app-ui.js | قبل از app-boot.js
+   نام‌های عمومی (renderNotes, openNoteEditor, notes, …) و رفتار حفظ شوند.
+   ========================================================================== */
+
+/* --- Constants & UI state --- */
 const NOTE_CATS = [
   {id:'daily',   label:'روزمره',  color:'#60a5fa'},
   {id:'idea',    label:'ایده',    color:'#a78bfa'},
@@ -18,6 +24,7 @@ let notesCalCursor = null; // Date for calendar month
 let notesCalSelectedISO = null;
 let noteDraftTags = [];
 const NOTES_UI_KEY = 'daftar-notes-ui';
+/* --- Persist notes UI prefs (search/filter/view) --- */
 function loadNotesUiState(){
   try{
     const raw = sessionStorage.getItem(NOTES_UI_KEY);
@@ -106,6 +113,7 @@ function uniqTags(list){
 }
 
 /** Minimal safe Markdown → HTML */
+/* --- Markdown helpers --- */
 function renderMarkdown(src){
   let s = String(src||'');
   s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -185,6 +193,7 @@ function formatNoteStamp(note){
 let noteModalMode = 'read'; // read | edit
 let noteModalCurrentId = null;
 
+/* --- Note modal: read / edit --- */
 function openNoteModal(){
   const m = $('noteModal');
   if(!m) return;
@@ -351,6 +360,7 @@ function collectAllTags(){
   return set.sort((a,b)=> a.localeCompare(b, 'fa'));
 }
 
+/* --- Filters, tags, calendar, list render --- */
 function renderNotesCatBar(){
   const el = $('notesCatBar');
   if(!el) return;
@@ -629,6 +639,7 @@ if($('analysisToggle') && $('analysisBody')){
 }
 
 
+/* --- Event bindings (notes toolbar / modal) --- */
 if($('notesNewBtn')){
   $('notesNewBtn').addEventListener('click', (e)=>{
     if(e){ e.preventDefault(); e.stopPropagation(); }
@@ -839,6 +850,7 @@ if($('noteCatPicks')) renderNoteCatPicks();
 
 
 /* چیدمان عمودی / افقی یادداشت‌ها */
+/* --- Layout toggle (vertical / horizontal) --- */
 function setNotesLayout(mode){
   notesLayoutMode = (mode === 'horizontal') ? 'horizontal' : 'vertical';
   try{ if(typeof saveNotesUiState === 'function') saveNotesUiState(); }catch(e){}
@@ -851,7 +863,4 @@ document.addEventListener('click', function(e){
   setNotesLayout(t.id === 'notesLayoutHorizontal' ? 'horizontal' : 'vertical');
 });
 
-/* ================= MARKET PRICES (lazy only on noncash) ================= */
-let _marketPrices = null;
-let _pricesApiLoading = null;
 
