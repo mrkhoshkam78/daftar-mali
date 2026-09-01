@@ -2746,8 +2746,10 @@ function renderBankCards(){
     const pattern = bcPatternKey(c);
     const isDef = isDefaultBankCard(c);
     const balStr = fmt(getBankCardDisplayBalance(c));
-    const defBadge = isDef ? '<span class="bc-default-badge">پیش‌فرض</span>' : '';
-    const defBtn = isDef ? '' : `<button type="button" class="bc-icon-btn" data-bc-default="${c.id}" title="تنظیم به‌عنوان پیش‌فرض" aria-label="پیش‌فرض"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.2 6.6H21l-5.4 4 2.1 6.5L12 16.6 6.3 20l2.1-6.5L3 9.6h6.8L12 3z"/></svg></button>`;
+    const defBadge = isDef
+      ? `<span class="bc-default-icon" title="کارت پیش‌فرض" aria-label="کارت پیش‌فرض"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2.9 6.1 6.7.7-5 4.6 1.4 6.6L12 17.8 6 20.5l1.4-6.6-5-4.6 6.7-.7L12 2.5z"/></svg></span>`
+      : '';
+    const defBtn = isDef ? '' : `<button type="button" class="bc-icon-btn" data-bc-default="${c.id}" title="تنظیم به‌عنوان پیش‌فرض" aria-label="تنظیم به‌عنوان پیش‌فرض"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.6H21l-5.4 4 2.1 6.5L12 16.6 6.3 20l2.1-6.5L3 9.6h6.8L12 3z"/></svg></button>`;
     return `<article class="bc-slide${isDef ? ' is-default' : ''}" data-bc-id="${c.id}" data-bc-pattern="${pattern}" style="--bc-accent:${color}">
       <span class="bc-orb bc-orb-1" aria-hidden="true"></span>
       <span class="bc-orb bc-orb-2" aria-hidden="true"></span>
@@ -2763,7 +2765,7 @@ function renderBankCards(){
           </div>
         </div>
         <div class="bc-slide-actions">
-          ${defBtn}
+          ${defBadge}${defBtn}
           <button type="button" class="bc-icon-btn" data-bc-edit="${c.id}" title="ویرایش" aria-label="ویرایش">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           </button>
@@ -2771,7 +2773,6 @@ function renderBankCards(){
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
-        ${defBadge}
       </div>
       <div class="bc-slide-chip-row">
         <span class="bc-chip" aria-hidden="true"></span>

@@ -836,6 +836,21 @@ if($('notesCalNext')){
 if($('noteCatPicks')) renderNoteCatPicks();
 
 
+
+
+/* چیدمان عمودی / افقی یادداشت‌ها */
+function setNotesLayout(mode){
+  notesLayoutMode = (mode === 'horizontal') ? 'horizontal' : 'vertical';
+  try{ if(typeof saveNotesUiState === 'function') saveNotesUiState(); }catch(e){}
+  if(typeof renderNotes === 'function') renderNotes();
+}
+document.addEventListener('click', function(e){
+  const t = e.target && e.target.closest && e.target.closest('#notesLayoutVertical, #notesLayoutHorizontal');
+  if(!t) return;
+  e.preventDefault();
+  setNotesLayout(t.id === 'notesLayoutHorizontal' ? 'horizontal' : 'vertical');
+});
+
 /* ================= MARKET PRICES (lazy only on noncash) ================= */
 let _marketPrices = null;
 let _pricesApiLoading = null;

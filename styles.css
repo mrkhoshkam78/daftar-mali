@@ -1414,17 +1414,18 @@
   #nbList .nb-day-group{margin-bottom:8px; display:block !important;}
   #nbList .nb-day-group:last-child{margin-bottom:0;}
   #nbList .nb-day-head{
-    display:flex !important; align-items:center; justify-content:space-between; gap:10px;
+    display:flex !important; align-items:center; justify-content:space-between; gap:8px;
     width:100%; box-sizing:border-box;
-    padding:10px 12px; margin:0 0 8px;
-    border:1px solid var(--border); border-radius:12px;
-    background:var(--bg-2); color:var(--ink);
+    padding:4px 2px; margin:0 0 6px;
+    border:none; border-radius:0;
+    background:transparent; color:var(--ink);
     cursor:pointer; font-family:var(--app-font); text-align:right;
-    transition:background .15s ease, border-color .15s ease;
+    transition:opacity .15s ease;
     -webkit-tap-highlight-color:transparent; user-select:none;
+    box-shadow:none;
   }
-  #nbList .nb-day-head:hover{border-color:var(--border-strong); background:var(--card-2);}
-  #nbList .nb-day-head:active{transform:scale(.99);}
+  #nbList .nb-day-head:hover{opacity:.85; background:transparent;}
+  #nbList .nb-day-head:active{opacity:.7; transform:none;}
   #nbList .nb-day-head-main{display:flex; align-items:center; gap:8px; min-width:0;}
   #nbList .nb-day-chev{
     width:18px; height:18px; flex-shrink:0; color:var(--ink-dim);
@@ -1436,16 +1437,16 @@
   }
   #nbList .nb-day-count{
     font-size:11px; font-weight:600; color:var(--ink-dim);
-    background:var(--card); border:1px solid var(--border);
-    padding:3px 9px; border-radius:999px; flex-shrink:0;
+    background:transparent; border:none;
+    padding:0; border-radius:0; flex-shrink:0;
     font-family:var(--app-font);
   }
   #nbList .nb-day-body{display:flex !important; flex-direction:column;}
   #nbList .nb-day-group.is-collapsed .nb-day-body{display:none !important;}
   html[data-design="neobank"] #nbList .nb-day-head{
-    border:none !important; border-radius:14px !important; background:var(--card-2) !important;
+    border:none !important; border-radius:0 !important; background:transparent !important;
   }
-  html[data-design="classic"] #nbList .nb-day-head{border-radius:8px !important;}
+  html[data-design="classic"] #nbList .nb-day-head{border-radius:0 !important; background:transparent !important;}
 
   .analysis-toggle{
     width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -4682,25 +4683,30 @@ html[data-theme] body{
 
 
 
-/* ---- Refactor polish: day collapse contrast + snapp log list ---- */
+/* ---- Day collapse minimal (فقط تاریخ + تعداد) ---- */
 #nbList .nb-day-head{
-  background: color-mix(in srgb, var(--blue-soft) 55%, var(--bg-2)) !important;
-  border-color: color-mix(in srgb, var(--blue) 22%, var(--border)) !important;
-  color: var(--ink) !important;
-}
-#nbList .nb-day-label{color: var(--ink) !important;}
-#nbList .nb-day-count{
-  background: var(--card) !important;
-  border-color: color-mix(in srgb, var(--blue) 20%, var(--border)) !important;
-  color: var(--blue) !important;
-}
-html[data-design="neobank"] #nbList .nb-day-head{
-  background: color-mix(in srgb, var(--blue) 12%, var(--card-2)) !important;
+  background: transparent !important;
   border: none !important;
+  box-shadow: none !important;
+  color: var(--ink) !important;
+  padding: 4px 2px !important;
+  border-radius: 0 !important;
+  margin: 0 0 6px !important;
 }
-html[data-design="classic"] #nbList .nb-day-head{
-  background: var(--bg-2) !important;
-  border: 1px solid var(--border-strong) !important;
+#nbList .nb-day-label{color: var(--ink-dim) !important; font-weight:700 !important;}
+#nbList .nb-day-count{
+  background: transparent !important;
+  border: none !important;
+  color: var(--ink-dim) !important;
+  padding: 0 !important;
+}
+html[data-design="neobank"] #nbList .nb-day-head,
+html[data-design="classic"] #nbList .nb-day-head,
+html[data-design="aurora"] #nbList .nb-day-head{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* لیست سود اسنپ — layout پایدار */
@@ -4822,4 +4828,97 @@ html[data-design="neobank"] #logList .log-item{
   .notes-grid.notes-layout-horizontal{
     grid-template-columns:1fr 1fr 1fr !important;
   }
+}
+
+
+/* انیمیشن تعویض تم — موج رنگ از بالا به پایین */
+/* Theme wipe — فقط transform/opacity (GPU compositing) */
+.theme-wipe-veil{
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  z-index:9999;
+  pointer-events:none;
+  opacity:0;
+  /* لایهٔ جدا برای GPU؛ بدون layout thrash */
+  transform:translate3d(0,-100%,0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  perspective:1000px;
+  contain:strict;
+  isolation:isolate;
+  will-change:auto;
+  background:linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--blue) 35%, var(--bg)) 0%,
+    color-mix(in srgb, var(--card) 70%, var(--bg)) 45%,
+    var(--bg) 100%
+  );
+}
+.theme-wipe-veil.run{
+  will-change:transform, opacity;
+  animation: themeWipeDown .7s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes themeWipeDown{
+  0%{
+    opacity:0;
+    transform:translate3d(0,-100%,0);
+  }
+  18%{
+    opacity:.55;
+    transform:translate3d(0,-72%,0);
+  }
+  55%{
+    opacity:.32;
+    transform:translate3d(0,0,0);
+  }
+  100%{
+    opacity:0;
+    transform:translate3d(0,0,0);
+  }
+}
+html[data-anim="off"] .theme-wipe-veil{
+  display:none !important;
+  animation:none !important;
+  will-change:auto !important;
+}
+@media (prefers-reduced-motion: reduce){
+  .theme-wipe-veil{display:none !important;}
+}
+
+#nbList .nb-day-head{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 2px !important;
+  border-radius: 0 !important;
+}
+#nbList .nb-day-count{
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.bc-default-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:8px; flex-shrink:0;
+  color:#FFD54A;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,213,74,.35);
+  pointer-events:none;
+}
+.bc-default-icon svg{display:block;}
+.bc-default-badge{display:none !important;}
+
+#notesGrid.notes-layout-vertical{
+  display:flex !important; flex-direction:column !important;
+  grid-template-columns:none !important; gap:8px !important;
+}
+#notesGrid.notes-layout-horizontal{
+  display:grid !important; grid-template-columns:1fr !important; gap:8px !important;
+}
+@media (min-width:560px){
+  #notesGrid.notes-layout-horizontal{grid-template-columns:1fr 1fr !important;}
+}
+@media (min-width:900px){
+  #notesGrid.notes-layout-horizontal{grid-template-columns:1fr 1fr 1fr !important;}
 }

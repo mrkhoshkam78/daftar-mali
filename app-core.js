@@ -184,6 +184,37 @@ function applyTheme(t){
   // اگر نام ناشناخته بود light — تم پیش‌فرض نئوبانک
   if(!VALID_THEMES.includes(t)) t = 'light';
   const root = document.documentElement;
+  const prev = root.getAttribute('data-theme') || '';
+  // انیمیشن موج رنگ از بالا به پایین هنگام تعویض تم
+  try{
+    const animOff = root.getAttribute('data-anim') === 'off'
+      || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if(prev && prev !== t && !animOff){
+      let veil = document.getElementById('themeWipeVeil');
+      if(!veil){
+        veil = document.createElement('div');
+        veil.id = 'themeWipeVeil';
+        veil.className = 'theme-wipe-veil';
+        veil.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(veil);
+      }
+      // ریست بدون layout thrash — فقط class + rAF برای شروع روی فریم بعدی
+      veil.classList.remove('run');
+      veil.style.willChange = 'transform, opacity';
+      window.clearTimeout(window._themeWipeT);
+      requestAnimationFrame(()=>{
+        try{
+          veil.classList.add('run');
+        }catch(e){}
+        window._themeWipeT = window.setTimeout(()=>{
+          try{
+            veil.classList.remove('run');
+            veil.style.willChange = 'auto';
+          }catch(e){}
+        }, 720);
+      });
+    }
+  }catch(e){}
   root.setAttribute('data-theme', t);
   // حذف همهٔ کلاس‌های theme-* سپس افزودن فعلی
   try{
