@@ -1,4 +1,9 @@
-/* auto-split from script.js — global scope shared */
+/* ==========================================================================
+   app-core.js — هستهٔ مشترک (global scope، وابستگی: قبل از app-ui / app-notes / app-boot)
+   بخش‌ها: Utils · I18n/Font · Theme/Design · Navigation · Dates · State/Persist · UI chrome
+   هشدار: نام توابع و شکل state عمومی نباید عوض شود (وابستگی فایل‌های دیگر).
+   ========================================================================== */
+
 /* APP_BUILD 20260831qa */
 const $ = id => document.getElementById(id);
 const fmt = n => {
@@ -16,6 +21,7 @@ const parseMoney = str => {
 };
 
 /* ================= LANGUAGE & FONT ================= */
+/* --- I18n & Font --- */
 const LANG_KEY = 'daftar-language';
 const FONT_KEY = 'daftar-font';
 const VALID_LANGS = ['fa','en'];
@@ -167,6 +173,7 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 
 
 /* ================= THEME ================= */
+/* --- Theme, Design, Animation prefs --- */
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
 const APP_VERSION = '2.03';
@@ -370,6 +377,7 @@ const revealObserver = new IntersectionObserver((entries)=>{
 document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 
 /* ================= HAMBURGER MENU & PAGE NAVIGATION ================= */
+/* --- Navigation & Pages --- */
 function openMenu(){
   document.body.classList.add('menu-open');
   const back = $('menuBackdrop');
@@ -576,6 +584,7 @@ try{ document.body.classList.add('home-immersive'); }catch(e){}
 
 
 /* ================= JALALI DATES ================= */
+/* --- Date / Jalali helpers --- */
 function gregorianToJalali(gy, gm, gd){
   const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
   let jy = (gy <= 1600) ? 0 : 979;
@@ -712,6 +721,7 @@ document.addEventListener('input', (e)=>{
   el.setSelectionRange(newPos, newPos);
 });
 
+/* --- UI chrome (toast, confirm) --- */
 function showToast(msg, isErr){
   const t = $('toast');
   t.textContent = msg;
@@ -740,6 +750,7 @@ function showConfirmModal(title, sub, onConfirm){
 
 /* ================= DATA MODEL ================= */
 /* ----- ASSETS (تعریف دارایی‌ها و محاسبات طلا/نقره) ----- */
+/* --- Domain state (assets, logs, notebook…) --- */
 const DEFAULT_ASSET_DEFS = [
   {key:'snapp',  name:'اسنپ',        cat:'سرمایه‌گذاری', color:'#3b82f6'},
   {key:'hami',   name:'صندوق حامی',   cat:'سرمایه‌گذاری', color:'#22d3ee'},
@@ -862,6 +873,7 @@ let _bcSelectedColor = BC_COLORS[0];
 let _bcSlideIndex = 0;
 
 /* ----- CASH (ذخیره‌سازی و بازیابی محلی — localStorage: Load/Parse/Persist) ----- */
+/* --- Persistence (localStorage) --- */
 const STORE_KEY = 'daftar-mali-v1';
 
 function loadAll(){

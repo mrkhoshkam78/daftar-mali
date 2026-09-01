@@ -1,5 +1,20 @@
+/* ==========================================================================
+   دفتر مالی — styles.css
+   ساختار منطقی (ترتیب cascade حفظ شده؛ فقط نشانه‌گذاری بخش‌ها):
+   1) Tokens / Reset
+   2) Layout shell (topbar, menu, pages)
+   3) Components (buttons, cards, forms, lists)
+   4) Features (notebook, notes, bank cards, goals, snapp…)
+   5) Design systems: aurora / neobank / classic
+   6) Theme overrides
+   7) Responsive + a11y motion
+   8) Polish / GPU helpers
+   نکته: ترتیب قوانین عمداً تغییر نکرده تا ظاهر یکسان بماند.
+   ========================================================================== */
 
-  :root{
+
+  /* --- 1) Design tokens --- */
+:root{
     --app-font:'Vazirmatn',sans-serif;
     /* Default = Light classic blue (not purple) */
     --bg:#F0F4F8; --bg-2:#E4EAF1;
@@ -1443,10 +1458,12 @@
   }
   #nbList .nb-day-body{display:flex !important; flex-direction:column;}
   #nbList .nb-day-group.is-collapsed .nb-day-body{display:none !important;}
-  html[data-design="neobank"] #nbList .nb-day-head{
+  /* --- 5b) Design: NeoBank --- */
+html[data-design="neobank"] #nbList .nb-day-head{
     border:none !important; border-radius:0 !important; background:transparent !important;
   }
-  html[data-design="classic"] #nbList .nb-day-head{border-radius:0 !important; background:transparent !important;}
+  /* --- 5c) Design: Classic --- */
+html[data-design="classic"] #nbList .nb-day-head{border-radius:0 !important; background:transparent !important;}
 
   .analysis-toggle{
     width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -1557,7 +1574,6 @@
   }
 
 
-
   .nc-gold-fields{
     display:none; margin-top:10px; padding:12px;
     border:1px solid var(--border); border-radius:12px; background:var(--bg-2);
@@ -1587,7 +1603,6 @@
   #assetCards.rendering .asset-card:hover{
     transition:none !important; transform:none !important; will-change:auto !important;
   }
-
 
 
   /* ========== Abstract خطی — فقط Themeهای Dark (نه light) ========== */
@@ -3096,10 +3111,10 @@
   }
 
 
-
   
 
-  html[data-design="aurora"],
+  /* --- 5a) Design: Aurora --- */
+html[data-design="aurora"],
 html[data-design="aurora"] body{
     background:var(--bg) !important;
   }
@@ -3603,7 +3618,6 @@ html[data-design="aurora"][data-theme="warm-sand"] .bottom-nav{
 
   
   html[data-design="aurora"] .main{padding-bottom:12px !important;}
-
 
 
   
@@ -4275,8 +4289,6 @@ html[data-design="neobank"].theme-navy-crimson .section{
 html[data-design="neobank"] .section::after{opacity:.35;}
 
 
-
-
 /* dash-metrics — Neo-Bank & Classic (were aurora-only → invisible/broken) */
 html[data-design="neobank"] .dash-metrics,
 html[data-design="classic"] .dash-metrics{
@@ -4680,7 +4692,6 @@ html[data-theme] body{
 
   /* ---- Perf helpers (safe) ---- */
   .bc-slide{will-change:auto !important;}
-
 
 
 /* ---- Day collapse minimal (فقط تاریخ + تعداد) ---- */
