@@ -4935,19 +4935,29 @@ html[data-anim="off"] .theme-wipe-veil{
 }
 
 /* ==========================================================================
-   Financial AI Advisor — fully scoped under #page-ai-advisor only
-   Uses existing .section / .btn tokens; no global overrides.
+   Financial AI Advisor — scoped ONLY under #page-ai-advisor
+   Overrides global .btn{width:100%} inside this page only.
    ========================================================================== */
 #page-ai-advisor .ai-root {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 #page-ai-advisor .ai-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 4px 0 2px;
+  margin: 2px 0 0;
+}
+/* مهم: دکمه toolbar نباید width:100% بگیرد */
+#page-ai-advisor .ai-toolbar .btn {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 12px;
+  font-size: 0.8rem;
 }
 #page-ai-advisor .ai-settings-panel {
   display: none;
@@ -4981,12 +4991,19 @@ html[data-anim="off"] .theme-wipe-veil{
 #page-ai-advisor .ai-settings-actions {
   margin-top: 10px;
 }
+#page-ai-advisor .ai-settings-actions .btn {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 16px;
+}
 #page-ai-advisor .ai-hint {
   font-size: 0.74rem;
   color: var(--ink-dim);
   margin: 8px 0 0;
   line-height: 1.4;
 }
+
+/* کارت چت */
 #page-ai-advisor .ai-chat-card {
   margin-top: 6px;
   background: var(--bg-2, var(--card-2));
@@ -4994,23 +5011,33 @@ html[data-anim="off"] .theme-wipe-veil{
   border-radius: 14px;
   display: flex;
   flex-direction: column;
-  min-height: 260px;
-  max-height: 520px;
+  width: 100%;
+  max-width: 100%;
+  min-height: 280px;
+  height: min(520px, 62vh);
+  max-height: min(520px, 62vh);
   overflow: hidden;
+  box-sizing: border-box;
 }
+
+/* پیام‌ها */
 #page-ai-advisor .ai-chat-messages {
   flex: 1 1 auto;
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 160px;
+  min-height: 0;
+  box-sizing: border-box;
 }
 #page-ai-advisor .ai-msg {
   display: flex;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 #page-ai-advisor .ai-msg-user {
   justify-content: flex-start;
@@ -5019,12 +5046,14 @@ html[data-anim="off"] .theme-wipe-veil{
   justify-content: flex-end;
 }
 #page-ai-advisor .ai-msg-bubble {
-  max-width: 90%;
+  max-width: min(92%, 520px);
   padding: 10px 13px;
   border-radius: 14px;
   font-size: 0.9rem;
   line-height: 1.65;
   word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 #page-ai-advisor .ai-msg-user .ai-msg-bubble {
   background: var(--accent, #3b82f6);
@@ -5041,65 +5070,109 @@ html[data-anim="off"] .theme-wipe-veil{
   opacity: 0.75;
   font-style: italic;
 }
+
+/* ردیف ورودی — افقی پایدار */
 #page-ai-advisor .ai-chat-input-row {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: flex-end;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid var(--border);
   background: var(--card);
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 #page-ai-advisor .ai-chat-input {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
+  width: auto;
+  max-width: none;
   resize: none;
   min-height: 44px;
-  max-height: 96px;
+  max-height: 110px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--ink);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 16px; /* iOS zoom fix */
   line-height: 1.45;
   box-sizing: border-box;
   margin: 0;
+  overflow-y: auto;
 }
 #page-ai-advisor .ai-chat-input:focus {
   outline: none;
   border-color: var(--accent, #3b82f6);
 }
+
+/* دکمه ارسال — لغو width:100% و margin-top سراسری */
+#page-ai-advisor #aiSendBtn.btn,
 #page-ai-advisor #aiSendBtn {
   flex: 0 0 auto;
-  min-width: 64px;
+  width: auto !important;
+  min-width: 68px;
+  max-width: 96px;
   height: 44px;
-  padding: 0 12px;
+  margin-top: 0 !important;
+  margin-bottom: 0;
+  padding: 0 14px !important;
   border-radius: 12px;
-  margin: 0;
   white-space: nowrap;
+  box-sizing: border-box;
+  align-self: flex-end;
 }
+
+/* موبایل */
 @media (max-width: 600px) {
   #page-ai-advisor .ai-chat-card {
-    max-height: 420px;
-    min-height: 220px;
+    min-height: 240px;
+    height: min(440px, 55vh);
+    max-height: min(440px, 55vh);
+    border-radius: 12px;
+  }
+  #page-ai-advisor .ai-chat-input-row {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  #page-ai-advisor .ai-chat-input {
+    min-height: 42px;
+    padding: 9px 10px;
+  }
+  #page-ai-advisor #aiSendBtn.btn,
+  #page-ai-advisor #aiSendBtn {
+    min-width: 58px;
+    max-width: 80px;
+    height: 42px;
+    padding: 0 12px !important;
+    font-size: 0.88rem;
   }
   #page-ai-advisor .ai-msg-bubble {
     max-width: 94%;
     font-size: 0.86rem;
   }
-  #page-ai-advisor #aiSendBtn {
-    min-width: 56px;
-    height: 42px;
-  }
-  #page-ai-advisor .ai-chat-input {
-    min-height: 42px;
+  #page-ai-advisor .ai-toolbar .btn {
+    padding: 7px 10px;
+    font-size: 0.76rem;
   }
 }
-/* فضای bottom-nav فقط در aurora */
+
+/* فضای bottom-nav در تم aurora */
 html[data-design="aurora"] #page-ai-advisor {
-  padding-bottom: 12px;
+  padding-bottom: 8px;
+}
+html[data-design="aurora"] #page-ai-advisor .ai-chat-card {
+  height: min(480px, 56vh);
+  max-height: min(480px, 56vh);
+}
+@media (max-width: 600px) {
+  html[data-design="aurora"] #page-ai-advisor .ai-chat-card {
+    height: min(400px, 50vh);
+    max-height: min(400px, 50vh);
+  }
 }

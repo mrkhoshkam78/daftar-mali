@@ -591,6 +591,12 @@
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
       });
+      // auto-resize ارتفاع کادر پیام
+      input.addEventListener('input', function () {
+        input.style.height = 'auto';
+        var h = Math.min(input.scrollHeight, 120);
+        input.style.height = Math.max(44, h) + 'px';
+      });
     }
     if (clearBtn && !clearBtn._aiBound) {
       clearBtn._aiBound = true;
@@ -628,6 +634,13 @@
     renderMessages();
     renderSettingsPanel();
     bindUI();
+    // اگر کلید تنظیم نشده، پنل تنظیمات را باز کن تا کاربر بداند کجا وارد کند
+    try {
+      if (!getApiKey()) {
+        var panel = document.getElementById('aiSettingsPanel');
+        if (panel) panel.classList.add('open');
+      }
+    } catch (e) {}
   }
 
   global.FinancialAI = {
