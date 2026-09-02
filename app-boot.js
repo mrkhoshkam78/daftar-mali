@@ -313,7 +313,6 @@ function refreshPinStatus(){
 }
 function showLockScreen(){
   $('lockScreen').style.display='flex';$('lockUsername').value='';$('lockInput').value='';$('lockErr').textContent='';
-  document.body.classList.add('lock-open');
   setTimeout(()=>$('lockUsername').focus(),50);
 }
 async function checkLock(){
@@ -338,7 +337,7 @@ $('lockUnlockBtn').addEventListener('click',async()=>{
     if(ok){
       try{ await unlockDataLayer(entered); }
       catch(err){ $('lockErr').textContent='دادهٔ رمزگذاری‌شده باز نشد — رمز یا فایل ذخیره را بررسی کنید'; triggerLoginError(); return; }
-      clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';document.body.classList.remove('lock-open');$('lockInput').value='';$('lockErr').textContent='';
+      clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';
       render();
     }
     else{registerFail();$('lockInput').value='';const left=PIN_MAX_FAILS-(getFailState().fails||0),rem=lockRemainingMs();triggerLoginError();$('lockErr').textContent=rem>0?`ورود ناموفق — ${Math.ceil(rem/1000)} ثانیه قفل شد`:`نام کاربری یا رمز عبور اشتباه است (تلاش باقی‌مانده: ${Math.max(left,1)})`;}

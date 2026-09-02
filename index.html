@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
-<meta name="theme-color" content="#F0F4F8">
+<meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
 <meta name="app-build" content="20260902struct">
 <title>مبحث درآمد</title>
@@ -25,22 +25,17 @@
   if(ok.indexOf(t)<0)t="light";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
-  var lang=localStorage.getItem("daftar-language")||"fa";
-  if(lang!=="en") lang="fa";
-  document.documentElement.setAttribute("data-lang",lang);
-  document.documentElement.lang=lang==="en"?"en-US":"fa";
-  document.documentElement.dir=lang==="en"?"ltr":"rtl";
 }catch(e){}})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260902ux" as="style">
+<link rel="preload" href="styles.css?v=20260902final" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260902ux">
+<link rel="stylesheet" href="styles.css?v=20260902final">
 </head>
 <body>
 
-<div class="confirm-modal" id="confirmModal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+<div class="confirm-modal" id="confirmModal" style="display:none;">
   <div class="confirm-box">
     <div class="confirm-title" id="confirmTitle"></div>
     <div class="confirm-sub" id="confirmSub"></div>
@@ -95,6 +90,7 @@
   <a href="#" class="menu-item" data-page="page-history"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span>تاریخچه</a>
   <a href="#" class="menu-item" data-page="page-notes"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>دفترچه یادداشت</a>
     <a href="#" class="menu-item" data-page="page-goals"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/><path d="M5 21h14"/></svg></span>اهداف مالی</a>
+    <a href="#" class="menu-item" data-page="page-ai-advisor"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 17v3"/><path d="M9 21h6"/><circle cx="12" cy="12" r="1"/></svg></span>مشاور هوشمند</a>
 <a href="#" class="menu-item" data-page="page-settings"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V19a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V5a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.9 1 1.51 1H19a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>تنظیمات</a>
   </nav>
 </div>
@@ -640,10 +636,44 @@
     </div>
     </div>
 
+
+<div class="page" id="page-ai-advisor">
+  <div class="ai-advisor-wrap">
+    <div class="ai-header">
+      <div class="ai-title-row">
+        <h2 class="ai-title">مشاور مالی هوشمند</h2>
+        <div class="ai-header-actions">
+          <button type="button" class="btn ghost sm" id="aiToggleSettings" title="تنظیمات API">تنظیمات</button>
+          <button type="button" class="btn ghost sm" id="aiClearBtn" title="پاک کردن گفتگو">پاک کردن</button>
+        </div>
+      </div>
+      <p class="ai-subtitle">از وضعیت مالی واقعی پنل شما برای پاسخ استفاده می‌کند. کلید API فقط روی دستگاه شما ذخیره می‌شود.</p>
+    </div>
+
+    <div class="ai-settings-panel" id="aiSettingsPanel">
+      <div class="ai-settings-inner">
+        <label class="ai-label">کلید API (OpenAI یا سازگار)</label>
+        <input type="password" id="aiApiKeyInput" class="ai-input" placeholder="sk-... یا کلید سازگار" autocomplete="off">
+        <label class="ai-label">آدرس Endpoint (اختیاری)</label>
+        <input type="text" id="aiEndpointInput" class="ai-input" placeholder="https://api.openai.com/v1/chat/completions">
+        <button type="button" class="btn primary sm" id="aiSaveKeyBtn">ذخیره تنظیمات</button>
+        <p class="ai-hint">کلید هرگز در کد یا سرور ذخیره نمی‌شود. فقط در localStorage مرورگر شماست.</p>
+      </div>
+    </div>
+
+    <div class="ai-chat-messages" id="aiChatMessages" role="log" aria-live="polite"></div>
+
+    <div class="ai-chat-input-row">
+      <textarea id="aiChatInput" class="ai-chat-input" rows="2" placeholder="سؤال خود را به فارسی بنویسید… مثلاً: وضعیت نقدینگی من چطور است؟"></textarea>
+      <button type="button" class="btn primary" id="aiSendBtn">ارسال</button>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-settings">
     
       <div class="section reveal in-view" id="sec-design-switcher">
-        <div class="section-title"><span class="dot"></span>طراحی</div>
+        <div class="section-title"><span class="dot"></span> Design</div>
         <div class="section-sub">ظاهر و ساختار رابط</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب طراحی">
           <button type="button" class="design-card active" data-design-val="aurora" role="option" aria-selected="true">
@@ -866,17 +896,18 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260902ux"></script>
-<script src="app-core.js?v=20260902ux"></script>
-<script src="app-ui.js?v=20260902ux"></script>
-<script src="app-notes.js?v=20260902ux"></script>
-<script src="app-boot.js?v=20260902ux"></script>
+<script src="prices-api.js?v=20260902final"></script>
+<script src="app-core.js?v=20260902final"></script>
+<script src="app-ui.js?v=20260902final"></script>
+<script src="app-notes.js?v=20260902final"></script>
+<script src="app-boot.js?v=20260902final"></script>
+<script src="financial-ai.js?v=20260902ai"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260902ux';
+      s.src='tests.js?v=20260902final';
       document.body.appendChild(s);
     }
   }catch(e){}

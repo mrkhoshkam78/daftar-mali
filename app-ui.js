@@ -407,7 +407,7 @@ function renderAssetCards(){
           <div class="asset-name">${d.name}</div>
           <div class="asset-cat">${d.cat}</div>
         </div>
-        ${FIXED_ASSET_KEYS.includes(d.key) ? '' : `<button class="asset-del-btn" data-del-key="${d.key}" title="حذف این دارایی" aria-label="حذف">×</button>`}
+        <button class="asset-del-btn" data-del-key="${d.key}" title="حذف این دارایی" aria-label="حذف">×</button>
       </div>
       <div class="asset-balance">
         <span class="asset-val" data-val-key="${d.key}">${fmt(val)} <small>تومان</small></span>

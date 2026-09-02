@@ -444,8 +444,7 @@ function renderNotesCalendar(){
   if(title) title.textContent = (JMONTHS[jm-1]||'') + ' ' + jy;
 
   const first = new Date(y, m, 1);
-  const isEn = (document.documentElement.getAttribute('data-lang') || 'fa') === 'en';
-  const startPad = isEn ? first.getDay() : ((first.getDay() + 1) % 7);
+  const startPad = first.getDay(); // 0 Sun
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const todayIso = todayISO();
   const counts = {};
@@ -454,7 +453,7 @@ function renderNotesCalendar(){
     if(d) counts[d] = (counts[d]||0)+1;
   });
 
-  const dows = isEn ? ['S','M','T','W','T','F','S'] : ['ش','ی','د','س','چ','پ','ج'];
+  const dows = ['ی','د','س','چ','پ','ج','ش']; // approximate labels
   let html = dows.map(d=>`<div class="notes-cal-dow">${d}</div>`).join('');
   for(let i=0;i<startPad;i++) html += `<button type="button" class="notes-cal-day muted" disabled></button>`;
   for(let day=1; day<=daysInMonth; day++){
