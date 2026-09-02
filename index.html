@@ -638,34 +638,29 @@
 
 
 <div class="page" id="page-ai-advisor">
-  <div class="ai-advisor-wrap">
-    <div class="ai-header">
-      <div class="ai-title-row">
-        <h2 class="ai-title">مشاور مالی هوشمند</h2>
-        <div class="ai-header-actions">
-          <button type="button" class="btn ghost sm" id="aiToggleSettings" title="تنظیمات API">تنظیمات</button>
-          <button type="button" class="btn ghost sm" id="aiClearBtn" title="پاک کردن گفتگو">پاک کردن</button>
-        </div>
-      </div>
-      <p class="ai-subtitle">از وضعیت مالی واقعی پنل شما برای پاسخ استفاده می‌کند. کلید API فقط روی دستگاه شما ذخیره می‌شود.</p>
+  <div class="section reveal in-view ai-section">
+    <div class="section-title"><span class="dot"></span>مشاور مالی هوشمند</div>
+    <div class="section-sub">پاسخ بر اساس داده‌های واقعی پنل. فقط خواندن — بدون تغییر داده.</div>
+    <div class="ai-toolbar">
+      <button type="button" class="btn ghost" id="aiToggleSettings">تنظیمات API</button>
+      <button type="button" class="btn ghost" id="aiClearBtn">پاک کردن گفتگو</button>
     </div>
-
     <div class="ai-settings-panel" id="aiSettingsPanel">
-      <div class="ai-settings-inner">
-        <label class="ai-label">کلید API (OpenAI یا سازگار)</label>
-        <input type="password" id="aiApiKeyInput" class="ai-input" placeholder="sk-... یا کلید سازگار" autocomplete="off">
-        <label class="ai-label">آدرس Endpoint (اختیاری)</label>
-        <input type="text" id="aiEndpointInput" class="ai-input" placeholder="https://api.openai.com/v1/chat/completions">
-        <button type="button" class="btn primary sm" id="aiSaveKeyBtn">ذخیره تنظیمات</button>
-        <p class="ai-hint">کلید هرگز در کد یا سرور ذخیره نمی‌شود. فقط در localStorage مرورگر شماست.</p>
+      <label class="ai-label">کلید API (OpenAI یا سازگار)</label>
+      <input type="password" id="aiApiKeyInput" class="ai-input" placeholder="sk-... یا کلید سازگار" autocomplete="off">
+      <label class="ai-label">آدرس Endpoint (اختیاری)</label>
+      <input type="text" id="aiEndpointInput" class="ai-input" placeholder="https://api.openai.com/v1/chat/completions">
+      <div class="ai-settings-actions">
+        <button type="button" class="btn primary" id="aiSaveKeyBtn">ذخیره</button>
       </div>
+      <p class="ai-hint">کلید فقط در localStorage مرورگر شما ذخیره می‌شود.</p>
     </div>
-
-    <div class="ai-chat-messages" id="aiChatMessages" role="log" aria-live="polite"></div>
-
-    <div class="ai-chat-input-row">
-      <textarea id="aiChatInput" class="ai-chat-input" rows="2" placeholder="سؤال خود را به فارسی بنویسید… مثلاً: وضعیت نقدینگی من چطور است؟"></textarea>
-      <button type="button" class="btn primary" id="aiSendBtn">ارسال</button>
+    <div class="ai-chat-card">
+      <div class="ai-chat-messages" id="aiChatMessages" role="log" aria-live="polite"></div>
+      <div class="ai-chat-input-row">
+        <textarea id="aiChatInput" class="ai-chat-input" rows="2" placeholder="مثلاً: هزینه‌های این ماه چطور بوده؟"></textarea>
+        <button type="button" class="btn primary" id="aiSendBtn">ارسال</button>
+      </div>
     </div>
   </div>
 </div>

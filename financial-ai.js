@@ -1,26 +1,23 @@
 /**
- * financial-ai.js — ماژول مستقل Financial AI Advisor (MVP v2)
- * وابستگی: فقط خواندن state سراسری و توابع محاسباتی موجود پروژه.
- * هیچ تغییری در منطق/محاسبات/UI فعلی ایجاد نمی‌کند.
- * کلید API فقط در localStorage کاربر ذخیره می‌شود (هرگز hardcode نمی‌شود).
- * بدون کلید: تحلیل‌گر محلی مبتنی بر Context واقعی پاسخ می‌دهد.
- * با کلید: درخواست به API سازگار با OpenAI ارسال می‌شود.
+ * financial-ai.js — Financial AI Advisor Version 2
+ * Context-Aware · Tool-Oriented · Read-Only · Session Memory
+ * وابستگی: فقط خواندن state و توابع محاسباتی موجود پروژه.
+ * هیچ تغییری در state مالی ایجاد نمی‌کند.
  */
 (function (global) {
   'use strict';
 
   var AI_KEY_STORAGE = 'daftar-ai-api-key';
   var AI_ENDPOINT_STORAGE = 'daftar-ai-endpoint';
-  var AI_HISTORY_STORAGE = 'daftar-ai-chat-history';
+  var AI_HISTORY_STORAGE = 'daftar-ai-chat-history-v2';
   var DEFAULT_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-  var MAX_HISTORY = 20;
-  var MAX_RECENT_TX = 12;
+  var MAX_HISTORY_TURNS = 8;
+  var MAX_RECENT_TX = 15;
 
   var chatHistory = [];
+  var sessionMemory = { lastIntents: [], lastTopics: [], lastContextKeys: [] };
   var isSending = false;
-  var _inited = false;
 
-  /* ---------- helpers ---------- */
   function safeNum(v, def) {
     var n = Number(v);
     return isFinite(n) ? n : (def != null ? def : 0);
@@ -35,312 +32,360 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+  function hasAny(q, words) {
+    q = String(q || '').toLowerCase();
+    for (var i = 0; i < words.length; i++) {
+      if (q.indexOf(words[i]) !== -1) return true;
+    }
+    return false;
+  }
 
-  /* ---------- Context Builder (فقط داده واقعی) ---------- */
-  function buildFinancialContext() {
-    var ctx = {
-      generatedAt: new Date().toISOString(),
-      currency: 'تومان',
-      summary: {},
-      assets: {},
-      bankCards: [],
-      noncash: [],
-      goals: [],
-      recentTransactions: [],
-      loans: { lentOpen: 0, borrowedOpen: 0, items: [] },
-      notes: []
-    };
-
-    try {
+  /* ========== Read-Only Tools ========== */
+  var Tools = {
+    getSummary: function () {
       var total = (typeof computeTotal === 'function') ? computeTotal() : 0;
       var cash = (typeof computeCash === 'function') ? computeCash() : 0;
       var invest = (typeof computeInvest === 'function') ? computeInvest() : 0;
       var noncashTotal = (typeof sumNoncashCurrentValues === 'function') ? sumNoncashCurrentValues() : 0;
-
-      ctx.summary = {
+      return {
         totalAssets: total,
         cashLiquidity: cash,
         investments: invest,
         noncashEstimated: noncashTotal,
-        totalWithNoncash: total + noncashTotal
+        totalWithNoncash: total + noncashTotal,
+        cashRatio: total > 0 ? Math.round((cash / total) * 100) : 0,
+        investRatio: total > 0 ? Math.round((invest / total) * 100) : 0
       };
-
+    },
+    getLiquidity: function () {
+      var items = [];
       if (typeof assets === 'object' && assets && typeof ASSET_DEFS !== 'undefined') {
-        var defs = Array.isArray(ASSET_DEFS) ? ASSET_DEFS : [];
-        defs.forEach(function (d) {
-          if (!d || !d.key) return;
-          ctx.assets[d.key] = {
-            name: d.name || d.key,
-            category: d.cat || '',
-            balance: safeNum(assets[d.key], 0)
-          };
+        (ASSET_DEFS || []).forEach(function (d) {
+          if (d && d.cat === 'نقدینگی') {
+            items.push({ key: d.key, name: d.name || d.key, balance: safeNum(assets[d.key], 0) });
+          }
         });
       }
-
+      var cards = [];
       if (Array.isArray(bankCards)) {
-        ctx.bankCards = bankCards.map(function (c) {
-          return {
-            name: c.name || 'کارت',
-            last4: c.last4 || '',
-            balance: safeNum(c.balance, 0),
-            isDefault: !!c.isDefault
-          };
+        cards = bankCards.map(function (c) {
+          return { name: c.name || 'کارت', last4: c.last4 || '', balance: safeNum(c.balance, 0), isDefault: !!c.isDefault };
         });
       }
-
+      var cash = (typeof computeCash === 'function') ? computeCash() : 0;
+      return { total: cash, items: items, bankCards: cards };
+    },
+    getInvestments: function () {
+      var items = [];
+      if (typeof assets === 'object' && assets && typeof ASSET_DEFS !== 'undefined') {
+        (ASSET_DEFS || []).forEach(function (d) {
+          if (d && d.cat === 'سرمایه‌گذاری') {
+            items.push({ key: d.key, name: d.name || d.key, balance: safeNum(assets[d.key], 0) });
+          }
+        });
+      }
+      var total = (typeof computeInvest === 'function') ? computeInvest() : 0;
+      return { total: total, items: items };
+    },
+    getNoncash: function () {
+      var list = [];
       if (Array.isArray(noncash)) {
-        ctx.noncash = noncash.slice(0, 15).map(function (item) {
-          var val = (typeof currentValueForNoncash === 'function')
-            ? currentValueForNoncash(item)
-            : safeNum(item.manualValue, 0);
-          return {
-            category: item.category || item.cat || 'other',
-            label: item.label || item.name || '',
-            estimatedValue: val
-          };
+        list = noncash.slice(0, 20).map(function (item) {
+          var val = (typeof currentValueForNoncash === 'function') ? currentValueForNoncash(item) : safeNum(item.manualValue, 0);
+          return { category: item.category || item.cat || 'other', label: item.label || item.name || '', estimatedValue: val };
         });
       }
-
+      var total = (typeof sumNoncashCurrentValues === 'function') ? sumNoncashCurrentValues() : 0;
+      return { total: total, items: list };
+    },
+    getGoals: function () {
+      var list = [];
+      var summary = Tools.getSummary();
       if (Array.isArray(financialGoals)) {
-        ctx.goals = financialGoals.map(function (g) {
-          return {
-            title: g.title || '',
-            targetAmount: safeNum(g.targetAmount, 0),
-            deadline: g.deadline || null
-          };
+        list = financialGoals.map(function (g) {
+          var target = safeNum(g.targetAmount, 0);
+          var progress = target > 0 ? Math.min(100, Math.round((summary.totalAssets / target) * 100)) : null;
+          return { title: g.title || '', targetAmount: target, deadline: g.deadline || null, progressPctApprox: progress };
         });
       }
-
+      return { count: list.length, items: list };
+    },
+    getLoans: function () {
+      var lent = 0, borrowed = 0, items = [];
+      if (Array.isArray(notebook)) {
+        notebook.forEach(function (e) {
+          if (!e || (e.type !== 'lent' && e.type !== 'borrowed') || e.settled) return;
+          var amt = safeNum(e.amount, 0);
+          if (e.type === 'lent') lent += amt; else borrowed += amt;
+          items.push({ type: e.type, amount: amt, person: e.person || '', date: e.date || '', desc: (e.desc || '').slice(0, 60) });
+        });
+      }
+      return { lentOpen: lent, borrowedOpen: borrowed, netDebt: borrowed - lent, items: items.slice(0, 12) };
+    },
+    getCashflow: function () {
+      var income = 0, expense = 0;
+      var byMonth = {};
+      var recentIncome = [], recentExpense = [];
+      if (Array.isArray(notebook)) {
+        notebook.forEach(function (e) {
+          if (!e) return;
+          var amt = safeNum(e.amount, 0);
+          if (amt <= 0) return;
+          var mk = (e.date || '').slice(0, 7) || 'unknown';
+          if (!byMonth[mk]) byMonth[mk] = { income: 0, expense: 0 };
+          if (e.type === 'deposit') {
+            income += amt; byMonth[mk].income += amt;
+            recentIncome.push({ amount: amt, date: e.date || '', person: e.person || '', desc: (e.desc || '').slice(0, 60) });
+          } else if (e.type === 'payment') {
+            expense += amt; byMonth[mk].expense += amt;
+            recentExpense.push({ amount: amt, date: e.date || '', person: e.person || '', desc: (e.desc || '').slice(0, 60) });
+          }
+        });
+      }
+      recentIncome = recentIncome.slice(-8).reverse();
+      recentExpense = recentExpense.slice(-8).reverse();
+      var months = Object.keys(byMonth).filter(function (k) { return k !== 'unknown'; }).sort().slice(-4);
+      var monthly = months.map(function (m) {
+        return { month: m, income: byMonth[m].income, expense: byMonth[m].expense, net: byMonth[m].income - byMonth[m].expense };
+      });
+      return {
+        totalIncomeRecorded: income, totalExpenseRecorded: expense, netRecorded: income - expense,
+        monthly: monthly, recentIncome: recentIncome, recentExpense: recentExpense,
+        hasData: income > 0 || expense > 0
+      };
+    },
+    getRecentTx: function () {
+      var list = [];
       if (Array.isArray(notebook)) {
         var sorted = notebook.slice().sort(function (a, b) {
-          var da = (a.date || '') + (a.time || '');
-          var db = (b.date || '') + (b.time || '');
-          return db.localeCompare(da);
+          return ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || ''));
         });
-        ctx.recentTransactions = sorted.slice(0, MAX_RECENT_TX).map(function (e) {
-          return {
-            type: e.type || '',
-            amount: safeNum(e.amount, 0),
-            date: e.date || '',
-            person: e.person || '',
-            desc: (e.desc || '').slice(0, 80),
-            settled: !!e.settled
-          };
-        });
-
-        var openLoans = notebook.filter(function (e) {
-          return e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled;
-        });
-        var lent = 0, borrowed = 0;
-        openLoans.forEach(function (e) {
-          var amt = safeNum(e.amount, 0);
-          if (e.type === 'lent') lent += amt;
-          else borrowed += amt;
-        });
-        ctx.loans = {
-          lentOpen: lent,
-          borrowedOpen: borrowed,
-          items: openLoans.slice(0, 8).map(function (e) {
-            return {
-              type: e.type,
-              amount: safeNum(e.amount, 0),
-              person: e.person || '',
-              date: e.date || ''
-            };
-          })
-        };
-      }
-
-      if (Array.isArray(notes)) {
-        ctx.notes = notes.slice(0, 5).map(function (n) {
-          return { title: (n.title || '').slice(0, 60), pinned: !!n.pinned };
+        list = sorted.slice(0, MAX_RECENT_TX).map(function (e) {
+          return { type: e.type || '', amount: safeNum(e.amount, 0), date: e.date || '', person: e.person || '', desc: (e.desc || '').slice(0, 80), settled: !!e.settled };
         });
       }
-    } catch (err) {
-      console.error('[FinancialAI] context build error', err);
-      ctx._error = 'خطا در ساخت خلاصه وضعیت مالی';
+      return { count: list.length, items: list };
     }
+  };
 
+  var INTENT_MAP = [
+    { id: 'liquidity', keys: ['نقد', 'نقدینگی', 'کارت', 'پول نقد', 'موجودی کارت', 'liquidity', 'cash'], tools: ['getLiquidity', 'getSummary'] },
+    { id: 'invest', keys: ['سرمایه', 'سرمایه‌گذاری', 'اسنپ', 'حامی', 'فارابی', 'صندوق', 'invest', 'fund'], tools: ['getInvestments', 'getSummary'] },
+    { id: 'expense', keys: ['هزینه', 'خرج', 'پرداخت', 'expense', 'payment', 'مخارج'], tools: ['getCashflow', 'getRecentTx'] },
+    { id: 'income', keys: ['درآمد', 'دریافت', 'حقوق', 'واریز', 'income', 'deposit'], tools: ['getCashflow', 'getRecentTx'] },
+    { id: 'cashflow', keys: ['جریان', 'دخل و خرج', 'تراز', 'مقایسه درآمد', 'cashflow'], tools: ['getCashflow', 'getSummary'] },
+    { id: 'loans', keys: ['قرض', 'بدهی', 'وام', 'بدهکار', 'طلب', 'debt', 'loan'], tools: ['getLoans'] },
+    { id: 'goals', keys: ['هدف', 'اهداف', 'پس‌انداز برای', 'goal'], tools: ['getGoals', 'getSummary'] },
+    { id: 'noncash', keys: ['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'gold', 'silver'], tools: ['getNoncash'] },
+    { id: 'tx', keys: ['تراکنش', 'تاریخچه تراکنش', 'آخرین تراکنش', 'transaction'], tools: ['getRecentTx'] },
+    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار', 'چه کار', 'بهتره', 'advice', 'suggest', 'راهنمایی'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
+    { id: 'summary', keys: ['خلاصه', 'وضعیت', 'گزارش', 'کل دارایی', 'overview', 'status', 'چطوره', 'چطور است'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
+  ];
+
+  function detectIntents(question, memory) {
+    var q = String(question || '');
+    var found = [];
+    INTENT_MAP.forEach(function (it) {
+      if (hasAny(q, it.keys)) found.push(it.id);
+    });
+    var isFollowUp = hasAny(q, ['نسبت به', 'ماه قبل', 'قبلی', 'همون', 'همان', 'بیشتر بگو', 'یعنی', 'پس ', 'و بعد']) ||
+      (q.trim().length < 18 && memory.lastIntents && memory.lastIntents.length);
+    if (!found.length && isFollowUp && memory.lastIntents && memory.lastIntents.length) {
+      found = memory.lastIntents.slice();
+    }
+    if (!found.length) found = ['summary'];
+    var uniq = [];
+    found.forEach(function (id) { if (uniq.indexOf(id) < 0) uniq.push(id); });
+    return uniq;
+  }
+
+  function selectToolsForIntents(intentIds) {
+    var toolSet = {};
+    intentIds.forEach(function (id) {
+      INTENT_MAP.forEach(function (it) {
+        if (it.id === id) it.tools.forEach(function (t) { toolSet[t] = true; });
+      });
+    });
+    if (intentIds.indexOf('advice') >= 0) toolSet.getSummary = true;
+    return Object.keys(toolSet);
+  }
+
+  function buildSelectedContext(toolNames) {
+    var ctx = { currency: 'تومان', generatedAt: new Date().toISOString(), selectedTools: toolNames.slice() };
+    var keyMap = {
+      getSummary: 'summary', getLiquidity: 'liquidity', getInvestments: 'investments',
+      getNoncash: 'noncash', getGoals: 'goals', getLoans: 'loans',
+      getCashflow: 'cashflow', getRecentTx: 'recentTx'
+    };
+    toolNames.forEach(function (name) {
+      if (typeof Tools[name] === 'function') {
+        try { ctx[keyMap[name] || name] = Tools[name](); }
+        catch (e) { console.error('[FinancialAI] tool', name, e); }
+      }
+    });
     return ctx;
   }
 
-  /* ---------- Local intelligent analyzer (بدون نیاز به API) ---------- */
-  function localAnalyze(userMessage, ctx) {
-    var q = String(userMessage || '').toLowerCase();
-    var s = ctx.summary || {};
-    var lines = [];
-
-    function has(words) {
-      return words.some(function (w) { return q.indexOf(w) !== -1; });
+  function buildLocalAnswer(question, intents, ctx) {
+    var parts = [];
+    var insights = [];
+    var q = String(question || '');
+    function addData(title, lines) {
+      if (!lines || !lines.length) return;
+      parts.push(title);
+      lines.forEach(function (l) { if (l) parts.push(l); });
+      parts.push('');
     }
 
-    // خلاصه کلی
-    if (has(['خلاصه', 'وضعیت', 'چطوره', 'چطور است', 'گزارش', 'کل', 'overview', 'status'])) {
-      lines.push('📊 خلاصه وضعیت مالی شما (بر اساس داده‌های واقعی پنل):');
-      lines.push('• کل دارایی نقد + سرمایه‌گذاری: ' + fmtNum(s.totalAssets) + ' تومان');
-      lines.push('• نقدینگی (کارت + پول نقد): ' + fmtNum(s.cashLiquidity) + ' تومان');
-      lines.push('• سرمایه‌گذاری‌ها: ' + fmtNum(s.investments) + ' تومان');
-      if (s.noncashEstimated > 0) {
-        lines.push('• ارزش تقریبی دارایی غیرنقد: ' + fmtNum(s.noncashEstimated) + ' تومان');
-        lines.push('• جمع تقریبی با غیرنقد: ' + fmtNum(s.totalWithNoncash) + ' تومان');
+    if (ctx.summary && (intents.indexOf('summary') >= 0 || intents.indexOf('advice') >= 0)) {
+      var s = ctx.summary;
+      addData('📊 خلاصه وضعیت (داده واقعی پنل)', [
+        '• کل دارایی (نقد + سرمایه‌گذاری): ' + fmtNum(s.totalAssets) + ' تومان',
+        '• نقدینگی: ' + fmtNum(s.cashLiquidity) + ' تومان (' + (s.cashRatio || 0) + '٪)',
+        '• سرمایه‌گذاری: ' + fmtNum(s.investments) + ' تومان (' + (s.investRatio || 0) + '٪)',
+        s.noncashEstimated > 0 ? '• غیرنقد (تخمینی): ' + fmtNum(s.noncashEstimated) + ' تومان' : null
+      ]);
+    }
+
+    if (ctx.liquidity && (intents.indexOf('liquidity') >= 0 || intents.indexOf('advice') >= 0 || intents.indexOf('summary') >= 0)) {
+      var L = ctx.liquidity;
+      var lines = ['مجموع نقدینگی: ' + fmtNum(L.total) + ' تومان'];
+      (L.items || []).forEach(function (it) { lines.push('• ' + it.name + ': ' + fmtNum(it.balance) + ' تومان'); });
+      if (L.bankCards && L.bankCards.length) {
+        lines.push('کارت‌ها:');
+        L.bankCards.forEach(function (c) {
+          lines.push('• ' + c.name + (c.last4 ? ' (…' + c.last4 + ')' : '') + (c.isDefault ? ' [پیش‌فرض]' : '') + ': ' + fmtNum(c.balance) + ' تومان');
+        });
+      }
+      addData('💰 نقدینگی', lines);
+      if (ctx.summary && ctx.summary.totalAssets > 0 && ctx.summary.cashRatio < 15) {
+        insights.push('نقدینگی کمتر از ۱۵٪ کل دارایی است؛ حاشیه امن نقدی را در نظر بگیرید.');
+      } else if (ctx.summary && ctx.summary.cashRatio > 55) {
+        insights.push('بخش بزرگی از دارایی نقد است؛ در صورت تمایل بخشی را می‌توان به سرمایه‌گذاری منتقل کرد.');
       }
     }
 
-    // نقدینگی
-    if (has(['نقد', 'نقدینگی', 'کارت', 'پول نقد', 'موجودی', 'liquidity', 'cash'])) {
-      lines.push('💰 نقدینگی:');
-      lines.push('مجموع نقدینگی: ' + fmtNum(s.cashLiquidity) + ' تومان');
-      if (ctx.assets) {
-        Object.keys(ctx.assets).forEach(function (k) {
-          var a = ctx.assets[k];
-          if (a.category === 'نقدینگی') {
-            lines.push('• ' + a.name + ': ' + fmtNum(a.balance) + ' تومان');
-          }
-        });
-      }
-      if (ctx.bankCards && ctx.bankCards.length) {
-        lines.push('کارت‌های بانکی:');
-        ctx.bankCards.forEach(function (c) {
-          lines.push('• ' + c.name + (c.last4 ? ' (…' + c.last4 + ')' : '') +
-            (c.isDefault ? ' [پیش‌فرض]' : '') + ': ' + fmtNum(c.balance) + ' تومان');
-        });
+    if (ctx.investments && (intents.indexOf('invest') >= 0 || intents.indexOf('summary') >= 0 || intents.indexOf('advice') >= 0)) {
+      var Inv = ctx.investments;
+      var linesI = ['مجموع سرمایه‌گذاری: ' + fmtNum(Inv.total) + ' تومان'];
+      if (!Inv.items || !Inv.items.length) linesI.push('اطلاعات کافی در پنل ثبت نشده — دارایی سرمایه‌گذاری تعریف نشده.');
+      else Inv.items.forEach(function (it) { linesI.push('• ' + it.name + ': ' + fmtNum(it.balance) + ' تومان'); });
+      addData('📈 سرمایه‌گذاری', linesI);
+    }
+
+    if (ctx.cashflow && (intents.indexOf('expense') >= 0 || intents.indexOf('income') >= 0 || intents.indexOf('cashflow') >= 0 || intents.indexOf('advice') >= 0)) {
+      var C = ctx.cashflow;
+      if (!C.hasData) {
+        addData('🧾 دخل و خرج', ['اطلاعات کافی در پنل ثبت نشده — هنوز دریافت/پرداختی در دفترچه ثبت نشده است.']);
       } else {
-        lines.push('هنوز کارت بانکی جداگانه‌ای ثبت نشده (موجودی کارت از دارایی «کارت» خوانده می‌شود).');
+        var linesC = [
+          '• مجموع دریافتی‌های ثبت‌شده: ' + fmtNum(C.totalIncomeRecorded) + ' تومان',
+          '• مجموع پرداخت‌های ثبت‌شده: ' + fmtNum(C.totalExpenseRecorded) + ' تومان',
+          '• خالص ثبت‌شده: ' + fmtNum(C.netRecorded) + ' تومان'
+        ];
+        if (C.monthly && C.monthly.length) {
+          linesC.push('روند ماهانه:');
+          C.monthly.forEach(function (m) {
+            linesC.push('• ' + m.month + ' → درآمد ' + fmtNum(m.income) + ' / هزینه ' + fmtNum(m.expense) + ' / خالص ' + fmtNum(m.net));
+          });
+        }
+        if (hasAny(q, ['ماه قبل', 'نسبت به', 'قبلی']) && C.monthly && C.monthly.length >= 2) {
+          var last = C.monthly[C.monthly.length - 1];
+          var prev = C.monthly[C.monthly.length - 2];
+          var expDiff = last.expense - prev.expense;
+          linesC.push('مقایسه هزینه ' + last.month + ' نسبت به ' + prev.month + ': ' +
+            (expDiff > 0 ? 'حدود ' + fmtNum(expDiff) + ' تومان بیشتر' : expDiff < 0 ? 'حدود ' + fmtNum(-expDiff) + ' تومان کمتر' : 'تقریباً برابر'));
+        }
+        if (intents.indexOf('expense') >= 0 && C.recentExpense && C.recentExpense.length) {
+          linesC.push('آخرین هزینه‌ها:');
+          C.recentExpense.slice(0, 5).forEach(function (t) {
+            linesC.push('• ' + fmtNum(t.amount) + ' تومان' + (t.date ? ' (' + t.date + ')' : '') + (t.desc ? ' — ' + t.desc : ''));
+          });
+        }
+        if (intents.indexOf('income') >= 0 && C.recentIncome && C.recentIncome.length) {
+          linesC.push('آخرین دریافتی‌ها:');
+          C.recentIncome.slice(0, 5).forEach(function (t) {
+            linesC.push('• ' + fmtNum(t.amount) + ' تومان' + (t.date ? ' (' + t.date + ')' : '') + (t.person ? ' — ' + t.person : ''));
+          });
+        }
+        addData('🧾 دخل و خرج', linesC);
+        if (C.totalExpenseRecorded > C.totalIncomeRecorded && C.totalIncomeRecorded > 0) {
+          insights.push('مجموع هزینه‌های ثبت‌شده از دریافتی‌ها بیشتر است.');
+        }
       }
     }
 
-    // سرمایه‌گذاری
-    if (has(['سرمایه', 'سرمایه‌گذاری', 'اسنپ', 'حامی', 'فارابی', 'invest', 'fund'])) {
-      lines.push('📈 سرمایه‌گذاری‌ها:');
-      lines.push('مجموع: ' + fmtNum(s.investments) + ' تومان');
-      if (ctx.assets) {
-        Object.keys(ctx.assets).forEach(function (k) {
-          var a = ctx.assets[k];
-          if (a.category === 'سرمایه‌گذاری') {
-            lines.push('• ' + a.name + ': ' + fmtNum(a.balance) + ' تومان');
-          }
+    if (ctx.loans && intents.indexOf('loans') >= 0) {
+      var Ln = ctx.loans;
+      var linesL = [
+        '• قرض داده‌شده (باز): ' + fmtNum(Ln.lentOpen) + ' تومان',
+        '• قرض گرفته‌شده (باز): ' + fmtNum(Ln.borrowedOpen) + ' تومان'
+      ];
+      if (!Ln.items || !Ln.items.length) linesL.push('قرض تسویه‌نشده‌ای ثبت نشده است.');
+      else Ln.items.slice(0, 6).forEach(function (it) {
+        linesL.push('• ' + (it.type === 'lent' ? 'قرض داده' : 'قرض گرفته') + ' — ' + (it.person || '—') + ': ' + fmtNum(it.amount) + ' تومان');
+      });
+      addData('🤝 قرض و بدهی', linesL);
+      if (Ln.borrowedOpen > 0) insights.push('قرض گرفته‌شده باز دارید؛ بازپرداخت را اولویت‌بندی کنید.');
+    }
+
+    if (ctx.goals && (intents.indexOf('goals') >= 0 || intents.indexOf('advice') >= 0)) {
+      var G = ctx.goals;
+      if (!G.count) addData('🎯 اهداف', ['اطلاعات کافی در پنل ثبت نشده — هنوز هدف مالی تعریف نشده است.']);
+      else {
+        var linesG = G.items.map(function (g) {
+          var p = g.progressPctApprox != null ? (' ≈ ' + g.progressPctApprox + '٪ نسبت به کل دارایی') : '';
+          return '• ' + (g.title || 'بدون عنوان') + ': هدف ' + fmtNum(g.targetAmount) + ' تومان' + p + (g.deadline ? ' — مهلت: ' + g.deadline : '');
         });
-      }
-      if (s.totalAssets > 0) {
-        var pct = Math.round((s.investments / s.totalAssets) * 100);
-        lines.push('سهم سرمایه‌گذاری از کل دارایی: حدود ' + pct + '٪');
+        addData('🎯 اهداف مالی', linesG);
       }
     }
 
-    // اهداف
-    if (has(['هدف', 'اهداف', 'goal'])) {
-      if (ctx.goals && ctx.goals.length) {
-        lines.push('🎯 اهداف مالی ثبت‌شده:');
-        ctx.goals.forEach(function (g) {
-          lines.push('• ' + (g.title || 'بدون عنوان') + ' — هدف: ' + fmtNum(g.targetAmount) + ' تومان' +
-            (g.deadline ? ' (مهلت: ' + g.deadline + ')' : ''));
+    if (ctx.noncash && intents.indexOf('noncash') >= 0) {
+      var N = ctx.noncash;
+      if (!N.items || !N.items.length) addData('🪙 غیرنقد', ['دارایی غیرنقدی ثبت نشده است.']);
+      else {
+        var linesN = ['جمع تقریبی: ' + fmtNum(N.total) + ' تومان'].concat(N.items.map(function (it) {
+          return '• ' + (it.label || it.category) + ': حدود ' + fmtNum(it.estimatedValue) + ' تومان';
+        }));
+        addData('🪙 دارایی غیرنقد', linesN);
+      }
+    }
+
+    if (ctx.recentTx && intents.indexOf('tx') >= 0) {
+      var T = ctx.recentTx;
+      if (!T.count) addData('📝 تراکنش‌ها', ['تراکنشی ثبت نشده است.']);
+      else {
+        var typeMap = { deposit: 'دریافتی', payment: 'پرداخت', lent: 'قرض داده', borrowed: 'قرض گرفته', transfer: 'انتقال' };
+        var linesT = T.items.slice(0, 8).map(function (t) {
+          return '• ' + (typeMap[t.type] || t.type) + ': ' + fmtNum(t.amount) + ' تومان' + (t.date ? ' (' + t.date + ')' : '') + (t.desc ? ' — ' + t.desc : '');
         });
-      } else {
-        lines.push('هنوز هدف مالی در پنل ثبت نشده. می‌توانید از بخش «اهداف مالی» هدف اضافه کنید.');
+        addData('📝 آخرین تراکنش‌ها', linesT);
       }
     }
 
-    // قرض
-    if (has(['قرض', 'بدهی', 'وام', 'lent', 'borrow', 'debt'])) {
-      var L = ctx.loans || {};
-      lines.push('🤝 وضعیت قرض‌ها:');
-      lines.push('• قرض داده‌شده (تسویه‌نشده): ' + fmtNum(L.lentOpen) + ' تومان');
-      lines.push('• قرض گرفته‌شده (تسویه‌نشده): ' + fmtNum(L.borrowedOpen) + ' تومان');
-      if (L.items && L.items.length) {
-        lines.push('جزئیات:');
-        L.items.forEach(function (it) {
-          var label = it.type === 'lent' ? 'قرض داده' : 'قرض گرفته';
-          lines.push('• ' + label + ' به/از ' + (it.person || '—') + ': ' + fmtNum(it.amount) + ' تومان');
-        });
-      } else if (!L.lentOpen && !L.borrowedOpen) {
-        lines.push('قرض تسویه‌نشده‌ای ثبت نشده است.');
-      }
+    if (intents.indexOf('advice') >= 0 && !insights.length && ctx.summary) {
+      insights.push('ترکیب دارایی را با اهداف خود مقایسه کنید؛ در صورت نبود هدف، یک هدف کوتاه‌مدت تعریف کنید.');
     }
 
-    // تراکنش / هزینه / درآمد
-    if (has(['تراکنش', 'هزینه', 'خرج', 'درآمد', 'پرداخت', 'دریافت', 'transaction', 'expense', 'income'])) {
-      if (ctx.recentTransactions && ctx.recentTransactions.length) {
-        lines.push('🧾 آخرین تراکنش‌های ثبت‌شده:');
-        ctx.recentTransactions.slice(0, 8).forEach(function (t) {
-          var typeLabel = ({
-            deposit: 'دریافتی', payment: 'پرداخت', lent: 'قرض داده',
-            borrowed: 'قرض گرفته', transfer: 'انتقال'
-          })[t.type] || t.type;
-          lines.push('• ' + typeLabel + ': ' + fmtNum(t.amount) + ' تومان' +
-            (t.date ? ' (' + t.date + ')' : '') +
-            (t.person ? ' — ' + t.person : '') +
-            (t.desc ? ' · ' + t.desc : ''));
-        });
-      } else {
-        lines.push('هنوز تراکنشی در دفترچه ثبت نشده است.');
-      }
+    if (!parts.length) {
+      parts.push('برای این سؤال داده مرتبط کافی پیدا نشد.');
+      parts.push('می‌توانید درباره نقدینگی، سرمایه‌گذاری، هزینه/درآمد، قرض، اهداف یا تراکنش‌ها بپرسید.');
     }
 
-    // غیرنقد
-    if (has(['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'noncash', 'gold'])) {
-      if (ctx.noncash && ctx.noncash.length) {
-        lines.push('🪙 دارایی غیرنقد:');
-        ctx.noncash.forEach(function (n) {
-          lines.push('• ' + (n.label || n.category) + ': حدود ' + fmtNum(n.estimatedValue) + ' تومان');
-        });
-        lines.push('جمع تقریبی: ' + fmtNum(s.noncashEstimated) + ' تومان');
-      } else {
-        lines.push('دارایی غیرنقدی ثبت نشده است.');
-      }
+    if (insights.length) {
+      parts.push('💡 پیشنهاد / Insight (بر اساس داده فعلی — نه تضمین آینده):');
+      insights.slice(0, 3).forEach(function (ins) { parts.push('• ' + ins); });
     }
 
-    // پیشنهاد / توصیه
-    if (has(['پیشنهاد', 'توصیه', 'چیکار', 'چه کار', 'advice', 'suggest', 'بهتر'])) {
-      lines.push('💡 پیشنهاد بر اساس وضعیت فعلی:');
-      if (s.cashLiquidity < s.totalAssets * 0.15 && s.totalAssets > 0) {
-        lines.push('• نقدینگی نسبت به کل دارایی پایین به نظر می‌رسد؛ بخشی از سرمایه‌گذاری را نقد نگه دارید.');
-      } else if (s.cashLiquidity > s.totalAssets * 0.5 && s.totalAssets > 0) {
-        lines.push('• بخش زیادی از دارایی نقد است؛ در صورت تمایل می‌توانید بخشی را به سرمایه‌گذاری منتقل کنید.');
-      } else {
-        lines.push('• ترکیب نقد و سرمایه‌گذاری نسبتاً متعادل به نظر می‌رسد.');
-      }
-      if (!(ctx.goals && ctx.goals.length)) {
-        lines.push('• ثبت حداقل یک هدف مالی مشخص کمک می‌کند برنامه‌ریزی دقیق‌تری داشته باشید.');
-      }
-      if ((ctx.loans && ctx.loans.borrowedOpen > 0)) {
-        lines.push('• قرض گرفته‌شده تسویه‌نشده دارید؛ اولویت بازپرداخت را در نظر بگیرید.');
-      }
-    }
-
-    // اگر هیچ دسته‌ای match نشد → خلاصه پیش‌فرض
-    if (!lines.length) {
-      lines.push('سلام! بر اساس داده‌های فعلی پنل:');
-      lines.push('• کل دارایی: ' + fmtNum(s.totalAssets) + ' تومان');
-      lines.push('• نقدینگی: ' + fmtNum(s.cashLiquidity) + ' تومان');
-      lines.push('• سرمایه‌گذاری: ' + fmtNum(s.investments) + ' تومان');
-      lines.push('');
-      lines.push('می‌توانید بپرسید: وضعیت نقدینگی، سرمایه‌گذاری‌ها، اهداف، قرض‌ها، تراکنش‌های اخیر، یا درخواست پیشنهاد.');
-    }
-
-    // یادآوری حالت محلی
     if (!getApiKey()) {
-      lines.push('');
-      lines.push('ℹ️ این پاسخ با تحلیل‌گر محلی و داده‌های واقعی پنل ساخته شده. برای پاسخ کامل‌تر با مدل زبانی، کلید API را در تنظیمات وارد کنید.');
+      parts.push('');
+      parts.push('ℹ️ حالت محلی. برای مدل زبانی کامل، کلید API را در تنظیمات وارد کنید.');
     }
 
-    return lines.join('\n');
+    return parts.join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
-  /* ---------- System Prompt (برای API واقعی) ---------- */
-  function buildSystemPrompt(context) {
-    return [
-      'تو یک مشاور مالی شخصی هوشمند و صادق هستی که به زبان فارسی روان پاسخ می‌دهی.',
-      'فقط بر اساس داده‌های واقعی Context زیر تحلیل و پیشنهاد بده.',
-      'هرگز عدد یا مانده را خودت محاسبه یا حدس نزن؛ اعداد را از Context بگیر.',
-      'اگر داده کافی نداری، صریحاً بگو «اطلاعات کافی در پنل ثبت نشده».',
-      'پاسخ‌ها مختصر، مفید و با توضیح دلیل باشند. واحد پول تومان است.',
-      '',
-      '=== وضعیت مالی فعلی کاربر ===',
-      JSON.stringify(context)
-    ].join('\n');
-  }
-
-  /* ---------- API key / endpoint ---------- */
   function getApiKey() {
     try { return localStorage.getItem(AI_KEY_STORAGE) || ''; } catch (e) { return ''; }
   }
@@ -351,8 +396,7 @@
     } catch (e) {}
   }
   function getEndpoint() {
-    try { return localStorage.getItem(AI_ENDPOINT_STORAGE) || DEFAULT_ENDPOINT; }
-    catch (e) { return DEFAULT_ENDPOINT; }
+    try { return localStorage.getItem(AI_ENDPOINT_STORAGE) || DEFAULT_ENDPOINT; } catch (e) { return DEFAULT_ENDPOINT; }
   }
   function setEndpoint(url) {
     try {
@@ -361,128 +405,90 @@
     } catch (e) {}
   }
 
-  /* ---------- Call AI (API یا محلی) ---------- */
-  async function callAI(userMessage) {
-    var context = buildFinancialContext();
-    var apiKey = getApiKey();
+  function buildSystemPrompt(ctx, intents) {
+    return [
+      'تو مشاور مالی شخصی صادق هستی. فقط فارسی روان پاسخ بده.',
+      'فقط از Context زیر استفاده کن. عدد اختراع نکن. اگر داده نیست بگو «اطلاعات کافی در پنل ثبت نشده».',
+      'بین داده واقعی، تحلیل و پیشنهاد تمایز بگذار. پیشنهادها قطعی نباشند.',
+      'Intentها: ' + intents.join(', '),
+      'Context انتخاب‌شده:',
+      JSON.stringify(ctx)
+    ].join('\n');
+  }
 
-    // بدون کلید → تحلیل‌گر محلی (همیشه پاسخ می‌دهد)
-    if (!apiKey) {
-      return { ok: true, content: localAnalyze(userMessage, context), mode: 'local' };
+  async function callAI(userMessage) {
+    var intents = detectIntents(userMessage, sessionMemory);
+    var toolNames = selectToolsForIntents(intents);
+    var ctx = buildSelectedContext(toolNames);
+    sessionMemory.lastIntents = intents.slice(0, 4);
+    sessionMemory.lastContextKeys = toolNames.slice();
+    sessionMemory.lastTopics = intents.slice();
+
+    if (!getApiKey()) {
+      return { ok: true, content: buildLocalAnswer(userMessage, intents, ctx), mode: 'local', intents: intents, tools: toolNames };
     }
 
-    var endpoint = getEndpoint();
-    var systemPrompt = buildSystemPrompt(context);
-    var messages = [{ role: 'system', content: systemPrompt }];
-    chatHistory.slice(-MAX_HISTORY).forEach(function (m) {
+    var messages = [{ role: 'system', content: buildSystemPrompt(ctx, intents) }];
+    chatHistory.slice(-MAX_HISTORY_TURNS * 2).forEach(function (m) {
       messages.push({ role: m.role, content: m.content });
     });
     messages.push({ role: 'user', content: userMessage });
 
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () {
-      if (controller) controller.abort();
-    }, 45000);
+    var timer = setTimeout(function () { if (controller) controller.abort(); }, 45000);
 
     try {
-      var res = await fetch(endpoint, {
+      var res = await fetch(getEndpoint(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + apiKey
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: messages,
-          temperature: 0.6,
-          max_tokens: 1200
-        }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getApiKey() },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages: messages, temperature: 0.5, max_tokens: 1100 }),
         signal: controller ? controller.signal : undefined
       });
       clearTimeout(timer);
-
       if (!res.ok) {
         var errText = 'HTTP ' + res.status;
-        try {
-          var errJson = await res.json();
-          if (errJson.error && errJson.error.message) errText = errJson.error.message;
-        } catch (e) {}
-        // fallback به محلی در صورت خطای API
-        var local = localAnalyze(userMessage, context);
-        return {
-          ok: true,
-          content: '⚠️ خطا در API (' + errText + '). پاسخ محلی:\n\n' + local,
-          mode: 'local-fallback'
-        };
+        try { var ej = await res.json(); if (ej.error && ej.error.message) errText = ej.error.message; } catch (e) {}
+        return { ok: true, content: '⚠️ خطا در API (' + errText + '). پاسخ محلی:\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
       }
-
       var data = await res.json();
-      var content = data.choices && data.choices[0] && data.choices[0].message
-        ? data.choices[0].message.content
-        : null;
-      if (!content) {
-        return { ok: true, content: localAnalyze(userMessage, context), mode: 'local-fallback' };
-      }
-      return { ok: true, content: String(content).trim(), mode: 'api' };
+      var content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
+      if (!content) return { ok: true, content: buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
+      return { ok: true, content: String(content).trim(), mode: 'api', intents: intents, tools: toolNames };
     } catch (err) {
       clearTimeout(timer);
-      var local = localAnalyze(userMessage, context);
-      var reason = (err && err.name === 'AbortError')
-        ? 'زمان پاسخ به پایان رسید'
-        : (err && err.message ? err.message : 'خطای شبکه');
-      return {
-        ok: true,
-        content: '⚠️ ' + reason + '. پاسخ محلی بر اساس داده‌های پنل:\n\n' + local,
-        mode: 'local-fallback'
-      };
+      var reason = (err && err.name === 'AbortError') ? 'زمان پاسخ تمام شد' : (err && err.message ? err.message : 'خطای شبکه');
+      return { ok: true, content: '⚠️ ' + reason + '\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
     }
   }
 
-  /* ---------- History ---------- */
   function loadHistory() {
     try {
       var raw = localStorage.getItem(AI_HISTORY_STORAGE);
-      if (raw) {
-        var arr = JSON.parse(raw);
-        if (Array.isArray(arr)) chatHistory = arr.slice(-MAX_HISTORY * 2);
-      }
+      if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) chatHistory = arr.slice(-MAX_HISTORY_TURNS * 2); }
     } catch (e) { chatHistory = []; }
   }
   function saveHistory() {
-    try {
-      localStorage.setItem(AI_HISTORY_STORAGE, JSON.stringify(chatHistory.slice(-MAX_HISTORY * 2)));
-    } catch (e) {}
+    try { localStorage.setItem(AI_HISTORY_STORAGE, JSON.stringify(chatHistory.slice(-MAX_HISTORY_TURNS * 2))); } catch (e) {}
   }
   function clearHistory() {
     chatHistory = [];
+    sessionMemory = { lastIntents: [], lastTopics: [], lastContextKeys: [] };
     saveHistory();
     renderMessages();
   }
 
-  /* ---------- UI ---------- */
-  function formatMessageContent(text) {
-    return escapeHtml(text).replace(/\n/g, '<br>');
-  }
+  function formatMessageContent(text) { return escapeHtml(text).replace(/\n/g, '<br>'); }
 
   function renderMessages() {
     var list = document.getElementById('aiChatMessages');
     if (!list) return;
-
     if (!chatHistory.length) {
-      list.innerHTML =
-        '<div class="ai-msg ai-msg-assistant">' +
-        '<div class="ai-msg-bubble">سلام! من مشاور مالی شما هستم. ' +
-        'می‌توانید درباره نقدینگی، سرمایه‌گذاری، اهداف، قرض‌ها یا تراکنش‌ها سؤال بپرسید. ' +
-        'پاسخ‌ها بر اساس داده‌های واقعی پنل است.' +
-        (getApiKey() ? '' : '<br><br>ℹ️ فعلاً بدون کلید API در حالت محلی کار می‌کند. برای مدل زبانی کامل، کلید را در تنظیمات وارد کنید.') +
-        '</div></div>';
+      list.innerHTML = '<div class="ai-msg ai-msg-assistant"><div class="ai-msg-bubble">سلام! درباره <b>نقدینگی</b>، <b>هزینه</b>، <b>سرمایه‌گذاری</b>، <b>قرض</b> یا <b>اهداف</b> بپرسید. فقط از داده واقعی پنل استفاده می‌کنم.</div></div>';
       return;
     }
-
     list.innerHTML = chatHistory.map(function (m) {
       var cls = m.role === 'user' ? 'ai-msg-user' : 'ai-msg-assistant';
-      return '<div class="ai-msg ' + cls + '"><div class="ai-msg-bubble">' +
-        formatMessageContent(m.content) + '</div></div>';
+      return '<div class="ai-msg ' + cls + '"><div class="ai-msg-bubble">' + formatMessageContent(m.content) + '</div></div>';
     }).join('');
     list.scrollTop = list.scrollHeight;
   }
@@ -491,10 +497,7 @@
     isSending = sending;
     var btn = document.getElementById('aiSendBtn');
     var input = document.getElementById('aiChatInput');
-    if (btn) {
-      btn.disabled = !!sending;
-      btn.textContent = sending ? '…' : 'ارسال';
-    }
+    if (btn) { btn.disabled = !!sending; btn.textContent = sending ? '…' : 'ارسال'; }
     if (input) input.disabled = !!sending;
   }
 
@@ -504,41 +507,27 @@
     if (!input) return;
     var text = (input.value || '').trim();
     if (!text) return;
-
     input.value = '';
     chatHistory.push({ role: 'user', content: text });
     renderMessages();
     saveHistory();
     setSendingState(true);
-
     var list = document.getElementById('aiChatMessages');
     if (list) {
       var thinking = document.createElement('div');
       thinking.className = 'ai-msg ai-msg-assistant ai-thinking';
       thinking.id = 'aiThinking';
-      thinking.innerHTML = '<div class="ai-msg-bubble">در حال تحلیل…</div>';
+      thinking.innerHTML = '<div class="ai-msg-bubble">در حال انتخاب داده و تحلیل…</div>';
       list.appendChild(thinking);
       list.scrollTop = list.scrollHeight;
     }
-
     var result;
-    try {
-      result = await callAI(text);
-    } catch (e) {
-      result = { ok: false, error: (e && e.message) || 'خطای ناشناخته' };
-    }
-
-    var thinkingEl = document.getElementById('aiThinking');
-    if (thinkingEl) thinkingEl.remove();
-
-    if (result && result.ok) {
-      chatHistory.push({ role: 'assistant', content: result.content });
-    } else {
-      chatHistory.push({
-        role: 'assistant',
-        content: '⚠️ ' + ((result && result.error) || 'خطای ناشناخته')
-      });
-    }
+    try { result = await callAI(text); }
+    catch (e) { result = { ok: false, error: (e && e.message) || 'خطا' }; }
+    var th = document.getElementById('aiThinking');
+    if (th) th.remove();
+    if (result && result.ok) chatHistory.push({ role: 'assistant', content: result.content });
+    else chatHistory.push({ role: 'assistant', content: '⚠️ ' + ((result && result.error) || 'خطای ناشناخته') });
     saveHistory();
     renderMessages();
     setSendingState(false);
@@ -549,13 +538,8 @@
     var endpointInput = document.getElementById('aiEndpointInput');
     if (keyInput) {
       var k = getApiKey();
-      if (k) {
-        keyInput.value = '••••••••' + k.slice(-4);
-        keyInput.dataset.hasKey = '1';
-      } else {
-        keyInput.value = '';
-        keyInput.dataset.hasKey = '0';
-      }
+      keyInput.value = k ? ('••••••••' + k.slice(-4)) : '';
+      keyInput.dataset.hasKey = k ? '1' : '0';
     }
     if (endpointInput) endpointInput.value = getEndpoint();
   }
@@ -566,21 +550,14 @@
     var clearBtn = document.getElementById('aiClearBtn');
     var saveKeyBtn = document.getElementById('aiSaveKeyBtn');
     var toggleSettings = document.getElementById('aiToggleSettings');
-
     if (sendBtn && !sendBtn._aiBound) {
       sendBtn._aiBound = true;
-      sendBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        handleSend();
-      });
+      sendBtn.addEventListener('click', function (e) { e.preventDefault(); handleSend(); });
     }
     if (input && !input._aiBound) {
       input._aiBound = true;
       input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          handleSend();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
       });
     }
     if (clearBtn && !clearBtn._aiBound) {
@@ -619,16 +596,16 @@
     renderMessages();
     renderSettingsPanel();
     bindUI();
-    _inited = true;
   }
 
-  /* ---------- Public ---------- */
   global.FinancialAI = {
     init: initPage,
-    buildContext: buildFinancialContext,
     clearHistory: clearHistory,
     getApiKey: getApiKey,
+    Tools: Tools,
+    detectIntents: detectIntents,
+    buildSelectedContext: buildSelectedContext,
     _callAI: callAI,
-    _localAnalyze: localAnalyze
+    _sessionMemory: function () { return sessionMemory; }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
