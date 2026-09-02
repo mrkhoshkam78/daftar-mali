@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
-<meta name="theme-color" content="#0B1220">
+<meta name="theme-color" content="#F0F4F8">
 <meta name="color-scheme" content="light dark">
 <meta name="app-build" content="20260902struct">
 <title>مبحث درآمد</title>
@@ -25,17 +25,22 @@
   if(ok.indexOf(t)<0)t="light";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
+  var lang=localStorage.getItem("daftar-language")||"fa";
+  if(lang!=="en") lang="fa";
+  document.documentElement.setAttribute("data-lang",lang);
+  document.documentElement.lang=lang==="en"?"en-US":"fa";
+  document.documentElement.dir=lang==="en"?"ltr":"rtl";
 }catch(e){}})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260902final" as="style">
+<link rel="preload" href="styles.css?v=20260902ux" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260902final">
+<link rel="stylesheet" href="styles.css?v=20260902ux">
 </head>
 <body>
 
-<div class="confirm-modal" id="confirmModal" style="display:none;">
+<div class="confirm-modal" id="confirmModal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
   <div class="confirm-box">
     <div class="confirm-title" id="confirmTitle"></div>
     <div class="confirm-sub" id="confirmSub"></div>
@@ -638,7 +643,7 @@
 <div class="page" id="page-settings">
     
       <div class="section reveal in-view" id="sec-design-switcher">
-        <div class="section-title"><span class="dot"></span> Design</div>
+        <div class="section-title"><span class="dot"></span>طراحی</div>
         <div class="section-sub">ظاهر و ساختار رابط</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب طراحی">
           <button type="button" class="design-card active" data-design-val="aurora" role="option" aria-selected="true">
@@ -861,17 +866,17 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260902final"></script>
-<script src="app-core.js?v=20260902final"></script>
-<script src="app-ui.js?v=20260902final"></script>
-<script src="app-notes.js?v=20260902final"></script>
-<script src="app-boot.js?v=20260902final"></script>
+<script src="prices-api.js?v=20260902ux"></script>
+<script src="app-core.js?v=20260902ux"></script>
+<script src="app-ui.js?v=20260902ux"></script>
+<script src="app-notes.js?v=20260902ux"></script>
+<script src="app-boot.js?v=20260902ux"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260902final';
+      s.src='tests.js?v=20260902ux';
       document.body.appendChild(s);
     }
   }catch(e){}

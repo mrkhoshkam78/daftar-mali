@@ -77,6 +77,7 @@ const I18N = {
   'تنظیم / تغییر رمز':'Set / Change Password','حذف رمز عبور':'Remove Password','پشتیبان‌گیری دستی (فایل)':'Manual Backup (File)',
   'دانلود فایل پشتیبان (JSON)':'Download Backup (JSON)','بازگردانی از فایل پشتیبان':'Restore from Backup','هدف رسید':'Goal Reached','🌐 زبان':'🌐 Language','زبان رابط کاربری را انتخاب کنید؛ فارسی پیش‌فرض است و English بر پایه استاندارد آمریکایی نمایش داده می‌شود.':'Choose the language used throughout the app','زبان':'Language','فارسی پیش‌فرض است · انگلیسی با استاندارد آمریکایی':'Persian is the default · English uses American English','فونت':'Font','فونت رابط کاربری را انتخاب کنید؛ انتخاب شما در کل برنامه اعمال و ذخیره می‌شود.':'Choose the font used throughout the interface','فونت سایت':'Site Font','Vazirmatn فونت پیش‌فرض فعلی است':'Vazirmatn is the current default font'
 };
+  I18N['طراحی']='Design';
   I18N['نام کاربری ورود']='Login Username';
   I18N['نام کاربری برای ورود به دفتر؛ پیش‌فرض «admin» است.']='Username used to enter the ledger; default is “admin”.';
   I18N['نام کاربری']='Username'; I18N['رمز عبور']='Password';
@@ -122,17 +123,24 @@ function translateDOM(lang){
   document.documentElement.setAttribute('data-lang', lang);
   const sel=$('languageSelect'); if(sel) sel.value=lang;
   updateTopbarDate();
+  try{
+    document.querySelectorAll('.hero-num, .dash-metric b, .asset-val, .nc-hero-amount').forEach(el=>{
+      if(el) el.style.textAlign = lang === 'en' ? 'left' : '';
+    });
+  }catch(e){}
 }
 function updateLoginPlaceholders(lang){
   const u=$('lockUsername'), p=$('lockInput'), s=$('loginUsername');
-  if(lang==='en'){ if(u)u.placeholder=''; if(p)p.placeholder='Password'; if(s)s.placeholder='admin'; }
-  else { if(u)u.placeholder=''; if(p)p.placeholder='رمز عبور'; if(s)s.placeholder='admin'; }
+  if(lang==='en'){ if(u)u.placeholder='Username'; if(p)p.placeholder='Password'; if(s)s.placeholder='admin'; }
+  else { if(u)u.placeholder='نام کاربری'; if(p)p.placeholder='رمز عبور'; if(s)s.placeholder='admin'; }
 }
 function applyLanguage(lang){
   if(!VALID_LANGS.includes(lang)) lang='fa';
   try{localStorage.setItem(LANG_KEY,lang);}catch(e){}
   translateDOM(lang);
   updateLoginPlaceholders(lang);
+  try{ if(typeof renderNotes === 'function') renderNotes(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
 }
 function applyFont(font){
   if(!VALID_FONTS.includes(font)) font='Vazirmatn';
@@ -233,6 +241,17 @@ function applyTheme(t){
   }
   root.classList.add('theme-' + t);
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+  try{
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta){
+      requestAnimationFrame(()=>{
+        try{
+          const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#0B1220';
+          meta.setAttribute('content', bg);
+        }catch(_e){}
+      });
+    }
+  }catch(_e){}
   document.querySelectorAll('.theme-card').forEach(c=>{
     const val = normalizeThemeId(c.getAttribute('data-theme-val') || c.dataset.themeVal || '');
     c.classList.toggle('active', val === t);
@@ -407,7 +426,9 @@ if($('menuToggle')){
 if($('menuBackdrop')) $('menuBackdrop').addEventListener('click', closeMenu);
 if($('menuCloseBtn')) $('menuCloseBtn').addEventListener('click', closeMenu);
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu();
+  if(e.key !== 'Escape') return;
+  if($('confirmModal') && $('confirmModal').style.display === 'flex') return;
+  if(document.body.classList.contains('menu-open')) closeMenu();
 });
 
 const PAGE_TITLES = {
@@ -418,6 +439,7 @@ const PAGE_TITLES = {
   'page-notebook': 'تراکنش‌ها',
   'page-history': 'تاریخچه',
   'page-notes': 'دفترچه یادداشت',
+  'page-goals': 'اهداف مالی',
   'page-settings': 'تنظیمات',
 };
 
@@ -713,39 +735,62 @@ if($('nbTime')) $('nbTime').value = todayDate().toTimeString().slice(0,5);
 document.addEventListener('input', (e)=>{
   if(!e.target.classList || !e.target.classList.contains('money-input')) return;
   const el = e.target;
-  const raw = el.value.replace(/,/g,'').replace(/[^\d]/g,'');
+  const raw = normalizeDigits(el.value).replace(/,/g,'').replace(/[^\d]/g,'');
   const withCommas = raw ? Number(raw).toLocaleString('en-US') : '';
-  const cursorFromEnd = el.value.length - el.selectionStart;
+  const cursorFromEnd = el.value.length - (el.selectionStart || 0);
   el.value = withCommas;
-  const newPos = Math.max(0, el.value.length - cursorFromEnd);
-  el.setSelectionRange(newPos, newPos);
+  try{
+    const newPos = Math.max(0, el.value.length - cursorFromEnd);
+    el.setSelectionRange(newPos, newPos);
+  }catch(_e){}
 });
 
 /* --- UI chrome (toast, confirm) --- */
 function showToast(msg, isErr){
   const t = $('toast');
+  if(!t) return;
   t.textContent = msg;
   t.classList.toggle('err', !!isErr);
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
 function showConfirmModal(title, sub, onConfirm){
-  $('confirmTitle').textContent = title;
-  $('confirmSub').textContent = sub || '';
-  $('confirmModal').style.display = 'flex';
+  const modal = $('confirmModal');
   const okBtn = $('confirmOkBtn');
   const cancelBtn = $('confirmCancelBtn');
+  if(!modal || !okBtn || !cancelBtn) return;
+  if(typeof showConfirmModal._cleanup === 'function'){
+    try{ showConfirmModal._cleanup(); }catch(_e){}
+  }
+  $('confirmTitle').textContent = title;
+  $('confirmSub').textContent = sub || '';
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
   const cleanup = ()=>{
-    $('confirmModal').style.display = 'none';
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = prevOverflow || '';
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
+    modal.removeEventListener('click', onBackdrop);
+    document.removeEventListener('keydown', onKey);
+    showConfirmModal._cleanup = null;
   };
-  const onOk = ()=>{ cleanup(); onConfirm(); };
-  const onCancel = ()=>{ cleanup(); };
+  showConfirmModal._cleanup = cleanup;
+  const onOk = (e)=>{ if(e) e.stopPropagation(); cleanup(); if(typeof onConfirm === 'function') onConfirm(); };
+  const onCancel = (e)=>{ if(e) e.stopPropagation(); cleanup(); };
+  const onBackdrop = (e)=>{ if(e.target === modal) cleanup(); };
+  const onKey = (e)=>{ if(e.key === 'Escape'){ e.preventDefault(); cleanup(); } };
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
+  modal.addEventListener('click', onBackdrop);
+  document.addEventListener('keydown', onKey);
+  try{ okBtn.focus(); }catch(_e){}
 }
 
 /* ================= DATA MODEL ================= */
