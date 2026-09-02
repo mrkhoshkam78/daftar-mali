@@ -480,7 +480,7 @@
       if (!res.ok) {
         var errText = 'HTTP ' + res.status;
         try { var ej = await res.json(); if (ej.error && ej.error.message) errText = ej.error.message; } catch (e) {}
-        return { ok: true, content: '⚠️ خطا در API (' + errText + '). پاسخ محلی:\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
+        return { ok: true, content: formatApiFallback(errText) + '\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
       }
       var data = await res.json();
       var content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
@@ -509,18 +509,97 @@
     renderMessages();
   }
 
-  function formatMessageContent(text) { return escapeHtml(text).replace(/\n/g, '<br>'); }
+  function formatApiFallback(errText) {
+    var t = String(errText || '');
+    var low = t.toLowerCase();
+    if (low.indexOf('credit') >= 0 || low.indexOf('quota') >= 0 || low.indexOf('billing') >= 0 || low.indexOf('insufficient') >= 0) {
+      return '⚠️ اعتبار API تمام شده است. پاسخ زیر با تحلیل‌گر محلی و داده‌های پنل ساخته شده.\n(برای استفاده از مدل ابری، اعتبار را در حساب OpenAI شارژ کنید.)';
+    }
+    if (low.indexOf('incorrect api key') >= 0 || low.indexOf('invalid api key') >= 0 || low.indexOf('authentication') >= 0) {
+      return '⚠️ کلید API نامعتبر است. از تنظیمات، کلید صحیح را وارد کنید. فعلاً پاسخ محلی:';
+    }
+    if (low.indexOf('rate limit') >= 0) {
+      return '⚠️ محدودیت تعداد درخواست API. کمی بعد دوباره تلاش کنید. پاسخ محلی:';
+    }
+    return '⚠️ ارتباط با سرویس ابری برقرار نشد (' + t + '). پاسخ محلی بر اساس داده‌های پنل:';
+  }
+
+  function formatMessageContent(text) {
+    var html = escapeHtml(text).replace(/\n/g, '<br>');
+    // بخش‌های ساده برای پیشنهاد / هشدار
+    html = html.replace(/💡 پیشنهاد[^<]*/g, function (m) {
+      return '<div class="ai-chip ai-chip-insight">' + m + '</div>';
+    });
+    html = html.replace(/⚠️[^<]*/g, function (m) {
+      return '<div class="ai-chip ai-chip-warn">' + m + '</div>';
+    });
+    return html;
+  }
+
+  function setStatus(text, mode) {
+    var el = document.getElementById('aiStatusText');
+    var line = document.getElementById('aiStatusLine');
+    if (el) el.textContent = text || 'آماده برای کمک';
+    if (line) {
+      line.classList.remove('is-busy', 'is-error');
+      if (mode === 'busy') line.classList.add('is-busy');
+      if (mode === 'error') line.classList.add('is-error');
+    }
+  }
+
+  function setContextBar(show, text) {
+    var bar = document.getElementById('aiContextBar');
+    var tx = document.getElementById('aiContextText');
+    if (!bar) return;
+    if (show) {
+      bar.hidden = false;
+      if (tx && text) tx.textContent = text;
+    } else {
+      bar.hidden = true;
+    }
+  }
+
+  var SUGGESTED = [
+    'وضعیت مالی من را تحلیل کن',
+    'نقدینگی‌ام چطور است؟',
+    'هزینه‌های اخیرم را خلاصه کن',
+    'پیشنهاد مدیریت دارایی بده'
+  ];
+
+  function renderWelcome() {
+    var chips = SUGGESTED.map(function (s) {
+      return '<button type="button" class="ai-suggest" data-suggest="' + escapeHtml(s) + '">' + escapeHtml(s) + '</button>';
+    }).join('');
+    return (
+      '<div class="ai-welcome">' +
+        '<div class="ai-welcome-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 17v3"/><path d="M9 21h6"/></svg>' +
+        '</div>' +
+        '<div class="ai-welcome-title">سلام، من مشاور مالی شما هستم</div>' +
+        '<div class="ai-welcome-sub">می‌توانم وضعیت نقدینگی، هزینه‌ها، سرمایه‌گذاری‌ها، قرض‌ها و اهداف را بر اساس داده‌های واقعی پنل تحلیل کنم.</div>' +
+        '<div class="ai-suggest-row">' + chips + '</div>' +
+      '</div>'
+    );
+  }
 
   function renderMessages() {
     var list = document.getElementById('aiChatMessages');
     if (!list) return;
     if (!chatHistory.length) {
-      list.innerHTML = '<div class="ai-msg ai-msg-assistant"><div class="ai-msg-bubble">سلام! درباره <b>نقدینگی</b>، <b>هزینه</b>، <b>سرمایه‌گذاری</b>، <b>قرض</b> یا <b>اهداف</b> بپرسید. فقط از داده واقعی پنل استفاده می‌کنم.</div></div>';
+      list.innerHTML = renderWelcome();
+      setStatus('آماده برای کمک', 'idle');
       return;
     }
     list.innerHTML = chatHistory.map(function (m) {
-      var cls = m.role === 'user' ? 'ai-msg-user' : 'ai-msg-assistant';
-      return '<div class="ai-msg ' + cls + '"><div class="ai-msg-bubble">' + formatMessageContent(m.content) + '</div></div>';
+      if (m.role === 'user') {
+        return '<div class="ai-msg ai-msg-user"><div class="ai-msg-bubble">' + formatMessageContent(m.content) + '</div></div>';
+      }
+      return (
+        '<div class="ai-msg ai-msg-assistant">' +
+          '<div class="ai-msg-meta"><span class="ai-msg-avatar">AI</span><span class="ai-msg-name">مشاور هوشمند</span></div>' +
+          '<div class="ai-msg-bubble">' + formatMessageContent(m.content) + '</div>' +
+        '</div>'
+      );
     }).join('');
     list.scrollTop = list.scrollHeight;
   }
@@ -529,37 +608,60 @@
     isSending = sending;
     var btn = document.getElementById('aiSendBtn');
     var input = document.getElementById('aiChatInput');
-    if (btn) { btn.disabled = !!sending; btn.textContent = sending ? '…' : 'ارسال'; }
+    if (btn) {
+      btn.disabled = !!sending;
+      btn.classList.toggle('is-loading', !!sending);
+    }
     if (input) input.disabled = !!sending;
+    if (sending) {
+      setStatus('در حال تحلیل…', 'busy');
+      setContextBar(true, 'در حال تحلیل داده‌های پنل…');
+    } else {
+      setStatus('آماده برای کمک', 'idle');
+      setContextBar(false);
+    }
   }
 
-  async function handleSend() {
+  async function handleSend(presetText) {
     if (isSending) return;
     var input = document.getElementById('aiChatInput');
-    if (!input) return;
-    var text = (input.value || '').trim();
+    var text = (presetText != null ? String(presetText) : (input && input.value) || '').trim();
     if (!text) return;
-    input.value = '';
+    if (input) {
+      input.value = '';
+      input.style.height = 'auto';
+    }
     chatHistory.push({ role: 'user', content: text });
     renderMessages();
     saveHistory();
     setSendingState(true);
+
     var list = document.getElementById('aiChatMessages');
     if (list) {
       var thinking = document.createElement('div');
       thinking.className = 'ai-msg ai-msg-assistant ai-thinking';
       thinking.id = 'aiThinking';
-      thinking.innerHTML = '<div class="ai-msg-bubble">در حال انتخاب داده و تحلیل…</div>';
+      thinking.innerHTML =
+        '<div class="ai-msg-meta"><span class="ai-msg-avatar">AI</span><span class="ai-msg-name">مشاور هوشمند</span></div>' +
+        '<div class="ai-msg-bubble ai-typing"><span></span><span></span><span></span></div>';
       list.appendChild(thinking);
       list.scrollTop = list.scrollHeight;
     }
+
     var result;
     try { result = await callAI(text); }
     catch (e) { result = { ok: false, error: (e && e.message) || 'خطا' }; }
+
     var th = document.getElementById('aiThinking');
     if (th) th.remove();
-    if (result && result.ok) chatHistory.push({ role: 'assistant', content: result.content });
-    else chatHistory.push({ role: 'assistant', content: '⚠️ ' + ((result && result.error) || 'خطای ناشناخته') });
+
+    if (result && result.ok) {
+      chatHistory.push({ role: 'assistant', content: result.content });
+      if (result.mode === 'local-fallback') setStatus('پاسخ محلی (سرویس ابری در دسترس نیست)', 'error');
+    } else {
+      chatHistory.push({ role: 'assistant', content: '⚠️ ' + ((result && result.error) || 'خطای ناشناخته') });
+      setStatus('خطا در دریافت پاسخ', 'error');
+    }
     saveHistory();
     renderMessages();
     setSendingState(false);
@@ -582,6 +684,8 @@
     var clearBtn = document.getElementById('aiClearBtn');
     var saveKeyBtn = document.getElementById('aiSaveKeyBtn');
     var toggleSettings = document.getElementById('aiToggleSettings');
+    var list = document.getElementById('aiChatMessages');
+
     if (sendBtn && !sendBtn._aiBound) {
       sendBtn._aiBound = true;
       sendBtn.addEventListener('click', function (e) { e.preventDefault(); handleSend(); });
@@ -591,7 +695,6 @@
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
       });
-      // auto-resize ارتفاع کادر پیام
       input.addEventListener('input', function () {
         input.style.height = 'auto';
         var h = Math.min(input.scrollHeight, 120);
@@ -601,7 +704,8 @@
     if (clearBtn && !clearBtn._aiBound) {
       clearBtn._aiBound = true;
       clearBtn.addEventListener('click', function () {
-        if (confirm('تاریخچه گفتگو پاک شود؟')) clearHistory();
+        clearHistory();
+        setStatus('گفتگوی جدید', 'idle');
       });
     }
     if (saveKeyBtn && !saveKeyBtn._aiBound) {
@@ -616,8 +720,8 @@
         }
         if (endpointInput) setEndpoint((endpointInput.value || '').trim());
         renderSettingsPanel();
-        renderMessages();
         if (typeof showToast === 'function') showToast('تنظیمات AI ذخیره شد');
+        setStatus(getApiKey() ? 'آماده برای کمک' : 'کلید API تنظیم نشده', getApiKey() ? 'idle' : 'error');
       });
     }
     if (toggleSettings && !toggleSettings._aiBound) {
@@ -627,6 +731,16 @@
         if (panel) panel.classList.toggle('open');
       });
     }
+    // suggested prompts (event delegation)
+    if (list && !list._aiSuggestBound) {
+      list._aiSuggestBound = true;
+      list.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest && e.target.closest('.ai-suggest');
+        if (!btn) return;
+        var q = btn.getAttribute('data-suggest') || btn.textContent || '';
+        handleSend(q);
+      });
+    }
   }
 
   function initPage() {
@@ -634,13 +748,7 @@
     renderMessages();
     renderSettingsPanel();
     bindUI();
-    // اگر کلید تنظیم نشده، پنل تنظیمات را باز کن تا کاربر بداند کجا وارد کند
-    try {
-      if (!getApiKey()) {
-        var panel = document.getElementById('aiSettingsPanel');
-        if (panel) panel.classList.add('open');
-      }
-    } catch (e) {}
+    setStatus(getApiKey() ? 'آماده برای کمک' : 'آماده (حالت محلی)', 'idle');
   }
 
   global.FinancialAI = {
