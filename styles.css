@@ -4935,67 +4935,73 @@ html[data-anim="off"] .theme-wipe-veil{
 }
 
 /* ==========================================================================
-   Financial AI Advisor — scoped styles (MVP)
+   Financial AI Advisor — scoped styles (MVP v2)
    ========================================================================== */
 #page-ai-advisor {
   max-width: 820px;
   margin: 0 auto;
-  padding: 12px 14px 100px;
+  padding: 10px 12px 0;
+  box-sizing: border-box;
 }
-.ai-advisor-wrap {
+#page-ai-advisor .ai-advisor-wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: calc(100vh - 140px);
+  height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
+  gap: 0;
+  box-sizing: border-box;
 }
-.ai-header {
-  padding: 4px 2px 0;
+#page-ai-advisor .ai-header {
+  flex-shrink: 0;
+  padding: 4px 2px 10px;
 }
-.ai-title-row {
+#page-ai-advisor .ai-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
-.ai-title {
-  font-size: 1.25rem;
+#page-ai-advisor .ai-title {
+  font-size: 1.2rem;
   font-weight: 800;
   margin: 0;
   color: var(--ink);
 }
-.ai-header-actions {
+#page-ai-advisor .ai-header-actions {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
 }
-.ai-subtitle {
+#page-ai-advisor .ai-subtitle {
   margin: 6px 0 0;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--ink-dim);
-  line-height: 1.5;
+  line-height: 1.45;
 }
-.ai-settings-panel {
+#page-ai-advisor .ai-settings-panel {
   display: none;
+  flex-shrink: 0;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
 }
-.ai-settings-panel.open {
+#page-ai-advisor .ai-settings-panel.open {
   display: block;
 }
-.ai-settings-inner {
+#page-ai-advisor .ai-settings-inner {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.ai-label {
+#page-ai-advisor .ai-label {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--ink-dim);
 }
-.ai-input {
+#page-ai-advisor .ai-input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -5006,107 +5012,127 @@ html[data-anim="off"] .theme-wipe-veil{
   font-size: 0.9rem;
   box-sizing: border-box;
 }
-.ai-hint {
-  font-size: 0.75rem;
+#page-ai-advisor .ai-hint {
+  font-size: 0.74rem;
   color: var(--ink-dim);
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   line-height: 1.4;
 }
-.ai-chat-messages {
-  flex: 1;
+#page-ai-advisor .ai-chat-messages {
+  flex: 1 1 auto;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 2px 16px;
-  min-height: 280px;
-  max-height: min(58vh, 520px);
+  gap: 10px;
+  padding: 8px 2px 12px;
+  min-height: 0;
 }
-.ai-msg {
+#page-ai-advisor .ai-msg {
   display: flex;
   width: 100%;
 }
-.ai-msg-user {
+#page-ai-advisor .ai-msg-user {
   justify-content: flex-start;
 }
-.ai-msg-assistant {
+#page-ai-advisor .ai-msg-assistant {
   justify-content: flex-end;
 }
-.ai-msg-bubble {
-  max-width: 88%;
-  padding: 12px 14px;
+#page-ai-advisor .ai-msg-bubble {
+  max-width: 90%;
+  padding: 11px 14px;
   border-radius: 16px;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.65;
   word-break: break-word;
 }
-.ai-msg-user .ai-msg-bubble {
+#page-ai-advisor .ai-msg-user .ai-msg-bubble {
   background: var(--accent, #3b82f6);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
-.ai-msg-assistant .ai-msg-bubble {
+#page-ai-advisor .ai-msg-assistant .ai-msg-bubble {
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--ink);
   border-bottom-left-radius: 4px;
 }
-.ai-thinking .ai-msg-bubble {
+#page-ai-advisor .ai-thinking .ai-msg-bubble {
   opacity: 0.75;
   font-style: italic;
 }
-.ai-chat-input-row {
+/* نوار ورودی — ثابت در پایین ناحیه صفحه، بدون تداخل با bottom-nav */
+#page-ai-advisor .ai-chat-input-row {
+  flex-shrink: 0;
   display: flex;
-  gap: 8px;
+  flex-direction: row;
   align-items: flex-end;
-  position: sticky;
-  bottom: 70px;
-  background: var(--bg);
-  padding: 10px 0 6px;
+  gap: 8px;
+  padding: 10px 0 12px;
   border-top: 1px solid var(--border);
-  z-index: 5;
+  background: var(--bg);
+  box-sizing: border-box;
 }
-.ai-chat-input {
-  flex: 1;
+#page-ai-advisor .ai-chat-input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   resize: none;
-  min-height: 48px;
-  max-height: 120px;
-  padding: 12px 14px;
-  border-radius: 14px;
+  min-height: 46px;
+  max-height: 110px;
+  padding: 11px 12px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--ink);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.45;
   box-sizing: border-box;
+  margin: 0;
 }
-.ai-chat-input:focus {
+#page-ai-advisor .ai-chat-input:focus {
   outline: none;
   border-color: var(--accent, #3b82f6);
 }
-#aiSendBtn {
-  flex-shrink: 0;
+#page-ai-advisor #aiSendBtn {
+  flex: 0 0 auto;
+  width: 72px;
   min-width: 72px;
-  height: 48px;
+  height: 46px;
+  padding: 0 10px;
   border-radius: 12px;
+  margin: 0;
+  white-space: nowrap;
 }
-.btn.sm {
-  padding: 6px 12px;
-  font-size: 0.8rem;
+#page-ai-advisor .btn.sm {
+  padding: 6px 11px;
+  font-size: 0.78rem;
   border-radius: 8px;
+}
+/* فضای خالی برای bottom-nav در تم aurora */
+html[data-design="aurora"] #page-ai-advisor .ai-advisor-wrap {
+  height: calc(100vh - 130px);
+  max-height: calc(100dvh - 130px);
+  padding-bottom: 8px;
 }
 @media (max-width: 600px) {
   #page-ai-advisor {
-    padding: 8px 10px 110px;
+    padding: 8px 10px 0;
   }
-  .ai-chat-messages {
-    max-height: min(50vh, 420px);
+  #page-ai-advisor .ai-advisor-wrap {
+    height: calc(100vh - 118px);
+    max-height: calc(100dvh - 118px);
   }
-  .ai-chat-input-row {
-    bottom: 64px;
+  html[data-design="aurora"] #page-ai-advisor .ai-advisor-wrap {
+    height: calc(100vh - 128px);
+    max-height: calc(100dvh - 128px);
   }
-  .ai-msg-bubble {
+  #page-ai-advisor .ai-msg-bubble {
     max-width: 94%;
+  }
+  #page-ai-advisor #aiSendBtn {
+    width: 64px;
+    min-width: 64px;
   }
 }
