@@ -4935,12 +4935,10 @@ html[data-anim="off"] .theme-wipe-veil{
 }
 
 /* ==========================================================================
-   Financial AI Advisor V2 — aligned with project section/card patterns
+   Financial AI Advisor — fully scoped under #page-ai-advisor only
+   Uses existing .section / .btn tokens; no global overrides.
    ========================================================================== */
-#page-ai-advisor {
-  padding-bottom: 88px;
-}
-#page-ai-advisor .ai-section {
+#page-ai-advisor .ai-root {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -4953,11 +4951,11 @@ html[data-anim="off"] .theme-wipe-veil{
 }
 #page-ai-advisor .ai-settings-panel {
   display: none;
-  background: var(--card);
+  background: var(--bg-2, var(--card-2));
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 12px 14px;
-  margin-bottom: 6px;
+  margin-top: 4px;
 }
 #page-ai-advisor .ai-settings-panel.open {
   display: block;
@@ -4990,30 +4988,30 @@ html[data-anim="off"] .theme-wipe-veil{
   line-height: 1.4;
 }
 #page-ai-advisor .ai-chat-card {
-  background: var(--card);
+  margin-top: 6px;
+  background: var(--bg-2, var(--card-2));
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
-  min-height: 360px;
-  max-height: min(62vh, 560px);
+  min-height: 260px;
+  max-height: 520px;
   overflow: hidden;
 }
 #page-ai-advisor .ai-chat-messages {
   flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 200px;
+  min-height: 160px;
 }
 #page-ai-advisor .ai-msg {
   display: flex;
   width: 100%;
 }
-/* RTL: کاربر راست، دستیار چپ */
 #page-ai-advisor .ai-msg-user {
   justify-content: flex-start;
 }
@@ -5021,8 +5019,8 @@ html[data-anim="off"] .theme-wipe-veil{
   justify-content: flex-end;
 }
 #page-ai-advisor .ai-msg-bubble {
-  max-width: 92%;
-  padding: 11px 14px;
+  max-width: 90%;
+  padding: 10px 13px;
   border-radius: 14px;
   font-size: 0.9rem;
   line-height: 1.65;
@@ -5034,7 +5032,7 @@ html[data-anim="off"] .theme-wipe-veil{
   border-bottom-right-radius: 4px;
 }
 #page-ai-advisor .ai-msg-assistant .ai-msg-bubble {
-  background: var(--card-2, var(--bg-2));
+  background: var(--card);
   border: 1px solid var(--border);
   color: var(--ink);
   border-bottom-left-radius: 4px;
@@ -5049,7 +5047,7 @@ html[data-anim="off"] .theme-wipe-veil{
   flex-direction: row;
   align-items: flex-end;
   gap: 8px;
-  padding: 10px 12px 12px;
+  padding: 10px 12px;
   border-top: 1px solid var(--border);
   background: var(--card);
   box-sizing: border-box;
@@ -5057,10 +5055,9 @@ html[data-anim="off"] .theme-wipe-veil{
 #page-ai-advisor .ai-chat-input {
   flex: 1 1 auto;
   min-width: 0;
-  width: auto;
   resize: none;
   min-height: 44px;
-  max-height: 100px;
+  max-height: 96px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -5078,7 +5075,7 @@ html[data-anim="off"] .theme-wipe-veil{
 }
 #page-ai-advisor #aiSendBtn {
   flex: 0 0 auto;
-  min-width: 68px;
+  min-width: 64px;
   height: 44px;
   padding: 0 12px;
   border-radius: 12px;
@@ -5086,28 +5083,23 @@ html[data-anim="off"] .theme-wipe-veil{
   white-space: nowrap;
 }
 @media (max-width: 600px) {
-  #page-ai-advisor {
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 96px;
-  }
   #page-ai-advisor .ai-chat-card {
-    min-height: 300px;
-    max-height: min(55vh, 480px);
-    border-radius: 14px;
+    max-height: 420px;
+    min-height: 220px;
   }
   #page-ai-advisor .ai-msg-bubble {
-    max-width: 95%;
-    font-size: 0.88rem;
+    max-width: 94%;
+    font-size: 0.86rem;
   }
   #page-ai-advisor #aiSendBtn {
-    min-width: 60px;
+    min-width: 56px;
     height: 42px;
   }
   #page-ai-advisor .ai-chat-input {
     min-height: 42px;
   }
 }
+/* فضای bottom-nav فقط در aurora */
 html[data-design="aurora"] #page-ai-advisor {
-  padding-bottom: 100px;
+  padding-bottom: 12px;
 }

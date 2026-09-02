@@ -169,44 +169,50 @@
   };
 
   var INTENT_MAP = [
-    { id: 'liquidity', keys: ['نقد', 'نقدینگی', 'کارت', 'پول نقد', 'موجودی کارت', 'liquidity', 'cash'], tools: ['getLiquidity', 'getSummary'] },
-    { id: 'invest', keys: ['سرمایه', 'سرمایه‌گذاری', 'اسنپ', 'حامی', 'فارابی', 'صندوق', 'invest', 'fund'], tools: ['getInvestments', 'getSummary'] },
-    { id: 'expense', keys: ['هزینه', 'خرج', 'پرداخت', 'expense', 'payment', 'مخارج'], tools: ['getCashflow', 'getRecentTx'] },
-    { id: 'income', keys: ['درآمد', 'دریافت', 'حقوق', 'واریز', 'income', 'deposit'], tools: ['getCashflow', 'getRecentTx'] },
-    { id: 'cashflow', keys: ['جریان', 'دخل و خرج', 'تراز', 'مقایسه درآمد', 'cashflow'], tools: ['getCashflow', 'getSummary'] },
+    { id: 'liquidity', keys: ['نقدینگی', 'نقد ', ' پول نقد', 'پول نقد', 'موجودی کارت', 'موجودی نقد', 'موجودی', 'کارت‌هام', 'کارت هام', 'چقدر پول', 'چقد پول', 'liquidity', 'cash'], tools: ['getLiquidity', 'getSummary'] },
+    { id: 'invest', keys: ['سرمایه‌گذاری', 'سرمایه گذاری', 'سرمایه‌گذاری', 'اسنپ', 'حامی', 'فارابی', 'صندوق', 'invest', 'fund'], tools: ['getInvestments', 'getSummary'] },
+    { id: 'expense', keys: ['هزینه', 'هزینه‌ها', 'هزینه‌ها', 'خرج', 'مخارج', 'پرداخت', 'expense'], tools: ['getCashflow'] },
+    { id: 'income', keys: ['درآمد', 'دریافت', 'حقوق', 'واریز', 'income', 'deposit'], tools: ['getCashflow'] },
+    { id: 'cashflow', keys: ['دخل و خرج', 'جریان نقد', 'تراز مالی', 'cashflow'], tools: ['getCashflow'] },
     { id: 'loans', keys: ['قرض', 'بدهی', 'وام', 'بدهکار', 'طلب', 'debt', 'loan'], tools: ['getLoans'] },
-    { id: 'goals', keys: ['هدف', 'اهداف', 'پس‌انداز برای', 'goal'], tools: ['getGoals', 'getSummary'] },
+    { id: 'goals', keys: ['هدف', 'اهداف', 'goal'], tools: ['getGoals', 'getSummary'] },
     { id: 'noncash', keys: ['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'gold', 'silver'], tools: ['getNoncash'] },
-    { id: 'tx', keys: ['تراکنش', 'تاریخچه تراکنش', 'آخرین تراکنش', 'transaction'], tools: ['getRecentTx'] },
-    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار', 'چه کار', 'بهتره', 'advice', 'suggest', 'راهنمایی'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
-    { id: 'summary', keys: ['خلاصه', 'وضعیت', 'گزارش', 'کل دارایی', 'overview', 'status', 'چطوره', 'چطور است'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
+    { id: 'tx', keys: ['تراکنش', 'آخرین تراکنش', 'transaction'], tools: ['getRecentTx'] },
+    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار', 'چه کار', 'چکار', 'راهنمایی', 'advice', 'suggest'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
+    { id: 'summary', keys: ['خلاصه', 'وضعیت مالی', 'گزارش مالی', 'کل دارایی', 'دارایی‌های من', 'دارایی های من', 'وضعیتم', 'اوضاع مالی'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
   ];
 
   function detectIntents(question, memory) {
-    var q = String(question || '');
+    var q = String(question || '').trim();
     var found = [];
     INTENT_MAP.forEach(function (it) {
       if (hasAny(q, it.keys)) found.push(it.id);
     });
-    var isFollowUp = hasAny(q, ['نسبت به', 'ماه قبل', 'قبلی', 'همون', 'همان', 'بیشتر بگو', 'یعنی', 'پس ', 'و بعد']) ||
-      (q.trim().length < 18 && memory.lastIntents && memory.lastIntents.length);
-    if (!found.length && isFollowUp && memory.lastIntents && memory.lastIntents.length) {
-      found = memory.lastIntents.slice();
+    // follow-up فقط با ارجاع صریح به قبل — نه پیام کوتاه دلخواه
+    var followPhrases = ['نسبت به', 'ماه قبل', 'قبلش', 'قبلی', 'همون', 'همان', 'بیشتر بگو', 'ادامه بده', 'یعنی چی', 'درباره همان', 'درباره همون'];
+    var isFollowUp = hasAny(q, followPhrases);
+    if (!found.length && isFollowUp && memory.lastIntents && memory.lastIntents.length && memory.lastIntents[0] !== 'none') {
+      found = [memory.lastIntents[0]];
     }
-    if (!found.length) found = ['summary'];
-    var uniq = [];
-    found.forEach(function (id) { if (uniq.indexOf(id) < 0) uniq.push(id); });
-    return uniq;
+    // سؤال مستقل جدید بدون کلیدواژه مالی
+    if (!found.length) found = ['none'];
+    // یک intent اصلی؛ advice اولویت دارد اگر صریح آمده باشد
+    if (found[0] !== 'none' && found.length > 1) {
+      if (found.indexOf('advice') >= 0) found = ['advice'];
+      else found = [found[0]];
+    }
+    // اگر سؤال کاملاً مستقل و intent جدید دارد، حافظه موضوع قبلی را با intent جدید عوض می‌کنیم (در callAI)
+    return found;
   }
 
   function selectToolsForIntents(intentIds) {
+    if (!intentIds || !intentIds.length || intentIds[0] === 'none') return [];
     var toolSet = {};
     intentIds.forEach(function (id) {
       INTENT_MAP.forEach(function (it) {
         if (it.id === id) it.tools.forEach(function (t) { toolSet[t] = true; });
       });
     });
-    if (intentIds.indexOf('advice') >= 0) toolSet.getSummary = true;
     return Object.keys(toolSet);
   }
 
@@ -237,7 +243,13 @@
       parts.push('');
     }
 
-    if (ctx.summary && (intents.indexOf('summary') >= 0 || intents.indexOf('advice') >= 0)) {
+    // سؤال غیرمالی یا بدون داده مرتبط
+    if (!intents || intents[0] === 'none') {
+      return 'این سؤال خارج از محدوده داده‌های مالی پنل است یا عبارت مالی مشخصی در آن تشخیص داده نشد.\nمی‌توانید درباره نقدینگی، هزینه‌ها، سرمایه‌گذاری، قرض‌ها، اهداف یا تراکنش‌ها بپرسید.';
+    }
+
+    var primary = (intents && intents[0]) || 'none';
+    if (ctx.summary && (primary === 'summary' || primary === 'advice' || primary === 'liquidity' || primary === 'invest' || primary === 'goals')) {
       var s = ctx.summary;
       addData('📊 خلاصه وضعیت (داده واقعی پنل)', [
         '• کل دارایی (نقد + سرمایه‌گذاری): ' + fmtNum(s.totalAssets) + ' تومان',
@@ -247,7 +259,7 @@
       ]);
     }
 
-    if (ctx.liquidity && (intents.indexOf('liquidity') >= 0 || intents.indexOf('advice') >= 0 || intents.indexOf('summary') >= 0)) {
+    if (ctx.liquidity && (primary === 'liquidity' || primary === 'advice' || primary === 'summary')) {
       var L = ctx.liquidity;
       var lines = ['مجموع نقدینگی: ' + fmtNum(L.total) + ' تومان'];
       (L.items || []).forEach(function (it) { lines.push('• ' + it.name + ': ' + fmtNum(it.balance) + ' تومان'); });
@@ -265,7 +277,7 @@
       }
     }
 
-    if (ctx.investments && (intents.indexOf('invest') >= 0 || intents.indexOf('summary') >= 0 || intents.indexOf('advice') >= 0)) {
+    if (ctx.investments && (primary === 'invest' || primary === 'summary' || primary === 'advice')) {
       var Inv = ctx.investments;
       var linesI = ['مجموع سرمایه‌گذاری: ' + fmtNum(Inv.total) + ' تومان'];
       if (!Inv.items || !Inv.items.length) linesI.push('اطلاعات کافی در پنل ثبت نشده — دارایی سرمایه‌گذاری تعریف نشده.');
@@ -273,7 +285,7 @@
       addData('📈 سرمایه‌گذاری', linesI);
     }
 
-    if (ctx.cashflow && (intents.indexOf('expense') >= 0 || intents.indexOf('income') >= 0 || intents.indexOf('cashflow') >= 0 || intents.indexOf('advice') >= 0)) {
+    if (ctx.cashflow && (primary === 'expense' || primary === 'income' || primary === 'cashflow' || primary === 'advice')) {
       var C = ctx.cashflow;
       if (!C.hasData) {
         addData('🧾 دخل و خرج', ['اطلاعات کافی در پنل ثبت نشده — هنوز دریافت/پرداختی در دفترچه ثبت نشده است.']);
@@ -296,13 +308,13 @@
           linesC.push('مقایسه هزینه ' + last.month + ' نسبت به ' + prev.month + ': ' +
             (expDiff > 0 ? 'حدود ' + fmtNum(expDiff) + ' تومان بیشتر' : expDiff < 0 ? 'حدود ' + fmtNum(-expDiff) + ' تومان کمتر' : 'تقریباً برابر'));
         }
-        if (intents.indexOf('expense') >= 0 && C.recentExpense && C.recentExpense.length) {
+        if (primary === 'expense' && C.recentExpense && C.recentExpense.length) {
           linesC.push('آخرین هزینه‌ها:');
           C.recentExpense.slice(0, 5).forEach(function (t) {
             linesC.push('• ' + fmtNum(t.amount) + ' تومان' + (t.date ? ' (' + t.date + ')' : '') + (t.desc ? ' — ' + t.desc : ''));
           });
         }
-        if (intents.indexOf('income') >= 0 && C.recentIncome && C.recentIncome.length) {
+        if (primary === 'income' && C.recentIncome && C.recentIncome.length) {
           linesC.push('آخرین دریافتی‌ها:');
           C.recentIncome.slice(0, 5).forEach(function (t) {
             linesC.push('• ' + fmtNum(t.amount) + ' تومان' + (t.date ? ' (' + t.date + ')' : '') + (t.person ? ' — ' + t.person : ''));
@@ -315,7 +327,7 @@
       }
     }
 
-    if (ctx.loans && intents.indexOf('loans') >= 0) {
+    if (ctx.loans && primary === 'loans') {
       var Ln = ctx.loans;
       var linesL = [
         '• قرض داده‌شده (باز): ' + fmtNum(Ln.lentOpen) + ' تومان',
@@ -329,7 +341,7 @@
       if (Ln.borrowedOpen > 0) insights.push('قرض گرفته‌شده باز دارید؛ بازپرداخت را اولویت‌بندی کنید.');
     }
 
-    if (ctx.goals && (intents.indexOf('goals') >= 0 || intents.indexOf('advice') >= 0)) {
+    if (ctx.goals && (primary === 'goals' || primary === 'advice')) {
       var G = ctx.goals;
       if (!G.count) addData('🎯 اهداف', ['اطلاعات کافی در پنل ثبت نشده — هنوز هدف مالی تعریف نشده است.']);
       else {
@@ -341,7 +353,7 @@
       }
     }
 
-    if (ctx.noncash && intents.indexOf('noncash') >= 0) {
+    if (ctx.noncash && primary === 'noncash') {
       var N = ctx.noncash;
       if (!N.items || !N.items.length) addData('🪙 غیرنقد', ['دارایی غیرنقدی ثبت نشده است.']);
       else {
@@ -352,7 +364,7 @@
       }
     }
 
-    if (ctx.recentTx && intents.indexOf('tx') >= 0) {
+    if (ctx.recentTx && primary === 'tx') {
       var T = ctx.recentTx;
       if (!T.count) addData('📝 تراکنش‌ها', ['تراکنشی ثبت نشده است.']);
       else {
@@ -364,13 +376,12 @@
       }
     }
 
-    if (intents.indexOf('advice') >= 0 && !insights.length && ctx.summary) {
+    if (primary === 'advice' && !insights.length && ctx.summary) {
       insights.push('ترکیب دارایی را با اهداف خود مقایسه کنید؛ در صورت نبود هدف، یک هدف کوتاه‌مدت تعریف کنید.');
     }
 
     if (!parts.length) {
-      parts.push('برای این سؤال داده مرتبط کافی پیدا نشد.');
-      parts.push('می‌توانید درباره نقدینگی، سرمایه‌گذاری، هزینه/درآمد، قرض، اهداف یا تراکنش‌ها بپرسید.');
+      parts.push('برای این سؤال، داده مرتبط کافی در پنل ثبت نشده است.');
     }
 
     if (insights.length) {
@@ -408,10 +419,13 @@
   function buildSystemPrompt(ctx, intents) {
     return [
       'تو مشاور مالی شخصی صادق هستی. فقط فارسی روان پاسخ بده.',
-      'فقط از Context زیر استفاده کن. عدد اختراع نکن. اگر داده نیست بگو «اطلاعات کافی در پنل ثبت نشده».',
+      'اولویت با آخرین پیام کاربر است. پاسخ‌های قبلی را با سؤال جدید اشتباه نگیر.',
+      'فقط از بلوک Context مالی زیر استفاده کن. عدد اختراع نکن.',
+      'اگر Intent برابر none است یا Context خالی است، بگو سؤال خارج از محدوده داده‌های مالی پنل است.',
+      'اگر داده نیست بگو «اطلاعات کافی در پنل ثبت نشده».',
       'بین داده واقعی، تحلیل و پیشنهاد تمایز بگذار. پیشنهادها قطعی نباشند.',
-      'Intentها: ' + intents.join(', '),
-      'Context انتخاب‌شده:',
+      'Intent: ' + (intents && intents.length ? intents.join(', ') : 'none'),
+      '--- Context مالی (جدا از تاریخچه گفتگو) ---',
       JSON.stringify(ctx)
     ].join('\n');
   }
@@ -420,16 +434,34 @@
     var intents = detectIntents(userMessage, sessionMemory);
     var toolNames = selectToolsForIntents(intents);
     var ctx = buildSelectedContext(toolNames);
-    sessionMemory.lastIntents = intents.slice(0, 4);
-    sessionMemory.lastContextKeys = toolNames.slice();
-    sessionMemory.lastTopics = intents.slice();
+    // حافظه موضوع فقط وقتی intent مالی معتبر است به‌روز می‌شود؛ سؤال نامرتبط موضوع قبلی را پاک نمی‌کند ولی follow-up اجباری هم نمی‌سازد
+    if (intents[0] && intents[0] !== 'none') {
+      sessionMemory.lastIntents = [intents[0]];
+      sessionMemory.lastContextKeys = toolNames.slice();
+      sessionMemory.lastTopics = [intents[0]];
+    }
 
     if (!getApiKey()) {
       return { ok: true, content: buildLocalAnswer(userMessage, intents, ctx), mode: 'local', intents: intents, tools: toolNames };
     }
 
     var messages = [{ role: 'system', content: buildSystemPrompt(ctx, intents) }];
-    chatHistory.slice(-MAX_HISTORY_TURNS * 2).forEach(function (m) {
+    // تاریخچه گفتگو جدا از Context مالی؛ بدون تکرار سؤال فعلی؛ حداکثر 4 نوبت (8 پیام)
+    var prior = [];
+    for (var i = 0; i < chatHistory.length; i++) {
+      var m = chatHistory[i];
+      if (!m || !m.content) continue;
+      if (m.role !== 'user' && m.role !== 'assistant') continue;
+      prior.push({ role: m.role, content: m.content });
+    }
+    // حذف آخرین user اگر همان پیام فعلی است (از handleSend اضافه شده)
+    if (prior.length && prior[prior.length - 1].role === 'user' && prior[prior.length - 1].content === userMessage) {
+      prior.pop();
+    }
+    // حداکثر 4 جفت پیام
+    if (prior.length > 8) prior = prior.slice(-8);
+    // اطمینان از ترتیب زوج user/assistant بدون نقش تکراری پشت‌سرهم غیرعادی
+    prior.forEach(function (m) {
       messages.push({ role: m.role, content: m.content });
     });
     messages.push({ role: 'user', content: userMessage });
