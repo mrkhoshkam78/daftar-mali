@@ -549,6 +549,7 @@ function renderNotes(){
       note.pinned = !note.pinned;
       note.updatedAt = new Date().toISOString();
       if(persist()){ showToast(note.pinned ? 'سنجاق شد' : 'سنجاق برداشته شد'); renderNotes(); }
+      else { note.pinned = !note.pinned; showToast('ذخیره ناموفق — دوباره تلاش کنید', true); }
     });
   });
   grid.querySelectorAll('[data-copy]').forEach(btn=>{

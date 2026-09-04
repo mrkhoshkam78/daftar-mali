@@ -36,7 +36,7 @@
 <body>
 
 <div class="confirm-modal" id="confirmModal" style="display:none;">
-  <div class="confirm-box">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmSub">
     <div class="confirm-title" id="confirmTitle"></div>
     <div class="confirm-sub" id="confirmSub"></div>
     <div class="confirm-actions">
@@ -835,7 +835,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="note-modal" id="noteModal" aria-hidden="true">
   <div class="note-modal-box" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
     <div class="note-modal-head">

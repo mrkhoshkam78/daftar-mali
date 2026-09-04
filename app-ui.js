@@ -444,6 +444,8 @@ function renderAssetCards(){
           valEl.classList.add('pulse');
         }
         render();
+      } else {
+        showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
       }
     });
   });
@@ -477,6 +479,8 @@ function confirmDeleteAsset(key){
       if(persist()){
         showToast(`دارایی «${def.name}» حذف شد`);
         render();
+      } else {
+        showToast('حذف ناموفق — ذخیره انجام نشد', true);
       }
     }
   );
@@ -725,7 +729,8 @@ function renderNonCash(){
         (cat ? cat + ' — ' : '') + fmt(Math.round(val)) + ' تومان',
         () => {
           noncash = noncash.filter(x => String(x.id) !== String(id));
-          if(persist()) renderNonCash();
+          if(persist()){ showToast('دارایی غیرنقد حذف شد'); renderNonCash(); }
+          else showToast('حذف ناموفق — ذخیره انجام نشد', true);
         }
       );
     });
@@ -777,6 +782,8 @@ function renderNonCash(){
       if(persist()){
         showToast('همان مورد به‌روز شد');
         renderNonCash();
+      } else {
+        showToast('ذخیره تغییرات ناموفق بود', true);
       }
     });
   });
@@ -2511,6 +2518,8 @@ if($('ncAddBtn')){
         clearNcForm();
         showToast('به موجودی قبلی همان دسته اضافه شد');
         renderNonCash();
+      } else {
+        showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
       }
     } else {
       const row = { id: Date.now(), category, label, manualValue: manualValue > 0 ? manualValue : 0, updatedAt: todayISO() };
@@ -2529,6 +2538,8 @@ if($('ncAddBtn')){
         clearNcForm();
         showToast('دارایی غیرنقد جدید اضافه شد');
         renderNonCash();
+      } else {
+        showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
       }
     }
   });
@@ -3110,7 +3121,7 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     if($('nbPerson')) $('nbPerson').value = '';
     if($('nbDesc')) $('nbDesc').value = '';
     const saved = persist();
-    showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد');
+    showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد (ذخیره پایدار ناموفق)', !saved);
     if(typeof renderNotebook === 'function') renderNotebook();
     else if(typeof render === 'function') render();
     if(typeof renderForecast === 'function') renderForecast();
@@ -3256,6 +3267,8 @@ $('tfBtn').addEventListener('click', ()=>{
     $('tfAmount').value = '';
     showToast(`${fmt(amount)} از ${fromName} به ${toName} منتقل شد`);
     render();
+  } else {
+    showToast('انتقال ناموفق — ذخیره انجام نشد', true);
   }
 });
 
@@ -3281,6 +3294,8 @@ $('newAssetBtn').addEventListener('click', ()=>{
     $('newAssetName').value=''; $('newAssetAmount').value='';
     showToast(`دارایی «${name}» اضافه شد`);
     render();
+  } else {
+    showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
   }
 });
 

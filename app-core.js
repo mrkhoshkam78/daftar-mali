@@ -726,13 +726,35 @@ document.addEventListener('input', (e)=>{
   el.setSelectionRange(newPos, newPos);
 });
 
+/* ================= ENTER-TO-SUBMIT (فرم‌های تک‌مرحله‌ای پرکاربرد) ================= */
+/* هدف: جلوگیری از سردرگمی کاربر دسکتاپ که انتظار دارد Enter فرم را ثبت کند؛
+   فقط برای فرم‌های ساده و مجزا که یک دکمهٔ ثبت مشخص دارند (بدون تغییر منطق ثبت). */
+const ENTER_SUBMIT_MAP = {
+  'nbAmount': 'nbAddBtn', 'nbDesc': 'nbAddBtn', 'nbPerson': 'nbAddBtn',
+  'logProfit': 'addLogBtn',
+  'tfAmount': 'tfBtn',
+  'newAssetAmount': 'newAssetBtn', 'newAssetName': 'newAssetBtn',
+  'ncManualValue': 'ncAddBtn',
+};
+document.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter' || e.shiftKey) return;
+  const id = e.target && e.target.id;
+  const btnId = id && ENTER_SUBMIT_MAP[id];
+  if(!btnId) return;
+  const btn = $(btnId);
+  if(!btn) return;
+  e.preventDefault();
+  btn.click();
+});
+
 /* --- UI chrome (toast, confirm) --- */
 function showToast(msg, isErr){
   const t = $('toast');
   t.textContent = msg;
   t.classList.toggle('err', !!isErr);
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  if(t._hideTimer) clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
@@ -746,11 +768,16 @@ function showConfirmModal(title, sub, onConfirm){
     $('confirmModal').style.display = 'none';
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
+    document.removeEventListener('keydown', onKey);
   };
   const onOk = ()=>{ cleanup(); onConfirm(); };
   const onCancel = ()=>{ cleanup(); };
+  const onKey = (e)=>{ if(e.key === 'Escape'){ e.preventDefault(); onCancel(); } };
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
+  document.addEventListener('keydown', onKey);
+  // تمرکز روی «انصراف» — پیش‌فرض امن‌تر برای عملیات مخرب (حذف)
+  try{ cancelBtn.focus(); }catch(_e){}
 }
 
 /* ================= DATA MODEL ================= */
