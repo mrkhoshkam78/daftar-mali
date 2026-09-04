@@ -562,20 +562,6 @@ function bindNavOnce(){
         return;
       }
       if(p) showPage(p);
-      return;
-    }
-    /* UX quick links + FAB (discoverability & primary action) */
-    const ql = e.target && e.target.closest && e.target.closest('.ux-quick-link');
-    if(ql){
-      e.preventDefault();
-      const page = ql.getAttribute('data-page') || ql.dataset.page;
-      if(page) showPage(page);
-      return;
-    }
-    if(e.target && (e.target.id === 'uxFab' || (e.target.closest && e.target.closest('#uxFab')))){
-      e.preventDefault();
-      showPage('page-notebook');
-      return;
     }
   });
 }
@@ -772,18 +758,14 @@ function showToast(msg, isErr){
 }
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
-function showConfirmModal(title, sub, onConfirm, okLabel){
+function showConfirmModal(title, sub, onConfirm){
   $('confirmTitle').textContent = title;
   $('confirmSub').textContent = sub || '';
   $('confirmModal').style.display = 'flex';
   const okBtn = $('confirmOkBtn');
   const cancelBtn = $('confirmCancelBtn');
-  /* Dynamic confirm button label (UX fix #12) */
-  const prevLabel = okBtn.textContent;
-  okBtn.textContent = (okLabel && String(okLabel).trim()) ? String(okLabel).trim() : 'حذف';
   const cleanup = ()=>{
     $('confirmModal').style.display = 'none';
-    okBtn.textContent = prevLabel || 'حذف';
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
     document.removeEventListener('keydown', onKey);
