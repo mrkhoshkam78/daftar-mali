@@ -1,16 +1,14 @@
 /**
- * financial-ai.js — Financial AI Advisor Version 2
- * Context-Aware · Tool-Oriented · Read-Only · Session Memory
+ * financial-ai.js — Financial Advisor Local (Offline) V3
+ * Context-Aware · Intent + Rule Engine · Read-Only · Session Memory
+ * کاملاً Local و Offline — هیچ درخواست شبکه‌ای برای پاسخ‌گویی ارسال نمی‌شود.
  * وابستگی: فقط خواندن state و توابع محاسباتی موجود پروژه.
  * هیچ تغییری در state مالی ایجاد نمی‌کند.
  */
 (function (global) {
   'use strict';
 
-  var AI_KEY_STORAGE = 'daftar-ai-api-key';
-  var AI_ENDPOINT_STORAGE = 'daftar-ai-endpoint';
   var AI_HISTORY_STORAGE = 'daftar-ai-chat-history-v2';
-  var DEFAULT_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
   var MAX_HISTORY_TURNS = 8;
   var MAX_RECENT_TX = 15;
 
@@ -32,12 +30,37 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+  /** نرمال‌سازی متن فارسی برای تطبیق بهتر کلیدواژه‌ها */
+  function normalizeFa(s) {
+    s = String(s || '').toLowerCase();
+    s = s.replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+    s = s.replace(/[\u200c\u200f\u202a-\u202e]/g, ''); // ZWNJ و جهت‌نما
+    s = s.replace(/[؟!؟?!.،,;:()[\]{}«»""''…]/g, ' ');
+    s = s.replace(/\s+/g, ' ').trim();
+    return s;
+  }
   function hasAny(q, words) {
-    q = String(q || '').toLowerCase();
+    q = normalizeFa(q);
     for (var i = 0; i < words.length; i++) {
-      if (q.indexOf(words[i]) !== -1) return true;
+      var w = normalizeFa(words[i]);
+      if (w && q.indexOf(w) !== -1) return true;
     }
     return false;
+  }
+  /** امتیاز تطبیق: کلیدهای بلندتر وزن بیشتر دارند */
+  function matchScore(q, keys) {
+    q = normalizeFa(q);
+    var best = 0;
+    for (var i = 0; i < keys.length; i++) {
+      var w = normalizeFa(keys[i]);
+      if (!w) continue;
+      if (q.indexOf(w) !== -1) {
+        var sc = w.length;
+        if (q === w || q.indexOf(' ' + w + ' ') !== -1 || q.indexOf(w + ' ') === 0 || q.lastIndexOf(' ' + w) === q.length - w.length - 1) sc += 2;
+        if (sc > best) best = sc;
+      }
+    }
+    return best;
   }
 
   /* ========== Read-Only Tools ========== */
@@ -169,39 +192,52 @@
   };
 
   var INTENT_MAP = [
-    { id: 'liquidity', keys: ['نقدینگی', 'نقد ', ' پول نقد', 'پول نقد', 'موجودی کارت', 'موجودی نقد', 'موجودی', 'کارت‌هام', 'کارت هام', 'چقدر پول', 'چقد پول', 'liquidity', 'cash'], tools: ['getLiquidity', 'getSummary'] },
-    { id: 'invest', keys: ['سرمایه‌گذاری', 'سرمایه گذاری', 'سرمایه‌گذاری', 'اسنپ', 'حامی', 'فارابی', 'صندوق', 'invest', 'fund'], tools: ['getInvestments', 'getSummary'] },
-    { id: 'expense', keys: ['هزینه', 'هزینه‌ها', 'هزینه‌ها', 'خرج', 'مخارج', 'پرداخت', 'expense'], tools: ['getCashflow'] },
-    { id: 'income', keys: ['درآمد', 'دریافت', 'حقوق', 'واریز', 'income', 'deposit'], tools: ['getCashflow'] },
-    { id: 'cashflow', keys: ['دخل و خرج', 'جریان نقد', 'تراز مالی', 'cashflow'], tools: ['getCashflow'] },
-    { id: 'loans', keys: ['قرض', 'بدهی', 'وام', 'بدهکار', 'طلب', 'debt', 'loan'], tools: ['getLoans'] },
-    { id: 'goals', keys: ['هدف', 'اهداف', 'goal'], tools: ['getGoals', 'getSummary'] },
-    { id: 'noncash', keys: ['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'gold', 'silver'], tools: ['getNoncash'] },
-    { id: 'tx', keys: ['تراکنش', 'آخرین تراکنش', 'transaction'], tools: ['getRecentTx'] },
-    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار', 'چه کار', 'چکار', 'راهنمایی', 'advice', 'suggest'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
-    { id: 'summary', keys: ['خلاصه', 'وضعیت مالی', 'گزارش مالی', 'کل دارایی', 'دارایی‌های من', 'دارایی های من', 'وضعیتم', 'اوضاع مالی'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
+    { id: 'liquidity', keys: ['نقدینگی', 'پول نقد', 'موجودی کارت', 'موجودی نقد', 'موجودی', 'کارت‌هام', 'کارت هام', 'چقدر پول', 'چقد پول', 'چقدر دارم', 'موجودیم', 'liquidity', 'cash', 'پول دارم', 'موجودی بانک'], tools: ['getLiquidity', 'getSummary'] },
+    { id: 'invest', keys: ['سرمایه‌گذاری', 'سرمایه گذاری', 'اسنپ', 'حامی', 'فارابی', 'صندوق', 'invest', 'fund', 'پورتفوی', 'سبد سرمایه‌گذاری', 'سبد'], tools: ['getInvestments', 'getSummary'] },
+    { id: 'expense', keys: ['هزینه', 'هزینه‌ها', 'هزینه ها', 'خرج', 'مخارج', 'پرداخت', 'expense', 'چقدر خرج', 'خرج کردم', 'هزینه‌های اخیر', 'پرداختی'], tools: ['getCashflow'] },
+    { id: 'income', keys: ['درآمد', 'دریافت', 'حقوق', 'واریز', 'income', 'deposit', 'چقدر درآمد', 'دریافتی', 'درآمدم'], tools: ['getCashflow'] },
+    { id: 'cashflow', keys: ['دخل و خرج', 'جریان نقد', 'تراز مالی', 'cashflow', 'تراز', 'سود و زیان', 'درآمد و هزینه'], tools: ['getCashflow'] },
+    { id: 'loans', keys: ['قرض', 'بدهی', 'وام', 'بدهکار', 'طلب', 'debt', 'loan', 'قرض‌ها', 'قرض ها', 'قرض باز'], tools: ['getLoans'] },
+    { id: 'goals', keys: ['هدف', 'اهداف', 'goal', 'پس‌انداز', 'پس انداز', 'هدف مالی'], tools: ['getGoals', 'getSummary'] },
+    { id: 'noncash', keys: ['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'gold', 'silver', 'ارز', 'دارایی غیرنقد'], tools: ['getNoncash'] },
+    { id: 'tx', keys: ['تراکنش', 'آخرین تراکنش', 'transaction', 'تراکنش‌ها', 'تراکنش ها', 'آخرین خرید', 'آخرین پرداخت'], tools: ['getRecentTx'] },
+    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار کنم', 'چه کار کنم', 'چکار کنم', 'راهنمایی', 'advice', 'suggest', 'نصیحت', 'چطور مدیریت', 'پیشنهاد بده'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
+    { id: 'summary', keys: ['خلاصه', 'وضعیت مالی', 'گزارش مالی', 'کل دارایی', 'دارایی‌های من', 'دارایی های من', 'وضعیتم', 'اوضاع مالی', 'تحلیل کن', 'وضعیت من', 'وضعیت کلی'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
   ];
 
   function detectIntents(question, memory) {
     var q = String(question || '').trim();
-    var found = [];
+    if (!q) return ['none'];
+
+    // امتیازدهی به همه intentها — کلید بلندتر و تطبیق دقیق‌تر برنده می‌شود
+    var scored = [];
     INTENT_MAP.forEach(function (it) {
-      if (hasAny(q, it.keys)) found.push(it.id);
+      var sc = matchScore(q, it.keys);
+      if (sc > 0) scored.push({ id: it.id, score: sc });
     });
-    // follow-up فقط با ارجاع صریح به قبل — نه پیام کوتاه دلخواه
-    var followPhrases = ['نسبت به', 'ماه قبل', 'قبلش', 'قبلی', 'همون', 'همان', 'بیشتر بگو', 'ادامه بده', 'یعنی چی', 'درباره همان', 'درباره همون'];
+    scored.sort(function (a, b) { return b.score - a.score; });
+
+    var found = scored.map(function (s) { return s.id; });
+
+    // follow-up فقط با ارجاع صریح به قبل
+    var followPhrases = ['نسبت به', 'ماه قبل', 'قبلش', 'قبلی', 'همون', 'همان', 'بیشتر بگو', 'ادامه بده', 'یعنی چی', 'درباره همان', 'درباره همون', 'همان مورد', 'همون مورد'];
     var isFollowUp = hasAny(q, followPhrases);
-    if (!found.length && isFollowUp && memory.lastIntents && memory.lastIntents.length && memory.lastIntents[0] !== 'none') {
+    if (!found.length && isFollowUp && memory && memory.lastIntents && memory.lastIntents.length && memory.lastIntents[0] !== 'none') {
       found = [memory.lastIntents[0]];
     }
-    // سؤال مستقل جدید بدون کلیدواژه مالی
+
     if (!found.length) found = ['none'];
-    // یک intent اصلی؛ advice اولویت دارد اگر صریح آمده باشد
+
+    // یک intent اصلی:
+    // ۱) اگر advice صریح باشد → اولویت advice
+    // ۲) در غیر این صورت بالاترین امتیاز
     if (found[0] !== 'none' && found.length > 1) {
-      if (found.indexOf('advice') >= 0) found = ['advice'];
-      else found = [found[0]];
+      if (found.indexOf('advice') >= 0 && matchScore(q, (INTENT_MAP.filter(function (x) { return x.id === 'advice'; })[0] || { keys: [] }).keys) >= 4) {
+        found = ['advice'];
+      } else {
+        found = [found[0]];
+      }
     }
-    // اگر سؤال کاملاً مستقل و intent جدید دارد، حافظه موضوع قبلی را با intent جدید عوض می‌کنیم (در callAI)
     return found;
   }
 
@@ -245,10 +281,26 @@
 
     // سؤال غیرمالی یا بدون داده مرتبط
     if (!intents || intents[0] === 'none') {
-      return 'این سؤال خارج از محدوده داده‌های مالی پنل است یا عبارت مالی مشخصی در آن تشخیص داده نشد.\nمی‌توانید درباره نقدینگی، هزینه‌ها، سرمایه‌گذاری، قرض‌ها، اهداف یا تراکنش‌ها بپرسید.';
+      return 'متوجه نشدم سؤال مالی مشخصی مطرح کرده‌اید.\nمی‌توانید درباره نقدینگی، هزینه‌ها، سرمایه‌گذاری، قرض‌ها، اهداف یا تراکنش‌های ثبت‌شده در پنل بپرسید. من فقط بر اساس داده‌های واقعی همین پنل پاسخ می‌دهم.';
     }
 
     var primary = (intents && intents[0]) || 'none';
+    // شروع مکالمه‌ای کوتاه
+    var openers = {
+      summary: 'بر اساس آخرین داده‌های ثبت‌شده در پنل:',
+      liquidity: 'وضعیت نقدینگی شما این‌طور است:',
+      invest: 'وضعیت سرمایه‌گذاری‌های ثبت‌شده:',
+      expense: 'خلاصه هزینه‌ها و پرداخت‌های ثبت‌شده:',
+      income: 'خلاصه دریافتی‌های ثبت‌شده:',
+      cashflow: 'نگاه کلی به دخل و خرج:',
+      loans: 'وضعیت قرض‌ها و بدهی‌های باز:',
+      goals: 'اهداف مالی ثبت‌شده:',
+      noncash: 'دارایی‌های غیرنقد ثبت‌شده:',
+      tx: 'آخرین تراکنش‌های ثبت‌شده:',
+      advice: 'با توجه به داده‌های فعلی پنل:'
+    };
+    if (openers[primary]) parts.push(openers[primary]);
+
     if (ctx.summary && (primary === 'summary' || primary === 'advice' || primary === 'liquidity' || primary === 'invest' || primary === 'goals')) {
       var s = ctx.summary;
       addData('📊 خلاصه وضعیت (داده واقعی پنل)', [
@@ -389,108 +441,28 @@
       insights.slice(0, 3).forEach(function (ins) { parts.push('• ' + ins); });
     }
 
-    if (!getApiKey()) {
-      parts.push('');
-      parts.push('ℹ️ حالت محلی. برای مدل زبانی کامل، کلید API را در تنظیمات وارد کنید.');
-    }
-
+    // پاسخ کاملاً محلی — بدون وابستگی به سرویس خارجی
     return parts.join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
-  function getApiKey() {
-    try { return localStorage.getItem(AI_KEY_STORAGE) || ''; } catch (e) { return ''; }
-  }
-  function setApiKey(key) {
-    try {
-      if (key) localStorage.setItem(AI_KEY_STORAGE, String(key).trim());
-      else localStorage.removeItem(AI_KEY_STORAGE);
-    } catch (e) {}
-  }
-  function getEndpoint() {
-    try { return localStorage.getItem(AI_ENDPOINT_STORAGE) || DEFAULT_ENDPOINT; } catch (e) { return DEFAULT_ENDPOINT; }
-  }
-  function setEndpoint(url) {
-    try {
-      if (url && String(url).trim()) localStorage.setItem(AI_ENDPOINT_STORAGE, String(url).trim());
-      else localStorage.removeItem(AI_ENDPOINT_STORAGE);
-    } catch (e) {}
-  }
-
-  function buildSystemPrompt(ctx, intents) {
-    return [
-      'تو مشاور مالی شخصی صادق هستی. فقط فارسی روان پاسخ بده.',
-      'اولویت با آخرین پیام کاربر است. پاسخ‌های قبلی را با سؤال جدید اشتباه نگیر.',
-      'فقط از بلوک Context مالی زیر استفاده کن. عدد اختراع نکن.',
-      'اگر Intent برابر none است یا Context خالی است، بگو سؤال خارج از محدوده داده‌های مالی پنل است.',
-      'اگر داده نیست بگو «اطلاعات کافی در پنل ثبت نشده».',
-      'بین داده واقعی، تحلیل و پیشنهاد تمایز بگذار. پیشنهادها قطعی نباشند.',
-      'Intent: ' + (intents && intents.length ? intents.join(', ') : 'none'),
-      '--- Context مالی (جدا از تاریخچه گفتگو) ---',
-      JSON.stringify(ctx)
-    ].join('\n');
-  }
-
-  async function callAI(userMessage) {
+  /** موتور پاسخ محلی (Offline) — Intent + Context + Rule Engine */
+  function callAI(userMessage) {
     var intents = detectIntents(userMessage, sessionMemory);
     var toolNames = selectToolsForIntents(intents);
     var ctx = buildSelectedContext(toolNames);
-    // حافظه موضوع فقط وقتی intent مالی معتبر است به‌روز می‌شود؛ سؤال نامرتبط موضوع قبلی را پاک نمی‌کند ولی follow-up اجباری هم نمی‌سازد
     if (intents[0] && intents[0] !== 'none') {
       sessionMemory.lastIntents = [intents[0]];
       sessionMemory.lastContextKeys = toolNames.slice();
       sessionMemory.lastTopics = [intents[0]];
     }
-
-    if (!getApiKey()) {
-      return { ok: true, content: buildLocalAnswer(userMessage, intents, ctx), mode: 'local', intents: intents, tools: toolNames };
+    var content = buildLocalAnswer(userMessage, intents, ctx);
+    // کمی طبیعی‌تر کردن شروع پاسخ برای حس مکالمه‌ای
+    if (intents[0] && intents[0] !== 'none' && content && content.indexOf('📊') === 0) {
+      // already structured
+    } else if (intents[0] && intents[0] !== 'none' && content && !content.startsWith('این سؤال')) {
+      // keep as-is
     }
-
-    var messages = [{ role: 'system', content: buildSystemPrompt(ctx, intents) }];
-    // تاریخچه گفتگو جدا از Context مالی؛ بدون تکرار سؤال فعلی؛ حداکثر 4 نوبت (8 پیام)
-    var prior = [];
-    for (var i = 0; i < chatHistory.length; i++) {
-      var m = chatHistory[i];
-      if (!m || !m.content) continue;
-      if (m.role !== 'user' && m.role !== 'assistant') continue;
-      prior.push({ role: m.role, content: m.content });
-    }
-    // حذف آخرین user اگر همان پیام فعلی است (از handleSend اضافه شده)
-    if (prior.length && prior[prior.length - 1].role === 'user' && prior[prior.length - 1].content === userMessage) {
-      prior.pop();
-    }
-    // حداکثر 4 جفت پیام
-    if (prior.length > 8) prior = prior.slice(-8);
-    // اطمینان از ترتیب زوج user/assistant بدون نقش تکراری پشت‌سرهم غیرعادی
-    prior.forEach(function (m) {
-      messages.push({ role: m.role, content: m.content });
-    });
-    messages.push({ role: 'user', content: userMessage });
-
-    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (controller) controller.abort(); }, 45000);
-
-    try {
-      var res = await fetch(getEndpoint(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getApiKey() },
-        body: JSON.stringify({ model: 'gpt-4o-mini', messages: messages, temperature: 0.5, max_tokens: 1100 }),
-        signal: controller ? controller.signal : undefined
-      });
-      clearTimeout(timer);
-      if (!res.ok) {
-        var errText = 'HTTP ' + res.status;
-        try { var ej = await res.json(); if (ej.error && ej.error.message) errText = ej.error.message; } catch (e) {}
-        return { ok: true, content: formatApiFallback(errText) + '\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
-      }
-      var data = await res.json();
-      var content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
-      if (!content) return { ok: true, content: buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
-      return { ok: true, content: String(content).trim(), mode: 'api', intents: intents, tools: toolNames };
-    } catch (err) {
-      clearTimeout(timer);
-      var reason = (err && err.name === 'AbortError') ? 'زمان پاسخ تمام شد' : (err && err.message ? err.message : 'خطای شبکه');
-      return { ok: true, content: '⚠️ ' + reason + '\n\n' + buildLocalAnswer(userMessage, intents, ctx), mode: 'local-fallback', intents: intents };
-    }
+    return { ok: true, content: content, mode: 'local', intents: intents, tools: toolNames };
   }
 
   function loadHistory() {
@@ -507,21 +479,6 @@
     sessionMemory = { lastIntents: [], lastTopics: [], lastContextKeys: [] };
     saveHistory();
     renderMessages();
-  }
-
-  function formatApiFallback(errText) {
-    var t = String(errText || '');
-    var low = t.toLowerCase();
-    if (low.indexOf('credit') >= 0 || low.indexOf('quota') >= 0 || low.indexOf('billing') >= 0 || low.indexOf('insufficient') >= 0) {
-      return '⚠️ اعتبار API تمام شده است. پاسخ زیر با تحلیل‌گر محلی و داده‌های پنل ساخته شده.\n(برای استفاده از مدل ابری، اعتبار را در حساب OpenAI شارژ کنید.)';
-    }
-    if (low.indexOf('incorrect api key') >= 0 || low.indexOf('invalid api key') >= 0 || low.indexOf('authentication') >= 0) {
-      return '⚠️ کلید API نامعتبر است. از تنظیمات، کلید صحیح را وارد کنید. فعلاً پاسخ محلی:';
-    }
-    if (low.indexOf('rate limit') >= 0) {
-      return '⚠️ محدودیت تعداد درخواست API. کمی بعد دوباره تلاش کنید. پاسخ محلی:';
-    }
-    return '⚠️ ارتباط با سرویس ابری برقرار نشد (' + t + '). پاسخ محلی بر اساس داده‌های پنل:';
   }
 
   function formatMessageContent(text) {
@@ -575,8 +532,8 @@
         '<div class="ai-welcome-icon" aria-hidden="true">' +
           '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 17v3"/><path d="M9 21h6"/></svg>' +
         '</div>' +
-        '<div class="ai-welcome-title">سلام، من مشاور مالی شما هستم</div>' +
-        '<div class="ai-welcome-sub">می‌توانم وضعیت نقدینگی، هزینه‌ها، سرمایه‌گذاری‌ها، قرض‌ها و اهداف را بر اساس داده‌های واقعی پنل تحلیل کنم.</div>' +
+        '<div class="ai-welcome-title">سلام، من مشاور مالی محلی شما هستم</div>' +
+        '<div class="ai-welcome-sub">کاملاً آفلاین کار می‌کنم. می‌توانم وضعیت نقدینگی، هزینه‌ها، سرمایه‌گذاری‌ها، قرض‌ها و اهداف را بر اساس داده‌های واقعی پنل تحلیل کنم.</div>' +
         '<div class="ai-suggest-row">' + chips + '</div>' +
       '</div>'
     );
@@ -657,10 +614,10 @@
 
     if (result && result.ok) {
       chatHistory.push({ role: 'assistant', content: result.content });
-      if (result.mode === 'local-fallback') setStatus('پاسخ محلی (سرویس ابری در دسترس نیست)', 'error');
+      setStatus('آماده (آفلاین)', 'idle');
     } else {
       chatHistory.push({ role: 'assistant', content: '⚠️ ' + ((result && result.error) || 'خطای ناشناخته') });
-      setStatus('خطا در دریافت پاسخ', 'error');
+      setStatus('خطا در تحلیل محلی', 'error');
     }
     saveHistory();
     renderMessages();
@@ -668,22 +625,17 @@
   }
 
   function renderSettingsPanel() {
-    var keyInput = document.getElementById('aiApiKeyInput');
-    var endpointInput = document.getElementById('aiEndpointInput');
-    if (keyInput) {
-      var k = getApiKey();
-      keyInput.value = k ? ('••••••••' + k.slice(-4)) : '';
-      keyInput.dataset.hasKey = k ? '1' : '0';
-    }
-    if (endpointInput) endpointInput.value = getEndpoint();
+    // پنل تنظیمات API دیگر استفاده نمی‌شود — مشاور کاملاً محلی است
+    var panel = document.getElementById('aiSettingsPanel');
+    if (panel) panel.style.display = 'none';
+    var toggle = document.getElementById('aiToggleSettings');
+    if (toggle) toggle.style.display = 'none';
   }
 
   function bindUI() {
     var sendBtn = document.getElementById('aiSendBtn');
     var input = document.getElementById('aiChatInput');
     var clearBtn = document.getElementById('aiClearBtn');
-    var saveKeyBtn = document.getElementById('aiSaveKeyBtn');
-    var toggleSettings = document.getElementById('aiToggleSettings');
     var list = document.getElementById('aiChatMessages');
 
     if (sendBtn && !sendBtn._aiBound) {
@@ -708,29 +660,6 @@
         setStatus('گفتگوی جدید', 'idle');
       });
     }
-    if (saveKeyBtn && !saveKeyBtn._aiBound) {
-      saveKeyBtn._aiBound = true;
-      saveKeyBtn.addEventListener('click', function () {
-        var keyInput = document.getElementById('aiApiKeyInput');
-        var endpointInput = document.getElementById('aiEndpointInput');
-        if (keyInput) {
-          var val = (keyInput.value || '').trim();
-          if (val && val.indexOf('••••') !== 0) setApiKey(val);
-          else if (!val) setApiKey('');
-        }
-        if (endpointInput) setEndpoint((endpointInput.value || '').trim());
-        renderSettingsPanel();
-        if (typeof showToast === 'function') showToast('تنظیمات AI ذخیره شد');
-        setStatus(getApiKey() ? 'آماده برای کمک' : 'کلید API تنظیم نشده', getApiKey() ? 'idle' : 'error');
-      });
-    }
-    if (toggleSettings && !toggleSettings._aiBound) {
-      toggleSettings._aiBound = true;
-      toggleSettings.addEventListener('click', function () {
-        var panel = document.getElementById('aiSettingsPanel');
-        if (panel) panel.classList.toggle('open');
-      });
-    }
     // suggested prompts (event delegation)
     if (list && !list._aiSuggestBound) {
       list._aiSuggestBound = true;
@@ -748,13 +677,12 @@
     renderMessages();
     renderSettingsPanel();
     bindUI();
-    setStatus(getApiKey() ? 'آماده برای کمک' : 'آماده (حالت محلی)', 'idle');
+    setStatus('آماده (آفلاین · محلی)', 'idle');
   }
 
   global.FinancialAI = {
     init: initPage,
     clearHistory: clearHistory,
-    getApiKey: getApiKey,
     Tools: Tools,
     detectIntents: detectIntents,
     buildSelectedContext: buildSelectedContext,
