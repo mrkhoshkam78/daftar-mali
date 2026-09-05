@@ -2289,6 +2289,15 @@ function applyLoanSettlement(entry, settling){
 
 /* --- Notebook (تراکنش‌های ثبت‌شده) --- */
 function renderNotebook(){
+  // یک‌بار در هر نشست: payment/depositهای قدیمی appliedنشده را همگام کن تا base با result هم‌خوان شود
+  if(!window._nbPayDepSynced){
+    window._nbPayDepSynced = true;
+    try{
+      if(typeof syncUnappliedPaymentsDeposits === 'function' && syncUnappliedPaymentsDeposits()){
+        if(typeof persist === 'function') persist();
+      }
+    }catch(e){ console.error(e); }
+  }
   try{ if(typeof renderBankCards === 'function') renderBankCards(); }catch(e){ console.error(e); }
   try{ if(typeof renderLoans === 'function') renderLoans(); }catch(e){ console.error(e); }
   const el = $('nbList');
@@ -2623,6 +2632,27 @@ function applyAmountToCard(cardId, delta, note){
   txs.push({date: todayISO(), key:'card', delta, note: note || ''});
   if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
 }
+/** همگام‌سازی یک‌بارهٔ تراکنش‌های payment/deposit قدیمی که هنوز applied نیستند
+ *  تا «موجودی فعلی کارت» با «موجودی محاسبه‌شده» برای این نوع تراکنش‌ها یکی شود.
+ *  قرض‌ها (lent/borrowed) عمداً در دلتا می‌مانند تا منطق فعلی حفظ شود. */
+function syncUnappliedPaymentsDeposits(){
+  if(!Array.isArray(notebook) || !notebook.length) return false;
+  let changed = false;
+  notebook.forEach(e => {
+    if(!e || e.applied) return;
+    if(e.type !== 'payment' && e.type !== 'deposit') return;
+    const amt = safeNum(e.amount, 0);
+    if(amt <= 0) return;
+    const sign = (NB_TYPES[e.type] && NB_TYPES[e.type].sign) || (e.type === 'deposit' ? 1 : -1);
+    const delta = sign * amt;
+    const cardId = e.cardId || '';
+    const label = (NB_TYPES[e.type] && NB_TYPES[e.type].label) || e.type;
+    applyAmountToCard(cardId, delta, label + (e.desc ? ' — ' + e.desc : '') + ' (همگام‌سازی)');
+    e.applied = true;
+    changed = true;
+  });
+  return changed;
+}
 function setDefaultBankCard(id){
   if(!Array.isArray(bankCards)) return;
   const target = findBankCard(id);
@@ -2709,7 +2739,17 @@ function fillNbCardSelect(){
     const label = escapeHtml(c.name || 'کارت') + (last ? ' · •••• ' + last : '');
     return `<option value="${c.id}">${label}</option>`;
   }).join('');
-  if(prev && list.some(c => String(c.id) === String(prev))) sel.value = prev;
+  // اولویت: مقدار قبلی معتبر → کارت پیش‌فرض → اولین کارت → بدون کارت
+  if(prev && list.some(c => String(c.id) === String(prev))){
+    sel.value = prev;
+  } else {
+    const def = (typeof ensureDefaultBankCard === 'function' ? ensureDefaultBankCard() : null)
+      || list.find(c => c && c.isDefault)
+      || list[0]
+      || null;
+    if(def && def.id != null) sel.value = String(def.id);
+    else sel.value = '';
+  }
 }
 function updateNbCardVisibility(){
   try{
