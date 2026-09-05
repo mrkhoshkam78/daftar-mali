@@ -281,13 +281,14 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','adaptive-canvas'];
+const VALID_DESIGNS = ['aurora','neobank','classic','adaptive-canvas','editorial-finance'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
   if(d === 'original' || d === 'premium' || d === 'glass') return 'classic';
   if(d === 'app' || d === 'shell') return 'aurora';
   if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc') return 'adaptive-canvas';
+  if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
   return d;
 }
 function applyDesign(d){
@@ -312,6 +313,10 @@ function applyDesign(d){
     } else if(d === 'aurora'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
+    } else if(d === 'editorial-finance'){
+      // Premium editorial: bottom nav + soft drawer available
+      if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
+      if(ham){ ham.style.display = ''; }
     } else {
       if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
       if(ham){ ham.style.display = ''; }
