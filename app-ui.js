@@ -3411,11 +3411,9 @@ function syncOwnerNameDependents(){
     const displayName = (p.name || '').trim() || 'مالک پنل';
     const uname = (p.username || (typeof getLoginUsername === 'function' ? getLoginUsername() : '') || '').trim();
 
-    // منو — کارت هویت
+    // منو — کارت هویت (نام + آخرین بازدید؛ بدون Username)
     const menuName = document.getElementById('menuOwnerName');
     if(menuName) menuName.textContent = displayName;
-    const menuUser = document.getElementById('menuOwnerUser');
-    if(menuUser) menuUser.textContent = uname ? ('@' + uname) : '—';
     applyAvatarToEl(document.getElementById('menuOwnerAvatar'), p);
 
     // خلاصه پروفایل

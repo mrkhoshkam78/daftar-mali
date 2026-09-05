@@ -150,12 +150,21 @@ function writeSession(sess){
 function clearSession(){
   try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
   try{ sessionStorage.removeItem(UNLOCK_FLAG); }catch(e){}
+  // جلوگیری از بازیابی ناخواسته Session موازی
+  try{ sessionStorage.removeItem('daftar-session'); }catch(e){}
+  try{ sessionStorage.removeItem('daftar-auth'); }catch(e){}
 }
 function isSessionActive(){
   const s = readSession();
-  if(s) return true;
-  // سازگاری با پرچم قدیمی
-  try{ return sessionStorage.getItem(UNLOCK_FLAG) === '1'; }catch(e){ return false; }
+  if(s && s.authenticated === true && s.status === 'active') return true;
+  // فقط اگر Session معتبر نبود ولی پرچم قدیمی هست (مهاجرت Refresh)
+  try{
+    if(sessionStorage.getItem(UNLOCK_FLAG) === '1'){
+      // بدون SESSION_KEY واقعی — فقط با restore ساخته می‌شود؛ اینجا true موقت
+      return true;
+    }
+  }catch(e){}
+  return false;
 }
 /**
  * ورود موفق: Previous Last Visit را برای نمایش Session فریز می‌کند،
@@ -204,10 +213,10 @@ function getSessionPreviousLastVisit(){
   return readLastVisitTs();
 }
 function formatLastVisitFa(ts){
-  if(ts == null || !isFinite(ts)) return 'اولین بازدید شماست';
+  if(ts == null || !isFinite(ts)) return 'اولین بازدید';
   try{
     const d = new Date(ts);
-    if(isNaN(d.getTime())) return 'اولین بازدید شماست';
+    if(isNaN(d.getTime())) return 'اولین بازدید';
     const now = new Date();
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -226,7 +235,7 @@ function updateLastVisitUI(){
     if(!el) return;
     const prev = getSessionPreviousLastVisit();
     if(prev == null){
-      el.textContent = 'اولین بازدید شماست';
+      el.textContent = 'اولین بازدید';
       el.classList.add('is-first');
     } else {
       el.textContent = 'آخرین بازدید: ' + formatLastVisitFa(prev);
@@ -573,7 +582,13 @@ refreshPinStatus();
 if($('menuLogoutBtn')){
   $('menuLogoutBtn').addEventListener('click', function(e){
     e.preventDefault();
-    performLogout();
+    if(typeof showConfirmModal === 'function'){
+      showConfirmModal('آیا قصد خروج دارید؟', 'نشست فعلی بسته می‌شود. داده‌های مالی و پروفایل حفظ می‌شوند.', function(){
+        performLogout();
+      });
+    } else if(window.confirm('آیا قصد خروج دارید؟')){
+      performLogout();
+    }
   });
 }
 // همگام UI آخرین بازدید پس از آماده شدن DOM
