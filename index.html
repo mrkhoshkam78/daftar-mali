@@ -6,7 +6,7 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260905v3local">
+<meta name="app-build" content="20260905v301">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -29,9 +29,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260905v3" as="style">
+<link rel="preload" href="styles.css?v=20260905v301" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260905v3">
+<link rel="stylesheet" href="styles.css?v=20260905v301">
 </head>
 <body>
 
@@ -693,6 +693,25 @@
 
 <div class="page" id="page-settings">
     
+      <div class="section reveal in-view" id="sec-owner-profile">
+        <div class="section-title"><span class="dot"></span>پروفایل مالک</div>
+        <div class="section-sub">نام و تصویر مالک پنل — فقط در همین دستگاه ذخیره می‌شود.</div>
+        <div class="owner-profile-row">
+          <div class="owner-avatar-wrap" id="ownerAvatarWrap" title="تغییر تصویر">
+            <div class="owner-avatar" id="ownerAvatarDisplay" aria-hidden="true">?</div>
+            <input type="file" id="ownerAvatarInput" accept="image/*" style="display:none;" aria-label="انتخاب تصویر پروفایل">
+          </div>
+          <div class="owner-profile-fields">
+            <label class="field" for="ownerNameInput">نام مالک</label>
+            <input type="text" id="ownerNameInput" class="owner-name-input" placeholder="مثلاً علی" maxlength="60" autocomplete="name">
+            <div class="owner-profile-actions">
+              <button type="button" class="btn" id="ownerSaveBtn">ذخیره پروفایل</button>
+              <button type="button" class="btn ghost" id="ownerClearAvatarBtn">حذف تصویر</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> Design</div>
         <div class="section-sub">ظاهر و ساختار رابط</div>
@@ -829,7 +848,7 @@
     </div>
 
     </div>
-    <div class="app-version" id="appVersion">مبحث درآمد · <b>v2.03</b></div>
+    <div class="app-version" id="appVersion">مبحث درآمد · <b>V3.01</b></div>
     </div>
 
   </div>
@@ -917,18 +936,18 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260905v3"></script>
-<script src="app-core.js?v=20260905v3"></script>
-<script src="app-ui.js?v=20260905v3"></script>
-<script src="app-notes.js?v=20260905v3"></script>
-<script src="app-boot.js?v=20260905v3"></script>
-<script src="financial-ai.js?v=20260905v3ai"></script>
+<script src="prices-api.js?v=20260905v301"></script>
+<script src="app-core.js?v=20260905v301"></script>
+<script src="app-ui.js?v=20260905v301"></script>
+<script src="app-notes.js?v=20260905v301"></script>
+<script src="app-boot.js?v=20260905v301"></script>
+<script src="financial-ai.js?v=20260905v301ai"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260905v3';
+      s.src='tests.js?v=20260905v301';
       document.body.appendChild(s);
     }
   }catch(e){}

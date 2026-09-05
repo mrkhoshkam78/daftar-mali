@@ -21,6 +21,7 @@ function render(){
   if(typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
   if(typeof renderNotes === 'function') renderNotes();
   if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
+  if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
 }
 
 let selectedDonutKey = null;
@@ -3269,6 +3270,12 @@ $('importFile').addEventListener('change', (e)=>{
         isDefault: !!c.isDefault
       })) : [];
       if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard();
+      if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
+        ownerProfile = {
+          name: String(d.ownerProfile.name || '').slice(0, 60),
+          avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
+        };
+      }
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
       ensureCoreAssets();
       initMilestonesBaseline();
@@ -3362,3 +3369,86 @@ $('newAssetBtn').addEventListener('click', ()=>{
 
 
 /* ================= NOTES (دفترچه یادداشت) ================= */
+
+/* ================= OWNER PROFILE ================= */
+function getOwnerProfile(){
+  if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+  return ownerProfile;
+}
+function ownerInitial(name){
+  const n = String(name || '').trim();
+  if(!n) return '?';
+  return n.charAt(0).toUpperCase();
+}
+function renderOwnerProfile(){
+  try{
+    const p = getOwnerProfile();
+    const av = document.getElementById('ownerAvatarDisplay');
+    const nameInp = document.getElementById('ownerNameInput');
+    if(nameInp && document.activeElement !== nameInp) nameInp.value = p.name || '';
+    if(av){
+      if(p.avatar && p.avatar.indexOf('data:image/') === 0){
+        av.style.backgroundImage = 'url(' + p.avatar + ')';
+        av.textContent = '';
+        av.classList.add('has-image');
+      } else {
+        av.style.backgroundImage = '';
+        av.textContent = ownerInitial(p.name);
+        av.classList.remove('has-image');
+      }
+    }
+  }catch(e){ console.error('renderOwnerProfile', e); }
+}
+function saveOwnerProfileFromUI(){
+  const nameInp = document.getElementById('ownerNameInput');
+  const name = (nameInp && nameInp.value || '').trim().slice(0, 60);
+  if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+  ownerProfile.name = name;
+  // avatar already set by file picker if any
+  const ok = typeof persist === 'function' ? persist() : true;
+  renderOwnerProfile();
+  if(typeof showToast === 'function') showToast(ok ? 'پروفایل ذخیره شد' : 'پروفایل ذخیره شد (ذخیره پایدار ناموفق)', !ok);
+}
+function bindOwnerProfileUI(){
+  if(window.__ownerProfileBound) return;
+  window.__ownerProfileBound = true;
+  const wrap = document.getElementById('ownerAvatarWrap');
+  const fileInp = document.getElementById('ownerAvatarInput');
+  const saveBtn = document.getElementById('ownerSaveBtn');
+  const clearBtn = document.getElementById('ownerClearAvatarBtn');
+  if(wrap && fileInp){
+    wrap.addEventListener('click', function(){ fileInp.click(); });
+    fileInp.addEventListener('change', function(){
+      const f = fileInp.files && fileInp.files[0];
+      if(!f) return;
+      if(!/^image\//.test(f.type)){ if(typeof showToast==='function') showToast('فقط فایل تصویری مجاز است', true); return; }
+      if(f.size > 1.5 * 1024 * 1024){ if(typeof showToast==='function') showToast('حجم تصویر حداکثر ۱٫۵ مگابایت', true); return; }
+      const reader = new FileReader();
+      reader.onload = function(){
+        try{
+          if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+          ownerProfile.avatar = String(reader.result || '');
+          renderOwnerProfile();
+          if(typeof persist === 'function') persist();
+          if(typeof showToast==='function') showToast('تصویر پروفایل تنظیم شد');
+        }catch(e){ console.error(e); }
+      };
+      reader.readAsDataURL(f);
+      fileInp.value = '';
+    });
+  }
+  if(saveBtn) saveBtn.addEventListener('click', function(e){ e.preventDefault(); saveOwnerProfileFromUI(); });
+  if(clearBtn) clearBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+    ownerProfile.avatar = '';
+    if(typeof persist === 'function') persist();
+    renderOwnerProfile();
+    if(typeof showToast==='function') showToast('تصویر حذف شد');
+  });
+}
+// bind once DOM ready (app-boot also calls render)
+if(typeof document !== 'undefined'){
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ bindOwnerProfileUI(); renderOwnerProfile(); });
+  else { bindOwnerProfileUI(); renderOwnerProfile(); }
+}

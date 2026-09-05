@@ -526,6 +526,9 @@ function showPage(pageId){
   if(pageId === 'page-ai-advisor' && typeof FinancialAI !== 'undefined' && FinancialAI.init){
     try{ FinancialAI.init(); }catch(e){ console.error('FinancialAI init', e); }
   }
+  if(pageId === 'page-settings' && typeof renderOwnerProfile === 'function'){
+    try{ renderOwnerProfile(); }catch(e){}
+  }
   // بخش‌های مخفی با reveal که هنگام display:none مشاهده نشدند را نمایان کن
   if(target){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
@@ -899,6 +902,7 @@ let notes = []; // {id,title,body,cat,pinned,createdAt,updatedAt}
 let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف ثبت‌شده
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let bankCards = []; // {id, name, last4, color, balance, isDefault} — موجودی اصلی = assets.card روی کارت پیش‌فرض
+let ownerProfile = { name: '', avatar: '' }; // پروفایل مالک پنل — فقط name + avatar (dataURL)
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 const BC_COLORS = ['#1d4ed8','#0f766e','#7c3aed','#b91c1c','#a16207','#334155','#0e7490','#be185d'];
 let _bcSelectedColor = BC_COLORS[0];
@@ -938,6 +942,12 @@ function loadAll(){
           balance: (typeof safeNum === 'function' ? safeNum(c.balance, 0) : Number(c.balance)||0),
           isDefault: !!c.isDefault
         }));
+        if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
+          ownerProfile = {
+            name: String(d.ownerProfile.name || '').slice(0, 60),
+            avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
+          };
+        }
         try{ if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard(); }catch(e){}
 
         if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
@@ -974,7 +984,7 @@ function pushSeriesPoint(){
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function getStatePayload(){
-  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, bankCards, assetDefs: ASSET_DEFS};
+  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, bankCards, ownerProfile, assetDefs: ASSET_DEFS};
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
@@ -999,6 +1009,12 @@ function applyStatePayload(d){
     balance: safeNum(c.balance, 0),
     isDefault: !!c.isDefault
   }));
+  if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
+    ownerProfile = {
+      name: String(d.ownerProfile.name || '').slice(0, 60),
+      avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
+    };
+  }
   // همگام‌سازی کارت پیش‌فرض
   if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard();
   else {
