@@ -2872,7 +2872,7 @@ function renderBankCards(){
       <div class="bc-slide-bottom">
         <div class="bc-holder">
           <span class="bc-holder-label">صاحب کارت</span>
-          <span class="bc-holder-name">${bankName}</span>
+          <span class="bc-holder-name">${escapeHtml((typeof getOwnerDisplayName === 'function' ? getOwnerDisplayName() : (ownerProfile && ownerProfile.name)) || bankName || '—')}</span>
         </div>
         <div class="bc-last4">
           <span class="bc-last4-label">۴ رقم آخر</span>
@@ -3371,6 +3371,15 @@ $('newAssetBtn').addEventListener('click', ()=>{
 /* ================= NOTES (دفترچه یادداشت) ================= */
 
 /* ================= OWNER PROFILE ================= */
+function getOwnerDisplayName(){
+  try{
+    if(typeof ownerProfile === 'object' && ownerProfile && String(ownerProfile.name||'').trim()){
+      return String(ownerProfile.name).trim().slice(0, 60);
+    }
+  }catch(e){}
+  return '';
+}
+
 function getOwnerProfile(){
   if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
   return ownerProfile;
@@ -3397,16 +3406,41 @@ function renderOwnerProfile(){
         av.classList.remove('has-image');
       }
     }
+    if(typeof syncOwnerNameDependents === 'function') syncOwnerNameDependents();
   }catch(e){ console.error('renderOwnerProfile', e); }
+}
+function syncOwnerNameDependents(){
+  try{
+    // منو
+    const menuName = document.getElementById('menuOwnerName');
+    if(menuName){
+      const n = (typeof getOwnerDisplayName === 'function' ? getOwnerDisplayName() : (ownerProfile && ownerProfile.name) || '');
+      menuName.textContent = n || 'مالک پنل';
+    }
+    // وضعیت امنیت
+    if(typeof refreshPinStatus === 'function') refreshPinStatus();
+    // فیلد نام کاربری (فقط نمایش از منبع واحد)
+    const lu = document.getElementById('loginUsername');
+    if(lu){
+      const n = (typeof getLoginUsername === 'function' ? getLoginUsername() : '') || '';
+      lu.value = n;
+      lu.readOnly = true;
+      lu.title = 'نام کاربری از پروفایل مالک خوانده می‌شود';
+    }
+    // کارت‌ها (صاحب کارت)
+    if(typeof renderBankCards === 'function') renderBankCards();
+  }catch(e){ console.error('syncOwnerNameDependents', e); }
 }
 function saveOwnerProfileFromUI(){
   const nameInp = document.getElementById('ownerNameInput');
   const name = (nameInp && nameInp.value || '').trim().slice(0, 60);
   if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
   ownerProfile.name = name;
-  // avatar already set by file picker if any
+  // همگام‌سازی کلید قدیمی نام کاربری (سازگاری)
+  try{ if(name) localStorage.setItem('daftar-login-username', name); }catch(e){}
   const ok = typeof persist === 'function' ? persist() : true;
   renderOwnerProfile();
+  syncOwnerNameDependents();
   if(typeof showToast === 'function') showToast(ok ? 'پروفایل ذخیره شد' : 'پروفایل ذخیره شد (ذخیره پایدار ناموفق)', !ok);
 }
 function bindOwnerProfileUI(){

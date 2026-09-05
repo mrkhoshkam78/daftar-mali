@@ -948,6 +948,17 @@ function loadAll(){
             avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
           };
         }
+        // مهاجرت یک‌باره: اگر پروفایل نام ندارد، از نام کاربری قدیمی امنیت پر شود
+        try{
+          if(!ownerProfile || !String(ownerProfile.name||'').trim()){
+            var legacyU = '';
+            try{ legacyU = String(localStorage.getItem('daftar-login-username')||'').trim(); }catch(_e){}
+            if(legacyU && legacyU.toLowerCase() !== 'admin'){
+              if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+              ownerProfile.name = legacyU.slice(0, 60);
+            }
+          }
+        }catch(_m){}
         try{ if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard(); }catch(e){}
 
         if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;

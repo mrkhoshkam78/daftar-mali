@@ -5399,3 +5399,10 @@ html[data-design="aurora"] #page-ai-advisor .ai-shell {
 .owner-profile-actions{
   display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
 }
+
+/* Owner name in side menu — layout-preserving */
+.sd-brand-text{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.sd-owner-name{
+  font-size:12px;font-weight:600;color:var(--ink-dim);
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
