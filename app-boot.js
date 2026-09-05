@@ -140,8 +140,12 @@ function readSession(){
     const raw = sessionStorage.getItem(SESSION_KEY);
     if(!raw) return null;
     const s = JSON.parse(raw);
-    if(s && s.authenticated === true && s.status === 'active') return s;
-  }catch(e){}
+    if(s && s.authenticated === true && s.status === 'active' && s.profileId) return s;
+    // stale / ناقص
+    try{ sessionStorage.removeItem(SESSION_KEY); }catch(_e){}
+  }catch(e){
+    try{ sessionStorage.removeItem(SESSION_KEY); }catch(_e){}
+  }
   return null;
 }
 function writeSession(sess){
@@ -189,8 +193,14 @@ function createActiveSession(){
 /** بازیابی Session پس از Refresh — بدون ثبت بازدید جدید */
 function restoreOrMigrateSession(){
   let s = readSession();
-  if(s) return s;
-  // مهاجرت: اگر فقط UNLOCK_FLAG بود
+  // Session ذخیره‌شده معتبر
+  if(s && s.authenticated === true && s.status === 'active') return s;
+  // Session ناقص/نامعتبر را پاک کن تا stale نماند
+  if(s){
+    try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+  }
+  // مهاجرت سازگاری: فقط UNLOCK_FLAG از نسخه قبل — بدون ثبت Login جدید
+  // previousLastVisit را از LAST_VISIT_KEY نخوان (آن زمان ورود فعلی است نه قبلی)
   try{
     if(sessionStorage.getItem(UNLOCK_FLAG) === '1'){
       s = {
@@ -198,9 +208,8 @@ function restoreOrMigrateSession(){
         profileId: 'owner-profile',
         startedAt: Date.now(),
         status: 'active',
-        previousLastVisit: readLastVisitTs() // نمایش همان last visit؛ زمان جدید ثبت نشود
+        previousLastVisit: null
       };
-      // توجه: writeLastVisitTs صداده نمی‌شود — Refresh ≠ Login
       writeSession(s);
       return s;
     }
@@ -481,13 +490,25 @@ function showLockScreen(){
 }
 async function checkLock(){
   const rec = loadPinRecord();
-  if(!rec) return;
+  // داده رمزشدهٔ pending → Session نامعتبر + قفل
   if(window._pendingEncStore){
-    sessionStorage.removeItem(UNLOCK_FLAG);
+    clearSession();
     showLockScreen();
     return;
   }
-  if(sessionStorage.getItem(UNLOCK_FLAG)!=='1') showLockScreen();
+  // بازیابی Session پس از Refresh — بدون Login جدید و بدون تغییر Last Visit
+  const sess = restoreOrMigrateSession();
+  if(sess && sess.authenticated === true && sess.status === 'active'){
+    try{ updateLastVisitUI(); }catch(e){}
+    return;
+  }
+  // بدون PIN: قفل اجباری نیست
+  if(!rec){
+    try{ updateLastVisitUI(); }catch(e){}
+    return;
+  }
+  // PIN فعال و Session معتبر نیست → ورود
+  showLockScreen();
 }
 function triggerLoginError(){const box=$('lockBox');if(!box)return;box.classList.remove('login-error');void box.offsetWidth;box.classList.add('login-error');}
 $('lockUnlockBtn').addEventListener('click',async()=>{
@@ -638,18 +659,34 @@ function openBackupDb(){
 async function saveBackupToIdb(payload){
   const db = await openBackupDb();
   return new Promise(function(resolve, reject){
+    let settled = false;
+    const done = function(err, id){
+      if(settled) return;
+      settled = true;
+      try{ db.close(); }catch(e){}
+      if(err) reject(err); else resolve(id);
+    };
     const tx = db.transaction(AUTO_BACKUP_STORE, 'readwrite');
     const store = tx.objectStore(AUTO_BACKUP_STORE);
     const id = 'ab_' + Date.now();
-    store.put({ id: id, ts: Date.now(), data: payload });
-    // prune old
+    const ts = Date.now();
+    // اول همه را بخوان، بعد put + حذف قدیمی‌ها در همان transaction
     const getAll = store.getAll();
     getAll.onsuccess = function(){
-      const rows = (getAll.result || []).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
-      rows.slice(AUTO_BACKUP_MAX).forEach(function(r){ store.delete(r.id); });
+      try{
+        const rows = (getAll.result || []).slice();
+        store.put({ id: id, ts: ts, data: payload });
+        rows.push({ id: id, ts: ts });
+        rows.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+        rows.slice(AUTO_BACKUP_MAX).forEach(function(r){
+          if(r && r.id) store.delete(r.id);
+        });
+      }catch(e){ done(e); }
     };
-    tx.oncomplete = function(){ db.close(); resolve(id); };
-    tx.onerror = function(){ reject(tx.error); };
+    getAll.onerror = function(){ done(getAll.error || new Error('idb getAll')); };
+    tx.oncomplete = function(){ done(null, id); };
+    tx.onerror = function(){ done(tx.error || new Error('idb tx')); };
+    tx.onabort = function(){ done(tx.error || new Error('idb abort')); };
   });
 }
 async function checkStorageWarning(){
