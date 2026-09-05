@@ -281,13 +281,13 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','adaptive-canvas','editorial-finance'];
+const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
   if(d === 'original' || d === 'premium' || d === 'glass') return 'classic';
   if(d === 'app' || d === 'shell') return 'aurora';
-  if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc') return 'adaptive-canvas';
+  if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc' || d === 'adaptive-canvas') return 'aurora';
   if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
   return d;
 }
@@ -307,14 +307,10 @@ function applyDesign(d){
     const bn = document.getElementById('bottomNav');
     const ham = document.getElementById('menuToggle');
     const drawer = document.getElementById('dropdownMenu');
-    if(d === 'adaptive-canvas'){
-      if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
-      if(ham){ ham.style.display = 'none'; }
-    } else if(d === 'aurora'){
+    if(d === 'aurora'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
     } else if(d === 'editorial-finance'){
-      // Premium editorial: bottom nav + soft drawer available
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = ''; }
     } else {
@@ -335,12 +331,8 @@ function applyDesign(d){
     if(bar) bar.style.transform = '';
     if(layout) layout.style.transform = '';
   }catch(e){}
-  try{
-    if(typeof AdaptiveCanvas !== 'undefined' && AdaptiveCanvas.onDesignChange){
-      AdaptiveCanvas.onDesignChange(d);
-    }
-  }catch(e){}
 }
+
 function onDesignCardActivate(e){
   const card = e.target && e.target.closest && e.target.closest('.design-card');
   if(!card) return;
@@ -354,6 +346,18 @@ document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
   let saved = 'aurora';
   try{ saved = localStorage.getItem(DESIGN_KEY) || 'aurora'; }catch(e){}
+  // مهاجرت: Adaptive Canvas حذف شده
+  try{
+    const n = String(saved||'').toLowerCase();
+    if(n === 'adaptive-canvas' || n === 'adaptive' || n === 'canvas' || n === 'afc'){
+      saved = 'aurora';
+      localStorage.setItem(DESIGN_KEY, 'aurora');
+    }
+  }catch(e){}
+  try{
+    document.documentElement.removeAttribute('data-ac-view');
+    document.body.classList.remove('ac-focus','ac-canvas-mode');
+  }catch(e){}
   applyDesign(saved);
 })();
 
@@ -547,13 +551,8 @@ function showPage(pageId){
   if(target){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
   }
-  // Adaptive Canvas: ورود به Focus Mode (فقط UI)
-  try{
-    if(typeof AdaptiveCanvas !== 'undefined' && AdaptiveCanvas.isActive && AdaptiveCanvas.isActive()){
-      AdaptiveCanvas.enterFocus(pageId);
-    }
-  }catch(e){}
 }
+
 // Event delegation — کار می‌کند حتی اگر HTML بعد از script بیاید
 function bindNavOnce(){
   if(window.__navBound) return;

@@ -6,7 +6,7 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260905v305ui01">
+<meta name="app-build" content="20260905v305fix">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -17,9 +17,9 @@
   d=String(d).toLowerCase();
   if(d==="neo"||d==="neo-bank"||d==="neo_bank")d="neobank";
   if(d==="original"||d==="glass"||d==="premium")d="classic";
-  if(d==="adaptive"||d==="canvas"||d==="afc"||d==="adaptivecanvas")d="adaptive-canvas";
+  if(d==="adaptive"||d==="canvas"||d==="afc"||d==="adaptivecanvas"||d==="adaptive-canvas")d="aurora";
   if(d==="editorial"||d==="editorialfinance"||d==="ef")d="editorial-finance";
-  if(["aurora","neobank","classic","adaptive-canvas","editorial-finance"].indexOf(d)<0)d="aurora";
+  if(["aurora","neobank","classic","editorial-finance"].indexOf(d)<0)d="aurora";
   document.documentElement.setAttribute("data-design",d);
   var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
@@ -31,9 +31,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260905v305ui01" as="style">
+<link rel="preload" href="styles.css?v=20260905v305fix" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260905v305ui01">
+<link rel="stylesheet" href="styles.css?v=20260905v305fix">
 </head>
 <body>
 <!-- Editorial Finance decorative layer (scoped via CSS) -->
@@ -73,68 +73,6 @@
   </div>
 </div>
 
-
-<!-- Adaptive Financial Canvas shell (only visible when data-design=adaptive-canvas) -->
-<div id="acShell" class="ac-shell" aria-hidden="true">
-  <header class="ac-top">
-    <button type="button" class="ac-back" id="acBackBtn" aria-label="بازگشت به Canvas" style="display:none">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
-      <span>Canvas</span>
-    </button>
-    <div class="ac-title" id="acTitle">Financial Canvas</div>
-    <button type="button" class="ac-ctx-btn" id="acCtxBtn" aria-label="تغییر زمینه" aria-expanded="false">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
-    </button>
-  </header>
-  <div class="ac-ctx-panel" id="acCtxPanel" hidden>
-    <button type="button" data-ac-ctx="page-dashboard">مالی · Canvas</button>
-    <button type="button" data-ac-ctx="page-notebook">تراکنش‌ها</button>
-    <button type="button" data-ac-ctx="page-budget">بودجه</button>
-    <button type="button" data-ac-ctx="page-assets">دارایی‌ها</button>
-    <button type="button" data-ac-ctx="page-goals">برنامه‌ریزی</button>
-    <button type="button" data-ac-ctx="page-notes">یادداشت‌ها</button>
-    <button type="button" data-ac-ctx="page-settings">تنظیمات</button>
-  </div>
-  <div class="ac-canvas" id="acCanvas">
-    <div class="ac-center">
-      <div class="ac-center-label">جمع کل دارایی</div>
-      <div class="ac-center-value" id="acTotalNet">—</div>
-      <div class="ac-center-sub" id="acTotalSub">تومان</div>
-    </div>
-    <div class="ac-modules" id="acModules">
-      <button type="button" class="ac-mod" data-ac-page="page-notebook" data-ac-key="flow">
-        <span class="ac-mod-kicker">جریان</span>
-        <span class="ac-mod-title">درآمد و هزینه</span>
-        <span class="ac-mod-metric" id="acModFlow">—</span>
-      </button>
-      <button type="button" class="ac-mod" data-ac-page="page-budget" data-ac-key="budget">
-        <span class="ac-mod-kicker">بودجه</span>
-        <span class="ac-mod-title">وضعیت هزینه</span>
-        <span class="ac-mod-metric" id="acModBudget">—</span>
-      </button>
-      <button type="button" class="ac-mod" data-ac-page="page-assets" data-ac-key="assets">
-        <span class="ac-mod-kicker">دارایی</span>
-        <span class="ac-mod-title">پورتفوی</span>
-        <span class="ac-mod-metric" id="acModAssets">—</span>
-      </button>
-      <button type="button" class="ac-mod" data-ac-page="page-goals" data-ac-key="goals">
-        <span class="ac-mod-kicker">اهداف</span>
-        <span class="ac-mod-title">برنامه‌ریزی</span>
-        <span class="ac-mod-metric" id="acModGoals">—</span>
-      </button>
-      <button type="button" class="ac-mod" data-ac-page="page-notebook" data-ac-key="loans">
-        <span class="ac-mod-kicker">قرض‌ها</span>
-        <span class="ac-mod-title">تعهدات</span>
-        <span class="ac-mod-metric" id="acModLoans">—</span>
-      </button>
-      <button type="button" class="ac-mod" data-ac-page="page-notes" data-ac-key="notes">
-        <span class="ac-mod-kicker">یادداشت</span>
-        <span class="ac-mod-title">دفترچه</span>
-        <span class="ac-mod-metric" id="acModNotes">—</span>
-      </button>
-    </div>
-  </div>
-</div>
 
 <div class="topbar" role="banner">
   <div class="topbar-main">
@@ -851,7 +789,7 @@
 
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> Design</div>
-        <div class="section-sub">انتخاب چیدمان و استایل کلی رابط (Aurora، Neo-Bank، Classic، Adaptive Canvas، Editorial Finance)</div>
+        <div class="section-sub">انتخاب چیدمان و استایل کلی رابط (Aurora، Neo-Bank، Classic، Editorial Finance)</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب طراحی">
           <button type="button" class="design-card active" data-design-val="aurora" role="option" aria-selected="true">
             <span class="design-name">Aurora</span>
@@ -861,9 +799,6 @@
           </button>
           <button type="button" class="design-card" data-design-val="classic" role="option" aria-selected="false">
             <span class="design-name">Classic</span>
-          </button>
-          <button type="button" class="design-card" data-design-val="adaptive-canvas" role="option" aria-selected="false">
-            <span class="design-name">Adaptive Canvas</span>
           </button>
           <button type="button" class="design-card" data-design-val="editorial-finance" role="option" aria-selected="false">
             <span class="design-name">Editorial Finance</span>
@@ -1109,18 +1044,18 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260905v305ui01"></script>
-<script src="app-core.js?v=20260905v305ui01"></script>
-<script src="app-ui.js?v=20260905v305ui01"></script>
-<script src="app-notes.js?v=20260905v305ui01"></script>
-<script src="app-boot.js?v=20260905v305ui01"></script>
-<script src="financial-ai.js?v=20260905v305ui01ai"></script>
+<script src="prices-api.js?v=20260905v305fix"></script>
+<script src="app-core.js?v=20260905v305fix"></script>
+<script src="app-ui.js?v=20260905v305fix"></script>
+<script src="app-notes.js?v=20260905v305fix"></script>
+<script src="app-boot.js?v=20260905v305fix"></script>
+<script src="financial-ai.js?v=20260905v305fixai"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260905v305ui01';
+      s.src='tests.js?v=20260905v305fix';
       document.body.appendChild(s);
     }
   }catch(e){}
