@@ -117,11 +117,141 @@ const USERNAME_KEY = 'daftar-login-username';
 const DEFAULT_USERNAME = 'admin';
 const PIN_KEY = 'daftar-pin-hash';
 const UNLOCK_FLAG = 'daftar-unlocked';
+const SESSION_KEY = 'daftar-session-v1';
+const LAST_VISIT_KEY = 'daftar-last-visit';
 const PIN_FAIL_KEY = 'daftar-pin-fails';
 const PIN_LOCKUNTIL_KEY = 'daftar-pin-lockuntil';
 const PIN_MAX_FAILS = 5;
 const PIN_LOCK_MS = 30000;
 const PBKDF2_ITERS = 120000;
+
+/* ========== Session / Last Visit (local, single source) ========== */
+function readLastVisitTs(){
+  try{
+    const v = parseInt(localStorage.getItem(LAST_VISIT_KEY) || '', 10);
+    return (v && isFinite(v) && v > 0) ? v : null;
+  }catch(e){ return null; }
+}
+function writeLastVisitTs(ts){
+  try{ localStorage.setItem(LAST_VISIT_KEY, String(ts)); }catch(e){}
+}
+function readSession(){
+  try{
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(s && s.authenticated === true && s.status === 'active') return s;
+  }catch(e){}
+  return null;
+}
+function writeSession(sess){
+  try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(sess)); }catch(e){}
+}
+function clearSession(){
+  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+  try{ sessionStorage.removeItem(UNLOCK_FLAG); }catch(e){}
+}
+function isSessionActive(){
+  const s = readSession();
+  if(s) return true;
+  // سازگاری با پرچم قدیمی
+  try{ return sessionStorage.getItem(UNLOCK_FLAG) === '1'; }catch(e){ return false; }
+}
+/**
+ * ورود موفق: Previous Last Visit را برای نمایش Session فریز می‌کند،
+ * سپس زمان ورود فعلی را به‌عنوان Last Visit بعدی ذخیره می‌کند.
+ * Refresh این تابع را صدا نمی‌زند.
+ */
+function createActiveSession(){
+  const previous = readLastVisitTs(); // قبل از بازنویسی
+  const now = Date.now();
+  const sess = {
+    authenticated: true,
+    profileId: 'owner-profile',
+    startedAt: now,
+    status: 'active',
+    previousLastVisit: previous // null = اولین ورود
+  };
+  writeSession(sess);
+  try{ sessionStorage.setItem(UNLOCK_FLAG, '1'); }catch(e){}
+  writeLastVisitTs(now); // برای ورود بعدی
+  return sess;
+}
+/** بازیابی Session پس از Refresh — بدون ثبت بازدید جدید */
+function restoreOrMigrateSession(){
+  let s = readSession();
+  if(s) return s;
+  // مهاجرت: اگر فقط UNLOCK_FLAG بود
+  try{
+    if(sessionStorage.getItem(UNLOCK_FLAG) === '1'){
+      s = {
+        authenticated: true,
+        profileId: 'owner-profile',
+        startedAt: Date.now(),
+        status: 'active',
+        previousLastVisit: readLastVisitTs() // نمایش همان last visit؛ زمان جدید ثبت نشود
+      };
+      // توجه: writeLastVisitTs صداده نمی‌شود — Refresh ≠ Login
+      writeSession(s);
+      return s;
+    }
+  }catch(e){}
+  return null;
+}
+function getSessionPreviousLastVisit(){
+  const s = readSession();
+  if(s && ('previousLastVisit' in s)) return s.previousLastVisit;
+  return readLastVisitTs();
+}
+function formatLastVisitFa(ts){
+  if(ts == null || !isFinite(ts)) return 'اولین بازدید شماست';
+  try{
+    const d = new Date(ts);
+    if(isNaN(d.getTime())) return 'اولین بازدید شماست';
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const dayDiff = Math.round((startToday - startThat) / 86400000);
+    const timeStr = d.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    if(dayDiff === 0) return 'امروز، ' + timeStr;
+    if(dayDiff === 1) return 'دیروز، ' + timeStr;
+    if(dayDiff > 1 && dayDiff < 7) return dayDiff + ' روز پیش، ' + timeStr;
+    const dateStr = d.toLocaleDateString('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' });
+    return dateStr + '، ' + timeStr;
+  }catch(e){ return '—'; }
+}
+function updateLastVisitUI(){
+  try{
+    const el = document.getElementById('menuLastVisit');
+    if(!el) return;
+    const prev = getSessionPreviousLastVisit();
+    if(prev == null){
+      el.textContent = 'اولین بازدید شماست';
+      el.classList.add('is-first');
+    } else {
+      el.textContent = 'آخرین بازدید: ' + formatLastVisitFa(prev);
+      el.classList.remove('is-first');
+    }
+  }catch(e){}
+}
+function performLogout(){
+  // فقط Session و Auth موقت — پروفایل، مالی، last-visit history حفظ می‌شوند
+  clearSession();
+  try{ sessionCryptoKey = null; }catch(e){}
+  try{
+    if(typeof closeMenu === 'function') closeMenu();
+  }catch(e){}
+  const rec = (typeof loadPinRecord === 'function') ? loadPinRecord() : null;
+  if(rec){
+    // با PIN: تا Login بعدی قفل بماند (Refresh هم وارد نمی‌کند)
+    showLockScreen();
+  } else {
+    // بدون PIN: قفل اجباری نداریم؛ Session غیرفعال می‌ماند
+    if(typeof showToast === 'function') showToast('نشست بسته شد');
+  }
+  updateLastVisitUI();
+  if(rec && typeof showToast === 'function') showToast('از حساب خارج شدید');
+}
 
 function bufToHex(buf){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -362,7 +492,11 @@ $('lockUnlockBtn').addEventListener('click',async()=>{
     if(ok){
       try{ await unlockDataLayer(entered); }
       catch(err){ $('lockErr').textContent='دادهٔ رمزگذاری‌شده باز نشد — رمز یا فایل ذخیره را بررسی کنید'; triggerLoginError(); return; }
-      clearFails();sessionStorage.setItem(UNLOCK_FLAG,'1');$('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';
+      clearFails();
+      // Login موفق: Previous Last Visit فریز + ثبت زمان ورود فعلی + Session فعال
+      createActiveSession();
+      $('lockScreen').style.display='none';$('lockInput').value='';$('lockErr').textContent='';
+      updateLastVisitUI();
       render();
     }
     else{registerFail();$('lockInput').value='';const left=PIN_MAX_FAILS-(getFailState().fails||0),rem=lockRemainingMs();triggerLoginError();$('lockErr').textContent=rem>0?`ورود ناموفق — ${Math.ceil(rem/1000)} ثانیه قفل شد`:`نام کاربری یا رمز عبور اشتباه است (تلاش باقی‌مانده: ${Math.max(left,1)})`;}
@@ -395,11 +529,12 @@ $('pinSetBtn').addEventListener('click', async ()=>{
     await storeNewPin(next);
     await ensureSessionKey(next);
     await writeStore(getStatePayload());
-    sessionStorage.setItem(UNLOCK_FLAG, '1');
+    createActiveSession();
     clearFails();
     $('pinCurrent').value=''; $('pinNew').value='';
     showToast('رمز ذخیره شد — قفل ورود فعال است؛ داده به‌صورت JSON ذخیره می‌شود');
     refreshPinStatus();
+    updateLastVisitUI();
   }catch(err){ showToast('ذخیره رمز ناموفق بود', true); }
 });
 $('pinRemoveBtn').addEventListener('click', async ()=>{
@@ -415,6 +550,7 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
       try{
         sessionCryptoKey = null;
         localStorage.removeItem(PIN_KEY);
+        clearSession();
         localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload()));
         clearFails();
         $('pinCurrent').value='';
@@ -433,6 +569,16 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
 
 /* init: PIN UI → lock gate → load state → assets → date clock */
 refreshPinStatus();
+// Logout از منو
+if($('menuLogoutBtn')){
+  $('menuLogoutBtn').addEventListener('click', function(e){
+    e.preventDefault();
+    performLogout();
+  });
+}
+// همگام UI آخرین بازدید پس از آماده شدن DOM
+try{ updateLastVisitUI(); }catch(e){}
+
 checkLock();
 loadAll();
 ensureCoreAssets();

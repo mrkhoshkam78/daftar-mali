@@ -5424,3 +5424,13 @@ html[data-design="aurora"] #page-ai-advisor .ai-shell {
   max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
+
+/* Session: last visit + logout */
+.sd-last-visit{
+  font-size:10.5px; color:var(--ink-dim); opacity:.9;
+  max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  margin-top:2px;
+}
+.sd-last-visit.is-first{ color:var(--blue-light); }
+.menu-item.menu-logout{ color:var(--danger, #ef4444); margin-top:6px; }
+.menu-item.menu-logout .ic{ color:inherit; }

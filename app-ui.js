@@ -3431,6 +3431,7 @@ function syncOwnerNameDependents(){
 
     // کارت‌های بانکی — فقط ownerName
     if(typeof renderBankCards === 'function') renderBankCards();
+    if(typeof updateLastVisitUI === 'function') updateLastVisitUI();
   }catch(e){ console.error('syncOwnerNameDependents', e); }
 }
 function renderOwnerProfile(){
