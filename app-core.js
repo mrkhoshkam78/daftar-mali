@@ -325,11 +325,23 @@ function applyDesign(d){
   }catch(e){}
   try{ if(typeof closeMenu === 'function') closeMenu(); }catch(e){}
   try{
-    if(document.body){ document.body.style.background=''; document.body.style.color=''; document.body.style.overflow=''; }
+    if(document.body){
+      document.body.style.background='';
+      document.body.style.color='';
+      document.body.style.overflow='';
+      document.body.classList.remove('ac-focus','ac-canvas-mode');
+    }
+    document.documentElement.removeAttribute('data-ac-view');
     var bar = document.querySelector('.topbar');
     var layout = document.querySelector('.layout');
-    if(bar) bar.style.transform = '';
-    if(layout) layout.style.transform = '';
+    var drawer = document.getElementById('dropdownMenu');
+    if(bar){ bar.style.transform = ''; bar.style.position = ''; }
+    if(layout){ layout.style.transform = ''; }
+    if(drawer){
+      ['transform','left','right','top','bottom','width','height','maxHeight','borderRadius','position','zIndex'].forEach(function(k){
+        try{ drawer.style[k] = ''; }catch(_e){}
+      });
+    }
   }catch(e){}
 }
 
