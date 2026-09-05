@@ -5473,3 +5473,172 @@ html[data-design="aurora"] #page-ai-advisor .ai-shell {
 .budget-warn{ margin-top:8px; font-size:12px; font-weight:600; }
 .budget-warn.near{ color:#d97706; }
 .budget-warn.over{ color:var(--red); }
+
+/* —— Budget list redesign —— */
+.budget-list{ display:flex; flex-direction:column; gap:12px; }
+.budget-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 14px 12px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+}
+.budget-card-top{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+}
+.budget-cat-wrap{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
+.budget-cat{ font-size:15px; font-weight:700; color:var(--ink); }
+.budget-status-pill{
+  font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px;
+  background:var(--green-soft); color:var(--green);
+}
+.budget-status-near .budget-status-pill{ background:var(--orange-soft); color:var(--orange); }
+.budget-status-over .budget-status-pill{ background:var(--red-soft); color:var(--red); }
+.budget-del-btn{
+  border:none; background:transparent; color:var(--ink-dim); cursor:pointer;
+  font-size:18px; line-height:1; padding:2px 6px; border-radius:8px;
+}
+.budget-del-btn:hover{ color:var(--red); background:var(--red-soft); }
+.budget-stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin-top:12px;
+}
+.budget-stat{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.budget-stat-lbl{ font-size:11px; color:var(--ink-dim); }
+.budget-stat-val{ font-size:13px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+.budget-status-over .budget-stat-val.remain{ color:var(--red); }
+.budget-status-near .budget-stat-val.spent{ color:var(--orange); }
+.budget-progress-row{
+  display:flex; align-items:center; gap:10px; margin-top:12px;
+}
+.budget-bar{
+  flex:1; height:8px; border-radius:999px; background:rgba(127,127,127,.14); overflow:hidden;
+}
+.budget-bar > span{
+  display:block; height:100%; border-radius:999px;
+  background:var(--green); transition:width .28s ease;
+}
+.budget-status-near .budget-bar > span{ background:var(--orange); }
+.budget-status-over .budget-bar > span{ background:var(--red); }
+.budget-pct{ font-size:12px; font-weight:700; color:var(--ink-dim); min-width:2.8em; text-align:left; }
+.budget-status-over .budget-pct{ color:var(--red); }
+.budget-status-near .budget-pct{ color:var(--orange); }
+@media (max-width:420px){
+  .budget-stats{ grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .budget-stat-val{ font-size:12px; }
+}
+
+/* —— Net-worth history list —— */
+#historyList{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+#historyList.net-hist-scroll{
+  max-height:420px; overflow-y:auto; overscroll-behavior:contain;
+  padding-left:2px; padding-right:4px;
+  scrollbar-width:thin;
+}
+.net-hist-item{
+  display:flex; flex-direction:column; gap:4px;
+  padding:12px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--card);
+}
+.net-hist-main{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.net-hist-date{ font-size:12.5px; color:var(--ink-dim); font-weight:600; }
+.net-hist-total{ font-size:14px; font-weight:700; color:var(--blue-light); font-variant-numeric:tabular-nums; }
+.net-hist-total small{ font-size:11px; font-weight:600; opacity:.8; }
+.net-hist-sub{ display:flex; justify-content:flex-end; }
+.net-hist-delta{ font-size:11.5px; font-weight:700; }
+.net-hist-delta.up{ color:var(--green); }
+.net-hist-delta.down{ color:var(--red); }
+
+/* —— Profile section animations (settings only) —— */
+#sec-owner-profile{
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+#sec-owner-profile .owner-profile-summary{
+  transition: background .2s ease;
+}
+#sec-owner-profile .owner-avatar-wrap{
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+#sec-owner-profile .owner-avatar-wrap:hover{
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px var(--blue-soft);
+}
+#sec-owner-profile .owner-avatar{
+  transition: background-image .3s ease, transform .25s ease;
+}
+#sec-owner-profile .owner-chevron{
+  transition: transform .28s cubic-bezier(.22,.8,.3,1);
+}
+#sec-owner-profile .owner-profile-body{
+  overflow:hidden;
+  transition: opacity .22s ease, transform .22s ease;
+}
+#sec-owner-profile:not(.is-expanded) .owner-profile-body{
+  opacity:0; transform: translateY(-4px);
+}
+#sec-owner-profile.is-expanded .owner-profile-body{
+  opacity:1; transform: translateY(0);
+}
+#sec-owner-profile.is-expanded{
+  box-shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,.06);
+}
+@media (prefers-reduced-motion: reduce){
+  #sec-owner-profile,
+  #sec-owner-profile *{
+    transition: none !important;
+  }
+}
+
+/* —— Subtle pulse only for meaningful status —— */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .72; }
+}
+.budget-status-over .budget-status-pill{
+  animation: softPulse 2.4s ease-in-out infinite;
+}
+html[data-anim="off"] .budget-status-over .budget-status-pill{
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce){
+  .budget-status-over .budget-status-pill{ animation: none; }
+}
+
+/* —— Theme: Sage Mist —— */
+html[data-theme="sage-mist"],
+html.theme-sage-mist{
+  --bg:#2F3E46; --bg-2:#354F52;
+  --card:#354F52; --card-2:#3d5a5c;
+  --border:rgba(202,210,197,.16); --border-strong:rgba(132,169,140,.45);
+  --ink:#CAD2C5; --ink-dim:#a8b5ad;
+  --blue:#52796F; --blue-light:#84A98C; --blue-deep:#3f5f57;
+  --blue-soft:rgba(82,121,111,.22); --blue-glow:rgba(132,169,140,.18);
+  --green:#84A98C; --green-soft:rgba(132,169,140,.18);
+  --red:#E07A7A; --red-soft:rgba(224,122,122,.14);
+  --orange:#D4A574; --orange-soft:rgba(212,165,116,.16);
+  --shadow: 0 10px 32px rgba(0,0,0,.35);
+}
+html[data-theme="sage-mist"] .topbar,
+html.theme-sage-mist .topbar{
+  background:rgba(47,62,70,.88);
+}
+html[data-theme="sage-mist"] .btn:not(.ghost),
+html.theme-sage-mist .btn:not(.ghost){
+  background:var(--blue);
+  color:#F1F5F2;
+}
+html[data-theme="sage-mist"] .menu-item.active,
+html.theme-sage-mist .menu-item.active{
+  background:var(--blue-soft);
+  color:var(--blue-light);
+}
+html[data-theme="sage-mist"] .hero,
+html.theme-sage-mist .hero{
+  background: linear-gradient(145deg, #354F52 0%, #2F3E46 55%, #52796F 140%);
+}

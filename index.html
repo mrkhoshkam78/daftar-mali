@@ -6,7 +6,7 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260905v301feat3">
+<meta name="app-build" content="20260905v301ui7">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -21,7 +21,7 @@
   document.documentElement.setAttribute("data-design",d);
   var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
-  var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson"];
+  var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson","sage-mist"];
   if(ok.indexOf(t)<0)t="light";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
@@ -29,9 +29,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260905v301feat3" as="style">
+<link rel="preload" href="styles.css?v=20260905v301ui7" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260905v301feat3">
+<link rel="stylesheet" href="styles.css?v=20260905v301ui7">
 </head>
 <body>
 
@@ -836,6 +836,11 @@
           <span class="theme-preview" style="background:linear-gradient(135deg,#0B1220 0%,#B91C2C 55%,#E0313F 100%)"></span>
           <span class="theme-name">Premium Theme</span>
         </button>
+              <button type="button" class="theme-card" data-theme-val="sage-mist" title="Sage Mist">
+          <span class="theme-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+          <span class="theme-preview" style="background:linear-gradient(135deg,#2F3E46 0%,#52796F 55%,#84A98C 100%)"></span>
+          <span class="theme-name">Sage Mist</span>
+        </button>
       </div>
     </div>
 
@@ -1020,18 +1025,18 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260905v301feat3"></script>
-<script src="app-core.js?v=20260905v301feat3"></script>
-<script src="app-ui.js?v=20260905v301feat3"></script>
-<script src="app-notes.js?v=20260905v301feat3"></script>
-<script src="app-boot.js?v=20260905v301feat3"></script>
-<script src="financial-ai.js?v=20260905v301feat3ai"></script>
+<script src="prices-api.js?v=20260905v301ui7"></script>
+<script src="app-core.js?v=20260905v301ui7"></script>
+<script src="app-ui.js?v=20260905v301ui7"></script>
+<script src="app-notes.js?v=20260905v301ui7"></script>
+<script src="app-boot.js?v=20260905v301ui7"></script>
+<script src="financial-ai.js?v=20260905v301ui7ai"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260905v301feat3';
+      s.src='tests.js?v=20260905v301ui7';
       document.body.appendChild(s);
     }
   }catch(e){}

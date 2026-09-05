@@ -638,10 +638,32 @@ document.querySelectorAll('#txFilters .hist-filter').forEach(btn=>{
 /* --- Net-worth history snapshots --- */
 function renderHistory(){
   const el = $('historyList');
-  if(history.length === 0){ el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده است</div>'; return; }
+  if(!el) return;
+  if(history.length === 0){
+    el.classList.remove('net-hist-scroll');
+    el.innerHTML = '<div class="empty">هنوز نقطه‌ای ثبت نشده است</div>';
+    return;
+  }
   const sorted = [...history].sort((a,b)=> a.date < b.date ? 1 : -1);
-  el.innerHTML = sorted.slice(0,10).map(h=>{
-    return `<div class="log-item"><span class="d">${toJalaliStr(h.date)}</span><span class="n"></span><span class="p" style="color:var(--blue-light)">${fmt(h.total)} ت</span></div>`;
+  // تمام موارد نمایش داده می‌شوند؛ فقط وقتی بیش از ۱۲ مورد باشد اسکرول داخلی
+  el.classList.toggle('net-hist-scroll', sorted.length > 12);
+  el.innerHTML = sorted.map((h, i) => {
+    const prev = sorted[i + 1];
+    let deltaHtml = '';
+    if(prev && prev.total != null && h.total != null){
+      const d = safeNum(h.total) - safeNum(prev.total);
+      if(d !== 0){
+        const cls = d > 0 ? 'up' : 'down';
+        deltaHtml = '<span class="net-hist-delta ' + cls + '">' + (d > 0 ? '+' : '') + fmt(d) + '</span>';
+      }
+    }
+    return '<div class="net-hist-item">' +
+      '<div class="net-hist-main">' +
+        '<span class="net-hist-date">' + (toJalaliStr(h.date) || '—') + '</span>' +
+        '<span class="net-hist-total">' + fmt(h.total) + ' <small>ت</small></span>' +
+      '</div>' +
+      (deltaHtml ? '<div class="net-hist-sub">' + deltaHtml + '</div>' : '') +
+    '</div>';
   }).join('');
 }
 
@@ -3653,35 +3675,58 @@ function renderBudgets(){
     const limit = safeNum(b.limit, 0);
     const spent = spentForBudgetCategory(b.category);
     const remain = limit - spent;
-    const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+    const pctRaw = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+    const pct = Math.min(100, Math.max(0, pctRaw));
     let status = 'ok';
-    let warn = '';
+    let statusLabel = 'در محدوده';
     if(limit > 0 && spent >= limit){
       status = 'over';
-      warn = '<div class="budget-warn over">سقف بودجه عبور کرده است</div>';
-    } else if(limit > 0 && pct >= 80){
+      statusLabel = 'عبور از سقف';
+    } else if(limit > 0 && pctRaw >= 80){
       status = 'near';
-      warn = '<div class="budget-warn near">نزدیک به سقف بودجه (' + pct + '٪)</div>';
+      statusLabel = 'نزدیک سقف';
     }
-    const barColor = status === 'over' ? 'var(--red)' : (status === 'near' ? '#f59e0b' : 'var(--green)');
-    return '<div class="budget-card" data-budget-id="' + escapeHtml(String(b.id)) + '">' +
-      '<div class="budget-card-head">' +
-        '<b>' + escapeHtml(b.category) + '</b>' +
-        '<button type="button" class="btn ghost budget-del-btn" data-budget-del="' + escapeHtml(String(b.id)) + '" style="padding:4px 8px;font-size:12px;">حذف</button>' +
+    return '<article class="budget-card budget-status-' + status + '" data-budget-id="' + escapeHtml(String(b.id)) + '">' +
+      '<div class="budget-card-top">' +
+        '<div class="budget-cat-wrap">' +
+          '<span class="budget-cat">' + escapeHtml(b.category) + '</span>' +
+          '<span class="budget-status-pill">' + statusLabel + '</span>' +
+        '</div>' +
+        '<button type="button" class="budget-del-btn" data-budget-del="' + escapeHtml(String(b.id)) + '" aria-label="حذف بودجه">×</button>' +
       '</div>' +
-      '<div class="budget-meta">بودجه: <b>' + fmt(limit) + '</b> · مصرف: <b>' + fmt(spent) + '</b> · باقی: <b style="color:' + (remain < 0 ? 'var(--red)' : 'inherit') + '">' + fmt(remain) + '</b></div>' +
-      '<div class="budget-bar"><span style="width:' + pct + '%;background:' + barColor + '"></span></div>' +
-      warn +
-    '</div>';
+      '<div class="budget-stats">' +
+        '<div class="budget-stat"><span class="budget-stat-lbl">بودجه</span><span class="budget-stat-val">' + fmt(limit) + '</span></div>' +
+        '<div class="budget-stat"><span class="budget-stat-lbl">مصرف</span><span class="budget-stat-val spent">' + fmt(spent) + '</span></div>' +
+        '<div class="budget-stat"><span class="budget-stat-lbl">باقی</span><span class="budget-stat-val remain">' + fmt(remain) + '</span></div>' +
+      '</div>' +
+      '<div class="budget-progress-row">' +
+        '<div class="budget-bar" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><span style="width:' + pct + '%"></span></div>' +
+        '<span class="budget-pct">' + pctRaw + '٪</span>' +
+      '</div>' +
+    '</article>';
   }).join('');
 
   listEl.querySelectorAll('[data-budget-del]').forEach(function(btn){
     btn.addEventListener('click', function(){
       const id = btn.getAttribute('data-budget-del');
-      budgets = (budgets || []).filter(function(b){ return String(b.id) !== String(id); });
-      if(typeof persist === 'function') persist();
-      renderBudgets();
-      if(typeof showToast === 'function') showToast('بودجه حذف شد');
+      const row = (budgets || []).find(function(b){ return String(b.id) === String(id); });
+      const cat = row ? row.category : '';
+      const doDel = function(){
+        budgets = (budgets || []).filter(function(b){ return String(b.id) !== String(id); });
+        if(typeof persist === 'function') persist();
+        renderBudgets();
+        if(typeof showToast === 'function') showToast('بودجه حذف شد');
+      };
+      if(typeof showConfirmModal === 'function'){
+        showConfirmModal(
+          'حذف این بودجه؟',
+          cat ? ('دسته «' + cat + '» از بودجه ماهانه حذف می‌شود.') : 'این بودجه ماهانه حذف می‌شود.',
+          doDel,
+          'حذف'
+        );
+      } else if(window.confirm('حذف این بودجه؟')){
+        doDel();
+      }
     });
   });
 }

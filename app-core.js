@@ -177,7 +177,7 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
 const APP_VERSION = '2.03';
-const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet','navy-crimson'];
+const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet','navy-crimson','sage-mist'];
 /** نرمال‌سازی نام تم — نام‌های قدیمی/غلط را اصلاح می‌کند */
 function normalizeThemeId(t){
   t = String(t || '').trim().toLowerCase().replace(/_/g, '-');
