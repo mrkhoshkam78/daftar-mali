@@ -6,7 +6,7 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260905v301ssot">
+<meta name="app-build" content="20260905v301id">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -29,9 +29,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260905v301ssot" as="style">
+<link rel="preload" href="styles.css?v=20260905v301id" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260905v301ssot">
+<link rel="stylesheet" href="styles.css?v=20260905v301id">
 </head>
 <body>
 
@@ -73,11 +73,11 @@
 <div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
 <div class="side-drawer" id="dropdownMenu" role="dialog" aria-modal="true" aria-label="منوی اصلی">
   <div class="side-drawer-head">
-    <div class="sd-brand">
-      <img src="logo.png" alt="" class="app-logo-sm" width="26" height="26" aria-hidden="true">
-      <div class="sd-brand-text">
-        <span class="sd-title">منو</span>
+    <div class="sd-identity" id="menuIdentityCard">
+      <div class="sd-identity-avatar" id="menuOwnerAvatar" aria-hidden="true">?</div>
+      <div class="sd-identity-meta">
         <span class="sd-owner-name" id="menuOwnerName">مالک پنل</span>
+        <span class="sd-identity-sub" id="menuOwnerUser">—</span>
       </div>
     </div>
     <button type="button" class="side-drawer-close" id="menuCloseBtn" aria-label="بستن منو">
@@ -696,17 +696,27 @@
 
 <div class="page" id="page-settings">
     
-      <div class="section reveal in-view" id="sec-owner-profile">
-        <div class="section-title"><span class="dot"></span>پروفایل مالک</div>
-        <div class="section-sub">نام و تصویر مالک پنل — فقط در همین دستگاه ذخیره می‌شود.</div>
-        <div class="owner-profile-row">
-          <div class="owner-avatar-wrap" id="ownerAvatarWrap" title="تغییر تصویر">
+      <div class="section reveal in-view owner-profile-section" id="sec-owner-profile">
+        <button type="button" class="owner-profile-summary" id="ownerProfileToggle" aria-expanded="false" aria-controls="ownerProfileBody">
+          <div class="owner-avatar-wrap owner-avatar-sm" id="ownerAvatarWrap" title="تغییر تصویر">
             <div class="owner-avatar" id="ownerAvatarDisplay" aria-hidden="true">?</div>
             <input type="file" id="ownerAvatarInput" accept="image/*" style="display:none;" aria-label="انتخاب تصویر پروفایل">
           </div>
+          <div class="owner-summary-meta">
+            <span class="owner-summary-name" id="ownerSummaryName">مالک پنل</span>
+            <span class="owner-summary-user" id="ownerSummaryUser">نام کاربری تنظیم نشده</span>
+          </div>
+          <span class="owner-chevron" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </button>
+        <div class="owner-profile-body" id="ownerProfileBody" hidden>
           <div class="owner-profile-fields">
             <label class="field" for="ownerNameInput">نام مالک</label>
-            <input type="text" id="ownerNameInput" class="owner-name-input" placeholder="مثلاً علی" maxlength="60" autocomplete="name">
+            <input type="text" id="ownerNameInput" class="owner-name-input" placeholder="مثلاً رضا خوشکام" maxlength="60" autocomplete="name">
+            <label class="field" for="ownerUsernameInput">نام کاربری ورود</label>
+            <input type="text" id="ownerUsernameInput" class="owner-name-input" placeholder="مثلاً reza" maxlength="32" autocomplete="username" spellcheck="false">
+            <div class="section-sub" style="margin:6px 0 0;">نام مالک و نام کاربری می‌توانند متفاوت باشند؛ ورود فقط با نام کاربری + رمز انجام می‌شود.</div>
             <div class="owner-profile-actions">
               <button type="button" class="btn" id="ownerSaveBtn">ذخیره پروفایل</button>
               <button type="button" class="btn ghost" id="ownerClearAvatarBtn">حذف تصویر</button>
@@ -822,8 +832,8 @@
         با تنظیم رمز، ورود به دفتر محافظت می‌شود و داده‌های محلی رمزگذاری می‌گردند. پشتیبان رمزگذاری‌شده بدون رمز قابل بازیابی نیست. رمز باید حداقل ۴ کاراکتر باشد.
       </div>
       <div class="setting-row security-username-row">
-        <div><div class="s-label">نام کاربری ورود</div><div class="s-sub">همان نام مالک در پروفایل — از بخش «پروفایل مالک» قابل تغییر است</div></div>
-        <input class="security-username" type="text" id="loginUsername" placeholder="از پروفایل مالک" autocomplete="username" spellcheck="false" readonly title="نام کاربری از پروفایل مالک خوانده می‌شود">
+        <div><div class="s-label">نام کاربری ورود</div><div class="s-sub">نام کاربری ورود (مستقل از نام نمایشی مالک) — از پروفایل نیز قابل تنظیم است</div></div>
+        <input class="security-username" type="text" id="loginUsername" placeholder="مثلاً reza" autocomplete="username" spellcheck="false" title="نام کاربری ورود">
       </div>
       <div id="pinStatus">🔓 رمز عبوری تنظیم نشده</div>
       <div class="grid2 pin-grid">
@@ -939,18 +949,18 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="prices-api.js?v=20260905v301ssot"></script>
-<script src="app-core.js?v=20260905v301ssot"></script>
-<script src="app-ui.js?v=20260905v301ssot"></script>
-<script src="app-notes.js?v=20260905v301ssot"></script>
-<script src="app-boot.js?v=20260905v301ssot"></script>
-<script src="financial-ai.js?v=20260905v301ssotai"></script>
+<script src="prices-api.js?v=20260905v301id"></script>
+<script src="app-core.js?v=20260905v301id"></script>
+<script src="app-ui.js?v=20260905v301id"></script>
+<script src="app-notes.js?v=20260905v301id"></script>
+<script src="app-boot.js?v=20260905v301id"></script>
+<script src="financial-ai.js?v=20260905v301idai"></script>
 <script>
 (function(){
   try{
     if(/[?&]test=1\b/.test(location.search) || localStorage.getItem('daftar-run-tests')==='1'){
       var s=document.createElement('script');
-      s.src='tests.js?v=20260905v301ssot';
+      s.src='tests.js?v=20260905v301id';
       document.body.appendChild(s);
     }
   }catch(e){}

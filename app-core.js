@@ -902,7 +902,7 @@ let notes = []; // {id,title,body,cat,pinned,createdAt,updatedAt}
 let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف ثبت‌شده
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let bankCards = []; // {id, name, last4, color, balance, isDefault} — موجودی اصلی = assets.card روی کارت پیش‌فرض
-let ownerProfile = { name: '', avatar: '' }; // پروفایل مالک پنل — فقط name + avatar (dataURL)
+let ownerProfile = { name: '', username: '', avatar: '' }; // پروفایل واحد: name + username + avatar
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 const BC_COLORS = ['#1d4ed8','#0f766e','#7c3aed','#b91c1c','#a16207','#334155','#0e7490','#be185d'];
 let _bcSelectedColor = BC_COLORS[0];
@@ -945,18 +945,17 @@ function loadAll(){
         if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
           ownerProfile = {
             name: String(d.ownerProfile.name || '').slice(0, 60),
+            username: String(d.ownerProfile.username || '').slice(0, 32),
             avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
           };
         }
-        // مهاجرت یک‌باره: اگر پروفایل نام ندارد، از نام کاربری قدیمی امنیت پر شود
+        // مهاجرت: username قدیمی امنیت → ownerProfile.username (مستقل از name)
         try{
-          if(!ownerProfile || !String(ownerProfile.name||'').trim()){
-            var legacyU = '';
-            try{ legacyU = String(localStorage.getItem('daftar-login-username')||'').trim(); }catch(_e){}
-            if(legacyU && legacyU.toLowerCase() !== 'admin'){
-              if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
-              ownerProfile.name = legacyU.slice(0, 60);
-            }
+          if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', username: '', avatar: '' };
+          var legacyU = '';
+          try{ legacyU = String(localStorage.getItem('daftar-login-username')||'').trim(); }catch(_e){}
+          if(!String(ownerProfile.username||'').trim() && legacyU){
+            ownerProfile.username = legacyU.slice(0, 32);
           }
         }catch(_m){}
         try{ if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard(); }catch(e){}
@@ -1023,6 +1022,7 @@ function applyStatePayload(d){
   if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
     ownerProfile = {
       name: String(d.ownerProfile.name || '').slice(0, 60),
+      username: String(d.ownerProfile.username || '').slice(0, 32),
       avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
     };
   }

@@ -2872,7 +2872,7 @@ function renderBankCards(){
       <div class="bc-slide-bottom">
         <div class="bc-holder">
           <span class="bc-holder-label">صاحب کارت</span>
-          <span class="bc-holder-name">${escapeHtml((typeof getOwnerDisplayName === 'function' ? getOwnerDisplayName() : (ownerProfile && ownerProfile.name)) || bankName || '—')}</span>
+          <span class="bc-holder-name">${escapeHtml((typeof getOwnerDisplayName === 'function' ? getOwnerDisplayName() : (ownerProfile && ownerProfile.name)) || '—')}</span>
         </div>
         <div class="bc-last4">
           <span class="bc-last4-label">۴ رقم آخر</span>
@@ -3273,6 +3273,7 @@ $('importFile').addEventListener('change', (e)=>{
       if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
         ownerProfile = {
           name: String(d.ownerProfile.name || '').slice(0, 60),
+          username: String(d.ownerProfile.username || '').slice(0, 32),
           avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
         };
       }
@@ -3379,9 +3380,11 @@ function getOwnerDisplayName(){
   }catch(e){}
   return '';
 }
-
 function getOwnerProfile(){
-  if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
+  if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', username: '', avatar: '' };
+  if(ownerProfile.username == null) ownerProfile.username = '';
+  if(ownerProfile.name == null) ownerProfile.name = '';
+  if(ownerProfile.avatar == null) ownerProfile.avatar = '';
   return ownerProfile;
 }
 function ownerInitial(name){
@@ -3389,59 +3392,91 @@ function ownerInitial(name){
   if(!n) return '?';
   return n.charAt(0).toUpperCase();
 }
-function renderOwnerProfile(){
-  try{
-    const p = getOwnerProfile();
-    const av = document.getElementById('ownerAvatarDisplay');
-    const nameInp = document.getElementById('ownerNameInput');
-    if(nameInp && document.activeElement !== nameInp) nameInp.value = p.name || '';
-    if(av){
-      if(p.avatar && p.avatar.indexOf('data:image/') === 0){
-        av.style.backgroundImage = 'url(' + p.avatar + ')';
-        av.textContent = '';
-        av.classList.add('has-image');
-      } else {
-        av.style.backgroundImage = '';
-        av.textContent = ownerInitial(p.name);
-        av.classList.remove('has-image');
-      }
-    }
-    if(typeof syncOwnerNameDependents === 'function') syncOwnerNameDependents();
-  }catch(e){ console.error('renderOwnerProfile', e); }
+function applyAvatarToEl(el, profile){
+  if(!el) return;
+  const p = profile || getOwnerProfile();
+  if(p.avatar && String(p.avatar).indexOf('data:image/') === 0){
+    el.style.backgroundImage = 'url(' + p.avatar + ')';
+    el.textContent = '';
+    el.classList.add('has-image');
+  } else {
+    el.style.backgroundImage = '';
+    el.textContent = ownerInitial(p.name);
+    el.classList.remove('has-image');
+  }
 }
 function syncOwnerNameDependents(){
   try{
-    // منو
+    const p = getOwnerProfile();
+    const displayName = (p.name || '').trim() || 'مالک پنل';
+    const uname = (p.username || (typeof getLoginUsername === 'function' ? getLoginUsername() : '') || '').trim();
+
+    // منو — کارت هویت
     const menuName = document.getElementById('menuOwnerName');
-    if(menuName){
-      const n = (typeof getOwnerDisplayName === 'function' ? getOwnerDisplayName() : (ownerProfile && ownerProfile.name) || '');
-      menuName.textContent = n || 'مالک پنل';
-    }
-    // وضعیت امنیت
+    if(menuName) menuName.textContent = displayName;
+    const menuUser = document.getElementById('menuOwnerUser');
+    if(menuUser) menuUser.textContent = uname ? ('@' + uname) : '—';
+    applyAvatarToEl(document.getElementById('menuOwnerAvatar'), p);
+
+    // خلاصه پروفایل
+    const sumName = document.getElementById('ownerSummaryName');
+    if(sumName) sumName.textContent = displayName;
+    const sumUser = document.getElementById('ownerSummaryUser');
+    if(sumUser) sumUser.textContent = uname ? ('نام کاربری: ' + uname) : 'نام کاربری تنظیم نشده';
+
+    // وضعیت امنیت + فیلد username
     if(typeof refreshPinStatus === 'function') refreshPinStatus();
-    // فیلد نام کاربری (فقط نمایش از منبع واحد)
     const lu = document.getElementById('loginUsername');
-    if(lu){
-      const n = (typeof getLoginUsername === 'function' ? getLoginUsername() : '') || '';
-      lu.value = n;
-      lu.readOnly = true;
-      lu.title = 'نام کاربری از پروفایل مالک خوانده می‌شود';
-    }
-    // کارت‌ها (صاحب کارت)
+    if(lu && document.activeElement !== lu) lu.value = uname || '';
+
+    // کارت‌های بانکی — فقط ownerName
     if(typeof renderBankCards === 'function') renderBankCards();
   }catch(e){ console.error('syncOwnerNameDependents', e); }
 }
+function renderOwnerProfile(){
+  try{
+    const p = getOwnerProfile();
+    const nameInp = document.getElementById('ownerNameInput');
+    const userInp = document.getElementById('ownerUsernameInput');
+    if(nameInp && document.activeElement !== nameInp) nameInp.value = p.name || '';
+    if(userInp && document.activeElement !== userInp) userInp.value = p.username || '';
+    applyAvatarToEl(document.getElementById('ownerAvatarDisplay'), p);
+    syncOwnerNameDependents();
+  }catch(e){ console.error('renderOwnerProfile', e); }
+}
 function saveOwnerProfileFromUI(){
   const nameInp = document.getElementById('ownerNameInput');
+  const userInp = document.getElementById('ownerUsernameInput');
   const name = (nameInp && nameInp.value || '').trim().slice(0, 60);
-  if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
-  ownerProfile.name = name;
-  // همگام‌سازی کلید قدیمی نام کاربری (سازگاری)
-  try{ if(name) localStorage.setItem('daftar-login-username', name); }catch(e){}
+  let username = (userInp && userInp.value || '').trim().slice(0, 32);
+  if(username && username.length < 3){
+    if(typeof showToast === 'function') showToast('نام کاربری حداقل ۳ کاراکتر باشد', true);
+    return;
+  }
+  const p = getOwnerProfile();
+  p.name = name;
+  if(username) p.username = username;
+  // سازگاری با کلید قدیمی — فقط username
+  try{ if(p.username) localStorage.setItem('daftar-login-username', p.username); }catch(e){}
   const ok = typeof persist === 'function' ? persist() : true;
   renderOwnerProfile();
-  syncOwnerNameDependents();
   if(typeof showToast === 'function') showToast(ok ? 'پروفایل ذخیره شد' : 'پروفایل ذخیره شد (ذخیره پایدار ناموفق)', !ok);
+}
+function setOwnerProfileExpanded(open){
+  const body = document.getElementById('ownerProfileBody');
+  const btn = document.getElementById('ownerProfileToggle');
+  const sec = document.getElementById('sec-owner-profile');
+  if(!body || !btn) return;
+  if(open){
+    body.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    if(sec) sec.classList.add('is-expanded');
+  } else {
+    body.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    if(sec) sec.classList.remove('is-expanded');
+  }
+  try{ localStorage.setItem('daftar-owner-profile-open', open ? '1' : '0'); }catch(e){}
 }
 function bindOwnerProfileUI(){
   if(window.__ownerProfileBound) return;
@@ -3450,8 +3485,23 @@ function bindOwnerProfileUI(){
   const fileInp = document.getElementById('ownerAvatarInput');
   const saveBtn = document.getElementById('ownerSaveBtn');
   const clearBtn = document.getElementById('ownerClearAvatarBtn');
+  const toggle = document.getElementById('ownerProfileToggle');
+
+  if(toggle){
+    toggle.addEventListener('click', function(e){
+      // کلیک روی آواتار = انتخاب عکس، نه toggle
+      if(e.target && (e.target.closest('#ownerAvatarWrap') || e.target.id === 'ownerAvatarInput')) return;
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      setOwnerProfileExpanded(!open);
+    });
+    try{
+      const pref = localStorage.getItem('daftar-owner-profile-open');
+      setOwnerProfileExpanded(pref === '1');
+    }catch(e){ setOwnerProfileExpanded(false); }
+  }
+
   if(wrap && fileInp){
-    wrap.addEventListener('click', function(){ fileInp.click(); });
+    wrap.addEventListener('click', function(e){ e.stopPropagation(); fileInp.click(); });
     fileInp.addEventListener('change', function(){
       const f = fileInp.files && fileInp.files[0];
       if(!f) return;
@@ -3460,8 +3510,8 @@ function bindOwnerProfileUI(){
       const reader = new FileReader();
       reader.onload = function(){
         try{
-          if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
-          ownerProfile.avatar = String(reader.result || '');
+          const p = getOwnerProfile();
+          p.avatar = String(reader.result || '');
           renderOwnerProfile();
           if(typeof persist === 'function') persist();
           if(typeof showToast==='function') showToast('تصویر پروفایل تنظیم شد');
@@ -3474,14 +3524,14 @@ function bindOwnerProfileUI(){
   if(saveBtn) saveBtn.addEventListener('click', function(e){ e.preventDefault(); saveOwnerProfileFromUI(); });
   if(clearBtn) clearBtn.addEventListener('click', function(e){
     e.preventDefault();
-    if(!ownerProfile || typeof ownerProfile !== 'object') ownerProfile = { name: '', avatar: '' };
-    ownerProfile.avatar = '';
+    const p = getOwnerProfile();
+    p.avatar = '';
     if(typeof persist === 'function') persist();
     renderOwnerProfile();
     if(typeof showToast==='function') showToast('تصویر حذف شد');
   });
 }
-// bind once DOM ready (app-boot also calls render)
+// bind once DOM ready
 if(typeof document !== 'undefined'){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ bindOwnerProfileUI(); renderOwnerProfile(); });
   else { bindOwnerProfileUI(); renderOwnerProfile(); }

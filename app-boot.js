@@ -304,10 +304,13 @@ function getOwnerDisplayName(){
   }catch(e){}
   return '';
 }
-/** Single Source of Truth: نام کاربری امنیتی = نام مالک پروفایل */
+/** Username امنیتی — مستقل از نام نمایشی مالک، متعلق به همان پروفایل */
 function getLoginUsername(){
-  const fromProfile = getOwnerDisplayName();
-  if(fromProfile) return fromProfile;
+  try{
+    if(typeof ownerProfile === 'object' && ownerProfile && String(ownerProfile.username||'').trim()){
+      return String(ownerProfile.username).trim().slice(0, 32);
+    }
+  }catch(e){}
   try{
     const legacy = String(localStorage.getItem(USERNAME_KEY)||'').trim();
     if(legacy) return legacy;
@@ -315,12 +318,11 @@ function getLoginUsername(){
   return DEFAULT_USERNAME;
 }
 function saveLoginUsername(value){
-  // همگام با پروفایل — منبع واحد
-  const username=String(value||'').trim().slice(0, 60);
-  if(username.length<1)return false;
+  const username=String(value||'').trim().slice(0, 32);
+  if(username.length < 3) return false;
   try{
-    if(typeof ownerProfile !== 'object' || !ownerProfile) ownerProfile = { name: '', avatar: '' };
-    ownerProfile.name = username;
+    if(typeof ownerProfile !== 'object' || !ownerProfile) ownerProfile = { name: '', username: '', avatar: '' };
+    ownerProfile.username = username;
     try{ localStorage.setItem(USERNAME_KEY, username); }catch(e){}
     if(typeof persist === 'function') persist();
     if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
@@ -368,14 +370,22 @@ $('lockUnlockBtn').addEventListener('click',async()=>{
 });
 $('lockUsername').addEventListener('keydown',e=>{if(e.key==='Enter')$('lockInput').focus();});
 $('lockInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('lockUnlockBtn').click();});
-if($('loginUsername')){$('loginUsername').readOnly=true;$('loginUsername').addEventListener('focus',()=>{$('loginUsername').blur();if(typeof showToast==='function')showToast('نام کاربری را از «پروفایل مالک» تغییر دهید');});}
+if($('loginUsername')){
+  $('loginUsername').readOnly=false;
+  $('loginUsername').addEventListener('change',()=>{
+    const value=($('loginUsername').value||'').trim();
+    if(value.length<3||value.length>32){showToast('نام کاربری باید بین ۳ تا ۳۲ کاراکتر باشد',true);$('loginUsername').value=getLoginUsername();return;}
+    if(saveLoginUsername(value)){refreshPinStatus();showToast('نام کاربری ذخیره شد');}
+  });
+}
 
 $('pinSetBtn').addEventListener('click', async ()=>{
   const current = $('pinCurrent').value;
   const next = $('pinNew').value;
-  const usernameInput = getLoginUsername();
+  let usernameInput = ($('loginUsername') && $('loginUsername').value.trim()) || getLoginUsername();
   const rec = loadPinRecord();
-  if(!usernameInput || !String(usernameInput).trim()){ showToast('ابتدا نام مالک را در پروفایل ثبت کنید', true); return; }
+  if(!usernameInput || usernameInput.length < 3){ showToast('نام کاربری معتبر (حداقل ۳ کاراکتر) وارد کنید', true); return; }
+  saveLoginUsername(usernameInput);
   if(!next || String(next).length < 4){ showToast('رمز جدید حداقل ۴ کاراکتر باشد', true); return; }
   if(rec){
     const ok = await verifyPin(current);
