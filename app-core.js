@@ -761,14 +761,18 @@ function showToast(msg, isErr){
 }
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
-function showConfirmModal(title, sub, onConfirm){
+function showConfirmModal(title, sub, onConfirm, okLabel){
   $('confirmTitle').textContent = title;
   $('confirmSub').textContent = sub || '';
   $('confirmModal').style.display = 'flex';
   const okBtn = $('confirmOkBtn');
   const cancelBtn = $('confirmCancelBtn');
+  // برچسب دکمه تأیید: پیش‌فرض «حذف» (سازگار با حذف‌ها)؛ برای خروج می‌توان «خروج» داد
+  const prevOkText = okBtn ? okBtn.textContent : '';
+  if(okBtn) okBtn.textContent = (okLabel && String(okLabel).trim()) ? String(okLabel).trim() : 'حذف';
   const cleanup = ()=>{
     $('confirmModal').style.display = 'none';
+    if(okBtn) okBtn.textContent = prevOkText || 'حذف';
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
     document.removeEventListener('keydown', onKey);
@@ -779,7 +783,7 @@ function showConfirmModal(title, sub, onConfirm){
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
   document.addEventListener('keydown', onKey);
-  // تمرکز روی «انصراف» — پیش‌فرض امن‌تر برای عملیات مخرب (حذف)
+  // تمرکز روی «انصراف» — پیش‌فرض امن‌تر
   try{ cancelBtn.focus(); }catch(_e){}
 }
 
@@ -903,6 +907,7 @@ let milestonesClaimed = {}; // { assetKey: [1000000, 5000000, ...] } اهداف 
 let financialGoals = []; // {id,title,targetAmount,deadline,createdAt,updatedAt}
 let bankCards = []; // {id, name, last4, color, balance, isDefault} — موجودی اصلی = assets.card روی کارت پیش‌فرض
 let ownerProfile = { name: '', username: '', avatar: '' }; // پروفایل واحد: name + username + avatar
+let budgets = []; // {id, category, limit} بودجه ماهانه دسته‌ها — مصرف از تراکنش‌های payment ماه جاری
 let milestonesReady = false; // بعد از اولین بارگذاری true می‌شود
 const BC_COLORS = ['#1d4ed8','#0f766e','#7c3aed','#b91c1c','#a16207','#334155','#0e7490','#be185d'];
 let _bcSelectedColor = BC_COLORS[0];
@@ -934,6 +939,11 @@ function loadAll(){
         if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object' && !Array.isArray(d.milestonesClaimed)) milestonesClaimed = d.milestonesClaimed;
         if(Array.isArray(d.notes)) notes = d.notes;
         if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
+        if(Array.isArray(d.budgets)) budgets = d.budgets.filter(b => b && b.category).map(b => ({
+          id: b.id || ('b_' + Date.now()),
+          category: String(b.category || '').slice(0, 40),
+          limit: (typeof safeNum === 'function' ? safeNum(b.limit, 0) : Number(b.limit)||0)
+        }));
         if(Array.isArray(d.bankCards)) bankCards = d.bankCards.filter(c => c && c.id != null).map(c => ({
           id: c.id,
           name: String(c.name || '').slice(0, 40),
@@ -994,7 +1004,7 @@ function pushSeriesPoint(){
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function getStatePayload(){
-  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, bankCards, ownerProfile, assetDefs: ASSET_DEFS};
+  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, bankCards, ownerProfile, budgets, assetDefs: ASSET_DEFS};
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
@@ -1011,6 +1021,11 @@ function applyStatePayload(d){
   if(d.milestonesClaimed && typeof d.milestonesClaimed === 'object' && !Array.isArray(d.milestonesClaimed)) milestonesClaimed = d.milestonesClaimed;
   if(Array.isArray(d.notes)) notes = d.notes;
   if(Array.isArray(d.financialGoals)) financialGoals = d.financialGoals;
+  if(Array.isArray(d.budgets)) budgets = d.budgets.filter(b => b && b.category).map(b => ({
+    id: b.id || ('b_' + Date.now()),
+    category: String(b.category || '').slice(0, 40),
+    limit: safeNum(b.limit, 0)
+  }));
   if(Array.isArray(d.bankCards)) bankCards = d.bankCards.filter(c => c && c.id != null).map(c => ({
     id: c.id,
     name: String(c.name || '').slice(0, 40),

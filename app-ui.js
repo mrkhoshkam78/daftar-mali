@@ -22,6 +22,7 @@ function render(){
   if(typeof renderNotes === 'function') renderNotes();
   if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
   if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
+  if(typeof renderBudgets === 'function') renderBudgets();
 }
 
 let selectedDonutKey = null;
@@ -3139,6 +3140,11 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
       person: needsPerson ? person : '',
       applied: false,
     };
+    if(type === 'payment'){
+      const catEl = document.getElementById('nbCategory');
+      const cat = (catEl && catEl.value || '').trim();
+      if(cat) entry.category = cat;
+    }
     if(type === 'lent' || type === 'borrowed'){
       entry.settled = false;
       entry.settledDate = null;
@@ -3177,6 +3183,7 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     if($('nbAmount')) $('nbAmount').value = '';
     if($('nbPerson')) $('nbPerson').value = '';
     if($('nbDesc')) $('nbDesc').value = '';
+    if($('nbCategory')) $('nbCategory').value = '';
     const saved = persist();
     showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد (ذخیره پایدار ناموفق)', !saved);
     // به‌روزرسانی کامل تمام بخش‌های وابسته (داشبورد، کارت‌ها، نمودارها، پیش‌بینی و …)
@@ -3277,6 +3284,11 @@ $('importFile').addEventListener('change', (e)=>{
           avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
         };
       }
+      if(Array.isArray(d.budgets)) budgets = d.budgets.filter(b => b && b.category).map(b => ({
+        id: b.id || ('b_' + Date.now()),
+        category: String(b.category || '').slice(0, 40),
+        limit: (typeof safeNum === 'function' ? safeNum(b.limit, 0) : Number(b.limit)||0)
+      }));
       if(d.assetDefs && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
       ensureCoreAssets();
       initMilestonesBaseline();
@@ -3534,4 +3546,190 @@ function bindOwnerProfileUI(){
 if(typeof document !== 'undefined'){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ bindOwnerProfileUI(); renderOwnerProfile(); });
   else { bindOwnerProfileUI(); renderOwnerProfile(); }
+}
+
+/* ================= SETTINGS SECTIONS COLLAPSE ================= */
+(function initSettingsCollapse(){
+  function enhanceSection(sec){
+    if(!sec || sec.dataset.collapseReady === '1') return;
+    if(sec.classList.contains('owner-profile-section')) return; // already collapsible
+    const title = sec.querySelector(':scope > .section-title');
+    if(!title) return;
+    const sub = sec.querySelector(':scope > .section-sub');
+    // body = everything except title and first section-sub
+    const bodyNodes = [];
+    let passedSub = !sub;
+    Array.from(sec.children).forEach(function(ch){
+      if(ch === title) return;
+      if(sub && ch === sub){ passedSub = true; return; }
+      bodyNodes.push(ch);
+    });
+    if(!bodyNodes.length) return;
+
+    sec.dataset.collapseReady = '1';
+    sec.classList.add('settings-collapsible');
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'settings-collapse-head';
+    head.setAttribute('aria-expanded', 'false');
+    // move title into head
+    title.classList.add('settings-collapse-title');
+    head.appendChild(title);
+    if(sub){
+      sub.classList.add('settings-collapse-desc');
+      head.appendChild(sub);
+    }
+    const chev = document.createElement('span');
+    chev.className = 'settings-collapse-chevron';
+    chev.setAttribute('aria-hidden', 'true');
+    chev.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+    head.appendChild(chev);
+
+    const body = document.createElement('div');
+    body.className = 'settings-collapse-body';
+    body.hidden = true;
+    bodyNodes.forEach(function(n){ body.appendChild(n); });
+
+    sec.insertBefore(head, sec.firstChild);
+    sec.appendChild(body);
+
+    head.addEventListener('click', function(){
+      const open = head.getAttribute('aria-expanded') === 'true';
+      const next = !open;
+      head.setAttribute('aria-expanded', next ? 'true' : 'false');
+      body.hidden = !next;
+      sec.classList.toggle('is-expanded', next);
+    });
+  }
+
+  function run(){
+    const page = document.getElementById('page-settings');
+    if(!page) return;
+    page.querySelectorAll('.section').forEach(enhanceSection);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+
+/* ================= MONTHLY BUDGET ================= */
+const BUDGET_CATS = ['خوراک','حمل‌ونقل','مسکن','پوشاک','درمان','تفریح','قبوض','سایر'];
+
+function currentBudgetMonthKey(){
+  if(typeof currentNbMonthKey === 'function') return currentNbMonthKey();
+  try{
+    const d = new Date();
+    // fallback approx
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }catch(e){ return ''; }
+}
+
+function spentForBudgetCategory(cat){
+  cat = String(cat || '').trim();
+  if(!cat) return 0;
+  const list = Array.isArray(notebook) ? notebook : [];
+  let sum = 0;
+  list.forEach(function(e){
+    if(!e || e.type !== 'payment') return;
+    if(typeof nbEntryInCurrentMonth === 'function' && !nbEntryInCurrentMonth(e)) return;
+    const amt = safeNum(e.amount, 0);
+    if(amt <= 0) return;
+    const ec = String(e.category || '').trim();
+    if(ec === cat) sum += amt;
+    else if(!ec && cat === 'سایر') sum += amt; // بدون دسته → سایر
+  });
+  return sum;
+}
+
+function renderBudgets(){
+  const listEl = document.getElementById('budgetList');
+  if(!listEl) return;
+  if(!Array.isArray(budgets)) budgets = [];
+  if(!budgets.length){
+    listEl.innerHTML = '<div class="goals-empty">هنوز بودجه‌ای تعریف نشده.<br>یک دسته و سقف مبلغ انتخاب کنید.</div>';
+    return;
+  }
+  listEl.innerHTML = budgets.map(function(b){
+    const limit = safeNum(b.limit, 0);
+    const spent = spentForBudgetCategory(b.category);
+    const remain = limit - spent;
+    const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+    let status = 'ok';
+    let warn = '';
+    if(limit > 0 && spent >= limit){
+      status = 'over';
+      warn = '<div class="budget-warn over">سقف بودجه عبور کرده است</div>';
+    } else if(limit > 0 && pct >= 80){
+      status = 'near';
+      warn = '<div class="budget-warn near">نزدیک به سقف بودجه (' + pct + '٪)</div>';
+    }
+    const barColor = status === 'over' ? 'var(--red)' : (status === 'near' ? '#f59e0b' : 'var(--green)');
+    return '<div class="budget-card" data-budget-id="' + escapeHtml(String(b.id)) + '">' +
+      '<div class="budget-card-head">' +
+        '<b>' + escapeHtml(b.category) + '</b>' +
+        '<button type="button" class="btn ghost budget-del-btn" data-budget-del="' + escapeHtml(String(b.id)) + '" style="padding:4px 8px;font-size:12px;">حذف</button>' +
+      '</div>' +
+      '<div class="budget-meta">بودجه: <b>' + fmt(limit) + '</b> · مصرف: <b>' + fmt(spent) + '</b> · باقی: <b style="color:' + (remain < 0 ? 'var(--red)' : 'inherit') + '">' + fmt(remain) + '</b></div>' +
+      '<div class="budget-bar"><span style="width:' + pct + '%;background:' + barColor + '"></span></div>' +
+      warn +
+    '</div>';
+  }).join('');
+
+  listEl.querySelectorAll('[data-budget-del]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const id = btn.getAttribute('data-budget-del');
+      budgets = (budgets || []).filter(function(b){ return String(b.id) !== String(id); });
+      if(typeof persist === 'function') persist();
+      renderBudgets();
+      if(typeof showToast === 'function') showToast('بودجه حذف شد');
+    });
+  });
+}
+
+function bindBudgetUI(){
+  if(window.__budgetBound) return;
+  window.__budgetBound = true;
+  const saveBtn = document.getElementById('budgetSaveBtn');
+  if(saveBtn) saveBtn.addEventListener('click', function(){
+    const cat = (document.getElementById('budgetCatSelect') && document.getElementById('budgetCatSelect').value) || '';
+    const limitRaw = document.getElementById('budgetLimitInput') && document.getElementById('budgetLimitInput').value;
+    const limit = typeof parseMoney === 'function' ? parseMoney(limitRaw) : Number(String(limitRaw||'').replace(/,/g,''));
+    if(!cat){ showToast('دسته را انتخاب کنید', true); return; }
+    if(!limit || limit <= 0){ showToast('مبلغ بودجه معتبر نیست', true); return; }
+    if(!Array.isArray(budgets)) budgets = [];
+    const existing = budgets.find(function(b){ return b.category === cat; });
+    if(existing){
+      existing.limit = limit;
+    } else {
+      budgets.push({ id: 'b_' + Date.now(), category: cat, limit: limit });
+    }
+    if(typeof persist === 'function') persist();
+    if(document.getElementById('budgetLimitInput')) document.getElementById('budgetLimitInput').value = '';
+    renderBudgets();
+    showToast('بودجه «' + cat + '» ذخیره شد');
+  });
+}
+
+// show category only for payment
+(function bindNbCategoryVisibility(){
+  function sync(){
+    const typeEl = document.getElementById('nbType');
+    const wrap = document.getElementById('nbCatWrap');
+    if(!typeEl || !wrap) return;
+    wrap.style.display = (typeEl.value === 'payment') ? '' : 'none';
+  }
+  if(document.getElementById('nbType')){
+    document.getElementById('nbType').addEventListener('change', sync);
+    sync();
+  } else {
+    document.addEventListener('DOMContentLoaded', function(){
+      const t = document.getElementById('nbType');
+      if(t){ t.addEventListener('change', sync); sync(); }
+    });
+  }
+})();
+
+if(typeof document !== 'undefined'){
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindBudgetUI);
+  else bindBudgetUI();
 }

@@ -9,7 +9,7 @@
   'use strict';
 
   var AI_HISTORY_STORAGE = 'daftar-ai-chat-history-v2';
-  var MAX_HISTORY_TURNS = 8;
+  var MAX_HISTORY_TURNS = 20;
   var MAX_RECENT_TX = 15;
 
   var chatHistory = [];
@@ -145,6 +145,27 @@
       }
       return { lentOpen: lent, borrowedOpen: borrowed, netDebt: borrowed - lent, items: items.slice(0, 12) };
     },
+    getBudgets: function () {
+      var list = [];
+      try {
+        if (typeof budgets !== 'undefined' && Array.isArray(budgets)) list = budgets;
+      } catch (e) {}
+      var rows = list.map(function (b) {
+        var limit = safeNum(b.limit, 0);
+        var spent = 0;
+        try {
+          if (typeof spentForBudgetCategory === 'function') spent = spentForBudgetCategory(b.category);
+        } catch (e2) {}
+        return {
+          category: b.category,
+          limit: limit,
+          spent: spent,
+          remain: limit - spent,
+          pct: limit > 0 ? Math.round((spent / limit) * 100) : 0
+        };
+      });
+      return { items: rows, count: rows.length };
+    },
     getCashflow: function () {
       var income = 0, expense = 0;
       var byMonth = {};
@@ -199,9 +220,10 @@
     { id: 'cashflow', keys: ['دخل و خرج', 'جریان نقد', 'تراز مالی', 'cashflow', 'تراز', 'سود و زیان', 'درآمد و هزینه'], tools: ['getCashflow'] },
     { id: 'loans', keys: ['قرض', 'بدهی', 'وام', 'بدهکار', 'طلب', 'debt', 'loan', 'قرض‌ها', 'قرض ها', 'قرض باز'], tools: ['getLoans'] },
     { id: 'goals', keys: ['هدف', 'اهداف', 'goal', 'پس‌انداز', 'پس انداز', 'هدف مالی'], tools: ['getGoals', 'getSummary'] },
+    { id: 'budget', keys: ['بودجه', 'سقف هزینه', 'بودجه‌بندی', 'budget', 'حد هزینه', 'مصرف دسته'], tools: ['getBudgets', 'getCashflow'] },
     { id: 'noncash', keys: ['طلا', 'نقره', 'دلار', 'سکه', 'غیرنقد', 'gold', 'silver', 'ارز', 'دارایی غیرنقد'], tools: ['getNoncash'] },
     { id: 'tx', keys: ['تراکنش', 'آخرین تراکنش', 'transaction', 'تراکنش‌ها', 'تراکنش ها', 'آخرین خرید', 'آخرین پرداخت'], tools: ['getRecentTx'] },
-    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار کنم', 'چه کار کنم', 'چکار کنم', 'راهنمایی', 'advice', 'suggest', 'نصیحت', 'چطور مدیریت', 'پیشنهاد بده'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals'] },
+    { id: 'advice', keys: ['پیشنهاد', 'توصیه', 'چیکار کنم', 'چه کار کنم', 'چکار کنم', 'راهنمایی', 'advice', 'suggest', 'نصیحت', 'چطور مدیریت', 'پیشنهاد بده', 'وضعیت این ماه', 'بیشترین هزینه'], tools: ['getSummary', 'getLiquidity', 'getInvestments', 'getCashflow', 'getLoans', 'getGoals', 'getBudgets'] },
     { id: 'summary', keys: ['خلاصه', 'وضعیت مالی', 'گزارش مالی', 'کل دارایی', 'دارایی‌های من', 'دارایی های من', 'وضعیتم', 'اوضاع مالی', 'تحلیل کن', 'وضعیت من', 'وضعیت کلی'], tools: ['getSummary', 'getLiquidity', 'getInvestments'] }
   ];
 
@@ -256,7 +278,7 @@
     var ctx = { currency: 'تومان', generatedAt: new Date().toISOString(), selectedTools: toolNames.slice() };
     var keyMap = {
       getSummary: 'summary', getLiquidity: 'liquidity', getInvestments: 'investments',
-      getNoncash: 'noncash', getGoals: 'goals', getLoans: 'loans',
+      getNoncash: 'noncash', getGoals: 'goals', getLoans: 'loans', getBudgets: 'budgets',
       getCashflow: 'cashflow', getRecentTx: 'recentTx'
     };
     toolNames.forEach(function (name) {
@@ -272,6 +294,83 @@
     var parts = [];
     var insights = [];
     var q = String(question || '');
+    // بودجه ماهانه
+    if (intents[0] === 'budget' || /بودجه|سقف هزینه/.test(q)) {
+      var bd = (ctx && ctx.budgets) || (typeof TOOLS !== 'undefined' && TOOLS.getBudgets ? TOOLS.getBudgets() : null);
+      if (!bd && ctx) bd = ctx.budgets;
+      try {
+        if (!bd && typeof budgets !== 'undefined') {
+          bd = { items: (budgets || []).map(function (b) {
+            var limit = safeNum(b.limit, 0);
+            var spent = typeof spentForBudgetCategory === 'function' ? spentForBudgetCategory(b.category) : 0;
+            return { category: b.category, limit: limit, spent: spent, remain: limit - spent, pct: limit > 0 ? Math.round(spent / limit * 100) : 0 };
+          }), count: (budgets || []).length };
+        }
+      } catch (e) {}
+      if (!bd || !bd.items || !bd.items.length) {
+        parts.push('هنوز بودجه‌ای تعریف نشده است. از بخش «بودجه ماهانه» یک دسته و سقف مشخص کنید.');
+      } else {
+        parts.push('📊 بودجه ماه جاری:');
+        bd.items.forEach(function (it) {
+          var line = '• ' + it.category + ': مصرف ' + fmtNum(it.spent) + ' از ' + fmtNum(it.limit) + ' (' + it.pct + '٪)';
+          if (it.spent >= it.limit) line += ' — عبور از سقف';
+          else if (it.pct >= 80) line += ' — نزدیک سقف';
+          parts.push(line);
+        });
+      }
+    }
+
+    // میانبر: بیشترین هزینه
+    if (/بیشترین هزینه|بیشترین خرج/.test(q)) {
+      var pays = [];
+      try {
+        var nb = (typeof notebook !== 'undefined' && Array.isArray(notebook)) ? notebook : [];
+        nb.forEach(function (e) {
+          if (!e || e.type !== 'payment') return;
+          if (typeof nbEntryInCurrentMonth === 'function' && !nbEntryInCurrentMonth(e)) return;
+          var a = safeNum(e.amount, 0);
+          if (a > 0) pays.push({ amount: a, desc: e.desc || e.category || 'پرداخت', category: e.category || 'سایر' });
+        });
+      } catch (e3) {}
+      if (!pays.length) {
+        parts.push('در این ماه پرداختی ثبت نشده تا بیشترین هزینه مشخص شود.');
+      } else {
+        pays.sort(function (a, b) { return b.amount - a.amount; });
+        var top = pays.slice(0, 5);
+        parts.push('📊 بیشترین هزینه‌های این ماه:');
+        top.forEach(function (p, i) {
+          parts.push((i + 1) + ') ' + (p.desc || p.category) + ' — ' + fmtNum(p.amount) + ' تومان');
+        });
+      }
+    }
+
+    // میانبر: وضعیت این ماه
+    if (/وضعیت این ماه|اوضاع این ماه/.test(q)) {
+      try {
+        var cf = null;
+        if (ctx && ctx.cashflow) cf = ctx.cashflow;
+        parts.push('📊 وضعیت این ماه بر اساس تراکنش‌های ثبت‌شده:');
+        if (cf) {
+          if (cf.expense != null) parts.push('• جمع هزینه: ' + fmtNum(cf.expense) + ' تومان');
+          if (cf.income != null) parts.push('• جمع درآمد: ' + fmtNum(cf.income) + ' تومان');
+        } else {
+          var inc = 0, exp = 0;
+          (typeof notebook !== 'undefined' && notebook || []).forEach(function (e) {
+            if (!e) return;
+            if (typeof nbEntryInCurrentMonth === 'function' && !nbEntryInCurrentMonth(e)) return;
+            var a = safeNum(e.amount, 0);
+            if (e.type === 'payment') exp += a;
+            if (e.type === 'deposit') inc += a;
+          });
+          parts.push('• جمع هزینه: ' + fmtNum(exp) + ' تومان');
+          parts.push('• جمع درآمد: ' + fmtNum(inc) + ' تومان');
+          parts.push('• تراز: ' + fmtNum(inc - exp) + ' تومان');
+        }
+      } catch (e4) {
+        parts.push('داده کافی برای خلاصه این ماه در دسترس نیست.');
+      }
+    }
+
     function addData(title, lines) {
       if (!lines || !lines.length) return;
       parts.push(title);
@@ -517,10 +616,12 @@
   }
 
   var SUGGESTED = [
-    'وضعیت مالی من را تحلیل کن',
-    'نقدینگی‌ام چطور است؟',
-    'هزینه‌های اخیرم را خلاصه کن',
-    'پیشنهاد مدیریت دارایی بده'
+    'وضعیت این ماه',
+    'بیشترین هزینه',
+    'بودجه ماهانه',
+    'وضعیت قرض‌ها',
+    'اهداف مالی',
+    'خلاصه دارایی'
   ];
 
   function renderWelcome() {

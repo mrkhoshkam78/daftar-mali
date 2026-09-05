@@ -5434,3 +5434,42 @@ html[data-design="aurora"] #page-ai-advisor .ai-shell {
 .sd-last-visit.is-first{ color:var(--blue-light); }
 .menu-item.menu-logout{ color:var(--danger, #ef4444); margin-top:6px; }
 .menu-item.menu-logout .ic{ color:inherit; }
+
+/* —— Settings collapsible sections —— */
+.settings-collapsible{ padding-top: 12px; padding-bottom: 12px; }
+.settings-collapse-head{
+  width:100%; display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px 10px;
+  background:transparent; border:none; color:inherit; cursor:pointer;
+  text-align:right; padding:0; font:inherit; position:relative;
+}
+.settings-collapse-head .settings-collapse-title{
+  flex:1 1 auto; margin:0; padding-left:28px;
+}
+.settings-collapse-head .settings-collapse-desc{
+  flex:1 1 100%; margin:0; padding-left:28px; opacity:.85; font-size:12.5px; line-height:1.45;
+}
+.settings-collapse-chevron{
+  position:absolute; left:0; top:2px;
+  color:var(--ink-dim); display:flex; transition:transform .2s ease;
+}
+.settings-collapsible.is-expanded .settings-collapse-chevron{ transform:rotate(180deg); }
+.settings-collapse-body{
+  margin-top:12px; padding-top:4px;
+}
+.settings-collapse-body[hidden]{ display:none !important; }
+
+/* —— Monthly budget —— */
+.budget-list{ display:flex; flex-direction:column; gap:10px; }
+.budget-card{
+  border:1px solid var(--border); border-radius:12px; padding:12px 14px;
+  background:var(--card);
+}
+.budget-card-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.budget-meta{ font-size:12.5px; color:var(--ink-dim); margin-top:6px; line-height:1.5; }
+.budget-bar{
+  margin-top:8px; height:8px; border-radius:999px; background:rgba(127,127,127,.15); overflow:hidden;
+}
+.budget-bar > span{ display:block; height:100%; border-radius:999px; transition:width .25s ease; }
+.budget-warn{ margin-top:8px; font-size:12px; font-weight:600; }
+.budget-warn.near{ color:#d97706; }
+.budget-warn.over{ color:var(--red); }

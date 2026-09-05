@@ -585,7 +585,7 @@ if($('menuLogoutBtn')){
     if(typeof showConfirmModal === 'function'){
       showConfirmModal('آیا قصد خروج دارید؟', 'نشست فعلی بسته می‌شود. داده‌های مالی و پروفایل حفظ می‌شوند.', function(){
         performLogout();
-      });
+      }, 'خروج');
     } else if(window.confirm('آیا قصد خروج دارید؟')){
       performLogout();
     }
@@ -599,3 +599,134 @@ loadAll();
 ensureCoreAssets();
 scheduleDateRollover();
 updateTopbarDate();
+
+/* ================= AUTO BACKUP (IndexedDB, local-only) ================= */
+const AUTO_BACKUP_CFG_KEY = 'daftar-auto-backup-cfg';
+const AUTO_BACKUP_DB = 'daftar-auto-backup-db';
+const AUTO_BACKUP_STORE = 'backups';
+const AUTO_BACKUP_MAX = 5;
+
+function loadAutoBackupCfg(){
+  try{
+    const raw = localStorage.getItem(AUTO_BACKUP_CFG_KEY);
+    if(!raw) return { enabled: false, interval: 'weekly', lastRun: 0 };
+    const o = JSON.parse(raw);
+    return {
+      enabled: !!o.enabled,
+      interval: (o.interval === 'daily' ? 'daily' : 'weekly'),
+      lastRun: parseInt(o.lastRun, 10) || 0
+    };
+  }catch(e){ return { enabled: false, interval: 'weekly', lastRun: 0 }; }
+}
+function saveAutoBackupCfg(cfg){
+  try{ localStorage.setItem(AUTO_BACKUP_CFG_KEY, JSON.stringify(cfg)); }catch(e){}
+}
+function openBackupDb(){
+  return new Promise(function(resolve, reject){
+    if(!window.indexedDB){ reject(new Error('no idb')); return; }
+    const req = indexedDB.open(AUTO_BACKUP_DB, 1);
+    req.onupgradeneeded = function(){
+      const db = req.result;
+      if(!db.objectStoreNames.contains(AUTO_BACKUP_STORE)){
+        db.createObjectStore(AUTO_BACKUP_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+async function saveBackupToIdb(payload){
+  const db = await openBackupDb();
+  return new Promise(function(resolve, reject){
+    const tx = db.transaction(AUTO_BACKUP_STORE, 'readwrite');
+    const store = tx.objectStore(AUTO_BACKUP_STORE);
+    const id = 'ab_' + Date.now();
+    store.put({ id: id, ts: Date.now(), data: payload });
+    // prune old
+    const getAll = store.getAll();
+    getAll.onsuccess = function(){
+      const rows = (getAll.result || []).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+      rows.slice(AUTO_BACKUP_MAX).forEach(function(r){ store.delete(r.id); });
+    };
+    tx.oncomplete = function(){ db.close(); resolve(id); };
+    tx.onerror = function(){ reject(tx.error); };
+  });
+}
+async function checkStorageWarning(){
+  const el = document.getElementById('storageWarn');
+  if(!el) return;
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      const usage = est.usage || 0;
+      const quota = est.quota || 1;
+      const ratio = usage / quota;
+      if(ratio >= 0.85){
+        el.style.display = '';
+        el.textContent = 'هشدار: فضای ذخیره‌سازی مرورگر نزدیک به پر شدن است (' + Math.round(ratio*100) + '٪). یک پشتیبان دستی دانلود کنید.';
+      } else {
+        el.style.display = 'none';
+        el.textContent = '';
+      }
+    }
+  }catch(e){}
+}
+async function runAutoBackupIfDue(){
+  const cfg = loadAutoBackupCfg();
+  updateAutoBackupStatusUI(cfg);
+  await checkStorageWarning();
+  if(!cfg.enabled) return;
+  const intervalMs = cfg.interval === 'daily' ? 86400000 : 604800000;
+  const now = Date.now();
+  if(cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
+  try{
+    if(typeof getStatePayload !== 'function') return;
+    const payload = getStatePayload();
+    // فقط کپی داده — بدون تغییر state اصلی
+    await saveBackupToIdb(JSON.parse(JSON.stringify(payload)));
+    cfg.lastRun = now;
+    saveAutoBackupCfg(cfg);
+    updateAutoBackupStatusUI(cfg);
+  }catch(e){ console.error('auto backup', e); }
+}
+function updateAutoBackupStatusUI(cfg){
+  cfg = cfg || loadAutoBackupCfg();
+  const el = document.getElementById('autoBackupStatus');
+  const tog = document.getElementById('autoBackupToggle');
+  const sel = document.getElementById('autoBackupInterval');
+  if(tog) tog.checked = !!cfg.enabled;
+  if(sel) sel.value = cfg.interval === 'daily' ? 'daily' : 'weekly';
+  if(!el) return;
+  if(!cfg.enabled){
+    el.textContent = 'وضعیت: غیرفعال';
+    return;
+  }
+  let last = 'هنوز اجرا نشده';
+  if(cfg.lastRun){
+    try{ last = new Date(cfg.lastRun).toLocaleString('fa-IR'); }catch(e){}
+  }
+  el.textContent = 'وضعیت: فعال · بازه: ' + (cfg.interval === 'daily' ? 'روزانه' : 'هفتگی') + ' · آخرین اجرا: ' + last;
+}
+function bindAutoBackupUI(){
+  if(window.__autoBackupBound) return;
+  window.__autoBackupBound = true;
+  const tog = document.getElementById('autoBackupToggle');
+  const sel = document.getElementById('autoBackupInterval');
+  function persistCfg(){
+    const cfg = loadAutoBackupCfg();
+    cfg.enabled = !!(tog && tog.checked);
+    cfg.interval = (sel && sel.value === 'daily') ? 'daily' : 'weekly';
+    saveAutoBackupCfg(cfg);
+    updateAutoBackupStatusUI(cfg);
+    if(cfg.enabled) runAutoBackupIfDue();
+  }
+  if(tog) tog.addEventListener('change', persistCfg);
+  if(sel) sel.addEventListener('change', persistCfg);
+  updateAutoBackupStatusUI();
+}
+// init after DOM
+if(typeof document !== 'undefined'){
+  const bootAuto = function(){ bindAutoBackupUI(); setTimeout(function(){ runAutoBackupIfDue(); }, 1500); };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAuto);
+  else bootAuto();
+}
