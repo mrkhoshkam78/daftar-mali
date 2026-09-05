@@ -23,6 +23,7 @@ function render(){
   if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
   if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
   if(typeof renderBudgets === 'function') renderBudgets();
+  try{ if(typeof AdaptiveCanvas !== 'undefined' && AdaptiveCanvas.refreshModules) AdaptiveCanvas.refreshModules(); }catch(e){}
 }
 
 let selectedDonutKey = null;
@@ -3778,3 +3779,261 @@ if(typeof document !== 'undefined'){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindBudgetUI);
   else bindBudgetUI();
 }
+
+/* ================= Adaptive Financial Canvas (UI-only, scoped) ================= */
+var AdaptiveCanvas = (function(){
+  var mode = 'canvas'; // canvas | focus
+  var focusPage = null;
+  var bound = false;
+
+  function isActive(){
+    try{
+      return document.documentElement.getAttribute('data-design') === 'adaptive-canvas';
+    }catch(e){ return false; }
+  }
+
+  function setView(v){
+    mode = v === 'focus' ? 'focus' : 'canvas';
+    try{
+      document.documentElement.setAttribute('data-ac-view', mode);
+      document.body.classList.toggle('ac-focus', mode === 'focus');
+      document.body.classList.toggle('ac-canvas-mode', mode === 'canvas' && isActive());
+    }catch(e){}
+    var back = document.getElementById('acBackBtn');
+    if(back) back.style.display = (isActive() && mode === 'focus') ? '' : 'none';
+    var canvas = document.getElementById('acCanvas');
+    if(canvas) canvas.hidden = !(isActive() && mode === 'canvas');
+    var title = document.getElementById('acTitle');
+    if(title){
+      if(mode === 'canvas') title.textContent = 'Financial Canvas';
+      else title.textContent = focusLabel(focusPage);
+    }
+  }
+
+  function focusLabel(pageId){
+    var map = {
+      'page-dashboard': 'مالی',
+      'page-notebook': 'تراکنش‌ها',
+      'page-budget': 'بودجه',
+      'page-assets': 'دارایی‌ها',
+      'page-noncash': 'دارایی غیرنقد',
+      'page-goals': 'اهداف',
+      'page-notes': 'یادداشت‌ها',
+      'page-settings': 'تنظیمات',
+      'page-history': 'تاریخچه',
+      'page-snapp': 'اسنپ',
+      'page-ai-advisor': 'مشاور'
+    };
+    return map[pageId] || 'Focus';
+  }
+
+  function fmtSafe(n){
+    try{ return (typeof fmt === 'function') ? fmt(n) : String(Math.round(n||0)); }
+    catch(e){ return '—'; }
+  }
+
+  function monthFlow(){
+    var inc = 0, exp = 0;
+    try{
+      (typeof notebook !== 'undefined' && notebook || []).forEach(function(e){
+        if(!e) return;
+        if(typeof nbEntryInCurrentMonth === 'function' && !nbEntryInCurrentMonth(e)) return;
+        var a = (typeof safeNum === 'function') ? safeNum(e.amount, 0) : Number(e.amount)||0;
+        if(e.type === 'deposit') inc += a;
+        if(e.type === 'payment') exp += a;
+      });
+    }catch(e){}
+    return { income: inc, expense: exp, net: inc - exp };
+  }
+
+  function budgetSummary(){
+    var list = (typeof budgets !== 'undefined' && Array.isArray(budgets)) ? budgets : [];
+    if(!list.length) return { text: 'تعریف نشده', over: 0 };
+    var over = 0, near = 0;
+    list.forEach(function(b){
+      var limit = (typeof safeNum === 'function') ? safeNum(b.limit, 0) : Number(b.limit)||0;
+      var spent = (typeof spentForBudgetCategory === 'function') ? spentForBudgetCategory(b.category) : 0;
+      if(limit > 0 && spent >= limit) over++;
+      else if(limit > 0 && spent / limit >= 0.8) near++;
+    });
+    if(over) return { text: over + ' عبور از سقف', over: over };
+    if(near) return { text: near + ' نزدیک سقف', over: 0 };
+    return { text: list.length + ' دسته فعال', over: 0 };
+  }
+
+  function loansOpen(){
+    var n = 0;
+    try{
+      (typeof notebook !== 'undefined' && notebook || []).forEach(function(e){
+        if(e && (e.type === 'lent' || e.type === 'borrowed') && !e.settled) n++;
+      });
+    }catch(e){}
+    return n;
+  }
+
+  function refreshModules(){
+    if(!isActive()) return;
+    try{
+      var total = (typeof computeTotal === 'function') ? computeTotal() : 0;
+      var elT = document.getElementById('acTotalNet');
+      if(elT) elT.textContent = fmtSafe(total);
+    }catch(e){}
+    try{
+      var fl = monthFlow();
+      var elF = document.getElementById('acModFlow');
+      if(elF) elF.textContent = 'خالص ' + fmtSafe(fl.net);
+    }catch(e){}
+    try{
+      var bs = budgetSummary();
+      var elB = document.getElementById('acModBudget');
+      if(elB) elB.textContent = bs.text;
+    }catch(e){}
+    try{
+      var cash = (typeof computeCash === 'function') ? computeCash() : 0;
+      var inv = (typeof computeInvest === 'function') ? computeInvest() : 0;
+      var elA = document.getElementById('acModAssets');
+      if(elA) elA.textContent = fmtSafe(cash + inv);
+    }catch(e){}
+    try{
+      var gc = (typeof financialGoals !== 'undefined' && Array.isArray(financialGoals)) ? financialGoals.length : 0;
+      var elG = document.getElementById('acModGoals');
+      if(elG) elG.textContent = gc ? (gc + ' هدف') : 'بدون هدف';
+    }catch(e){}
+    try{
+      var elL = document.getElementById('acModLoans');
+      if(elL){
+        var ln = loansOpen();
+        elL.textContent = ln ? (ln + ' باز') : 'بدون قرض باز';
+      }
+    }catch(e){}
+    try{
+      var nc = (typeof notes !== 'undefined' && Array.isArray(notes)) ? notes.length : 0;
+      var elN = document.getElementById('acModNotes');
+      if(elN) elN.textContent = nc ? (nc + ' یادداشت') : 'خالی';
+    }catch(e){}
+  }
+
+  function closeCtx(){
+    var panel = document.getElementById('acCtxPanel');
+    var btn = document.getElementById('acCtxBtn');
+    if(panel) panel.hidden = true;
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function enterFocus(pageId){
+    if(!isActive()) return;
+    if(pageId === 'page-dashboard'){
+      // بازگشت به Canvas به‌جای داشبورد کلاسیک
+      exitFocus();
+      return;
+    }
+    focusPage = pageId;
+    setView('focus');
+    closeCtx();
+    try{ window.scrollTo(0, 0); }catch(e){}
+  }
+
+  function exitFocus(){
+    if(!isActive()) return;
+    focusPage = null;
+    setView('canvas');
+    // مخفی کردن صفحات در حالت canvas
+    try{
+      document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    }catch(e){}
+    closeCtx();
+    refreshModules();
+    try{ window.scrollTo(0, 0); }catch(e){}
+  }
+
+  function bind(){
+    if(bound) return;
+    bound = true;
+    document.addEventListener('click', function(e){
+      if(!isActive()) return;
+      var mod = e.target && e.target.closest && e.target.closest('.ac-mod');
+      if(mod){
+        e.preventDefault();
+        var page = mod.getAttribute('data-ac-page');
+        if(page && typeof showPage === 'function'){
+          // showPage خودش enterFocus را صدا می‌زند
+          showPage(page);
+        }
+        return;
+      }
+      var back = e.target && e.target.closest && e.target.closest('#acBackBtn');
+      if(back){
+        e.preventDefault();
+        exitFocus();
+        return;
+      }
+      var ctxBtn = e.target && e.target.closest && e.target.closest('#acCtxBtn');
+      if(ctxBtn){
+        e.preventDefault();
+        var panel = document.getElementById('acCtxPanel');
+        if(!panel) return;
+        var open = panel.hidden;
+        panel.hidden = !open;
+        ctxBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        return;
+      }
+      var ctxItem = e.target && e.target.closest && e.target.closest('[data-ac-ctx]');
+      if(ctxItem && e.target.closest('#acCtxPanel')){
+        e.preventDefault();
+        var pid = ctxItem.getAttribute('data-ac-ctx');
+        closeCtx();
+        if(pid === 'page-dashboard') exitFocus();
+        else if(pid && typeof showPage === 'function') showPage(pid);
+      }
+    });
+  }
+
+  function onDesignChange(d){
+    bind();
+    var shell = document.getElementById('acShell');
+    if(d === 'adaptive-canvas'){
+      if(shell){ shell.setAttribute('aria-hidden', 'false'); }
+      exitFocus(); // start on canvas
+      refreshModules();
+    } else {
+      if(shell){ shell.setAttribute('aria-hidden', 'true'); }
+      try{
+        document.documentElement.removeAttribute('data-ac-view');
+        document.body.classList.remove('ac-focus', 'ac-canvas-mode');
+      }catch(e){}
+      closeCtx();
+      // اگر صفحه‌ای active نیست، داشبورد
+      try{
+        if(!document.querySelector('.page.active') && typeof showPage === 'function'){
+          // avoid recursive adaptive enterFocus: temporarily
+          document.documentElement.setAttribute('data-design', d);
+          showPage('page-dashboard');
+        }
+      }catch(e){}
+    }
+  }
+
+  function init(){
+    bind();
+    if(isActive()) onDesignChange('adaptive-canvas');
+  }
+
+  if(typeof document !== 'undefined'){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  }
+
+  return {
+    isActive: isActive,
+    enterFocus: enterFocus,
+    exitFocus: exitFocus,
+    refreshModules: refreshModules,
+    onDesignChange: onDesignChange
+  };
+})();
+
+// refresh canvas metrics with main render
+(function(){
+  var _r = typeof render === 'function' ? render : null;
+  // hook after existing render via reassignment is risky if const; call from render body instead
+})();

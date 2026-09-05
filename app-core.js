@@ -281,12 +281,13 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic'];
+const VALID_DESIGNS = ['aurora','neobank','classic','adaptive-canvas'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
   if(d === 'original' || d === 'premium' || d === 'glass') return 'classic';
   if(d === 'app' || d === 'shell') return 'aurora';
+  if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc') return 'adaptive-canvas';
   return d;
 }
 function applyDesign(d){
@@ -305,7 +306,10 @@ function applyDesign(d){
     const bn = document.getElementById('bottomNav');
     const ham = document.getElementById('menuToggle');
     const drawer = document.getElementById('dropdownMenu');
-    if(d === 'aurora'){
+    if(d === 'adaptive-canvas'){
+      if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
+      if(ham){ ham.style.display = 'none'; }
+    } else if(d === 'aurora'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
     } else {
@@ -325,6 +329,11 @@ function applyDesign(d){
     var layout = document.querySelector('.layout');
     if(bar) bar.style.transform = '';
     if(layout) layout.style.transform = '';
+  }catch(e){}
+  try{
+    if(typeof AdaptiveCanvas !== 'undefined' && AdaptiveCanvas.onDesignChange){
+      AdaptiveCanvas.onDesignChange(d);
+    }
   }catch(e){}
 }
 function onDesignCardActivate(e){
@@ -533,6 +542,12 @@ function showPage(pageId){
   if(target){
     target.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
   }
+  // Adaptive Canvas: ورود به Focus Mode (فقط UI)
+  try{
+    if(typeof AdaptiveCanvas !== 'undefined' && AdaptiveCanvas.isActive && AdaptiveCanvas.isActive()){
+      AdaptiveCanvas.enterFocus(pageId);
+    }
+  }catch(e){}
 }
 // Event delegation — کار می‌کند حتی اگر HTML بعد از script بیاید
 function bindNavOnce(){

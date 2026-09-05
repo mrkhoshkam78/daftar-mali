@@ -16,7 +16,7 @@ const NOTE_CATS = [
 let notesFilterCat = 'all';
 let notesFilterTags = []; // multi-tag AND filter
 let notesQuery = '';
-let notesSortMode = 'updated';
+let notesSortMode = 'newest';
 let notesPinnedOnly = false;
 let notesViewMode = 'list'; // list | cal
 let notesLayoutMode = 'vertical'; // vertical | horizontal
@@ -488,7 +488,7 @@ function renderNotes(){
   if($('notesSearch') && document.activeElement !== $('notesSearch')){
     $('notesSearch').value = notesQuery || '';
   }
-  if($('notesSort')) $('notesSort').value = notesSortMode || 'updated';
+  if($('notesSort')) $('notesSort').value = notesSortMode || 'newest';
   if($('notesPinnedOnly')) $('notesPinnedOnly').checked = !!notesPinnedOnly;
   updateNotesSearchChrome();
   renderNotesCatBar();
@@ -804,7 +804,7 @@ document.addEventListener('click', (e)=>{
 });
 if($('notesSort')){
   $('notesSort').addEventListener('change', ()=>{
-    notesSortMode = $('notesSort').value || 'updated';
+    notesSortMode = $('notesSort').value || 'newest';
     renderNotes();
   });
 }
