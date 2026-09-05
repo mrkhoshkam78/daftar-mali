@@ -2395,10 +2395,10 @@ function renderNotebook(){
             const sign = (NB_TYPES[entry.type] && NB_TYPES[entry.type].sign) || 0;
             const amt = safeNum(entry.amount, 0);
             if(sign !== 0 && amt > 0){
-              assets.card = safeNum(assets.card, 0) - (sign * amt);
-              if(!Array.isArray(txs)) txs = [];
-              txs.push({date: todayISO(), key:'card', delta: -(sign * amt), note: 'حذف ' + ((NB_TYPES[entry.type] && NB_TYPES[entry.type].label) || entry.type) + (entry.desc ? ' — ' + entry.desc : '')});
-              if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+              // برگشت اثر از همان کارت/منبعی که در لحظه ثبت اعمال شده بود
+              const cardId = entry.cardId || '';
+              const label = 'حذف ' + ((NB_TYPES[entry.type] && NB_TYPES[entry.type].label) || entry.type) + (entry.desc ? ' — ' + entry.desc : '');
+              applyAmountToCard(cardId, -(sign * amt), label);
             }
           }
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
@@ -2608,6 +2608,20 @@ function getBankCardDisplayBalance(card){
   if(!card) return 0;
   if(isDefaultBankCard(card)) return safeNum(assets && assets.card, 0);
   return safeNum(card.balance, 0);
+}
+/** اعمال فوری مبلغ روی کارت انتخاب‌شده (یا کارت پیش‌فرض / assets.card) — برای همگام‌سازی Real-Time */
+function applyAmountToCard(cardId, delta, note){
+  delta = safeNum(delta, 0);
+  if(Math.abs(delta) < 0.5) return;
+  const card = findBankCard(cardId);
+  if(card && !isDefaultBankCard(card)){
+    card.balance = safeNum(card.balance, 0) + delta;
+  } else {
+    assets.card = safeNum(assets.card, 0) + delta;
+  }
+  if(!Array.isArray(txs)) txs = [];
+  txs.push({date: todayISO(), key:'card', delta, note: note || ''});
+  if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
 }
 function setDefaultBankCard(id){
   if(!Array.isArray(bankCards)) return;
@@ -3102,14 +3116,16 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
       }
     }
     if(!Array.isArray(notebook)) notebook = [];
-    // دریافتی: بلافاصله روی موجودی کارت اعمال شود (یک‌بار، با پرچم applied)
-    if(type === 'deposit'){
+    // دریافتی و پرداخت: بلافاصله روی موجودی کارت/منبع مرتبط اعمال شود (یک‌بار، با پرچم applied)
+    // تا موجودی، داشبورد، کارت‌ها و تمام بخش‌های وابسته بدون Refresh همگام شوند
+    if(type === 'deposit' || type === 'payment'){
       const amt = safeNum(amount, 0);
-      assets.card = safeNum(assets.card, 0) + amt;
+      const sign = (NB_TYPES[type] && NB_TYPES[type].sign) || (type === 'deposit' ? 1 : -1);
+      const delta = sign * amt;
+      const cardId = entry.cardId || (($('nbCardSelect') && $('nbCardSelect').value) || '');
+      const label = (NB_TYPES[type] && NB_TYPES[type].label) || type;
+      applyAmountToCard(cardId, delta, label + (desc ? ' — ' + desc : ''));
       entry.applied = true;
-      if(!Array.isArray(txs)) txs = [];
-      txs.push({date: date || todayISO(), key:'card', delta: amt, note: 'دریافتی' + (desc ? ' — ' + desc : '')});
-      if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
     }
     notebook.push(entry);
     if(type === 'payment' || type === 'deposit'){
@@ -3122,9 +3138,13 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     if($('nbDesc')) $('nbDesc').value = '';
     const saved = persist();
     showToast(saved ? 'تراکنش ثبت شد' : 'تراکنش ثبت شد (ذخیره پایدار ناموفق)', !saved);
-    if(typeof renderNotebook === 'function') renderNotebook();
-    else if(typeof render === 'function') render();
-    if(typeof renderForecast === 'function') renderForecast();
+    // به‌روزرسانی کامل تمام بخش‌های وابسته (داشبورد، کارت‌ها، نمودارها، پیش‌بینی و …)
+    if(typeof render === 'function') render();
+    else {
+      if(typeof renderNotebook === 'function') renderNotebook();
+      if(typeof renderForecast === 'function') renderForecast();
+      if(typeof renderBankCards === 'function') renderBankCards();
+    }
   }catch(err){
     console.error('nbAdd', err);
     showToast('خطا در ثبت تراکنش: ' + (err && err.message ? err.message : err), true);
