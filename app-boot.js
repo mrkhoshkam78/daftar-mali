@@ -708,6 +708,180 @@ async function checkStorageWarning(){
     }
   }catch(e){}
 }
+
+/** لیست پشتیبان‌های خودکار از IndexedDB (جدیدترین اول) */
+async function listAutoBackups(){
+  const db = await openBackupDb();
+  return new Promise(function(resolve, reject){
+    let settled = false;
+    const done = function(err, rows){
+      if(settled) return;
+      settled = true;
+      try{ db.close(); }catch(e){}
+      if(err) reject(err); else resolve(rows || []);
+    };
+    try{
+      const tx = db.transaction(AUTO_BACKUP_STORE, 'readonly');
+      const store = tx.objectStore(AUTO_BACKUP_STORE);
+      const req = store.getAll();
+      req.onsuccess = function(){
+        const rows = (req.result || []).slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+        done(null, rows);
+      };
+      req.onerror = function(){ done(req.error || new Error('idb getAll')); };
+      tx.onerror = function(){ done(tx.error || new Error('idb tx')); };
+    }catch(e){ done(e); }
+  });
+}
+
+/** آخرین پشتیبان خودکار معتبر (دارای data آبجکت) */
+async function getLatestAutoBackup(){
+  const rows = await listAutoBackups();
+  for(let i = 0; i < rows.length; i++){
+    const r = rows[i];
+    if(r && r.data && typeof r.data === 'object' && !Array.isArray(r.data)){
+      return r;
+    }
+  }
+  return null;
+}
+
+/** اعتبارسنجی کامل بودن داده پشتیبان برای restore */
+function validateBackupPayload(d){
+  if(!d || typeof d !== 'object' || Array.isArray(d)) return { ok: false, reason: 'ساختار داده نامعتبر است' };
+  // حداقل یکی از فیلدهای اصلی باید وجود داشته باشد
+  const hasAssets = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
+  const hasTxs = Array.isArray(d.txs);
+  const hasHistory = Array.isArray(d.history);
+  const hasLogs = Array.isArray(d.logs);
+  const hasNotebook = Array.isArray(d.notebook);
+  if(!hasAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook){
+    return { ok: false, reason: 'پشتیبان خالی یا ناقص است (بدون دارایی/تراکنش/تاریخچه)' };
+  }
+  // جلوگیری از envelope رمزشدهٔ خام به‌عنوان payload
+  if(d.enc === true || d.magic === BACKUP_MAGIC || d.ct || d.iv){
+    return { ok: false, reason: 'فرمت پشتیبان خودکار با دادهٔ رمزشده سازگار نیست' };
+  }
+  return { ok: true };
+}
+
+/**
+ * بازگردانی کامل state از payload پشتیبان خودکار
+ * همان الگوی import دستی — جایگزینی تمیز، بدون duplicate
+ */
+function applyAutoBackupPayload(d){
+  if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
+    assets = Object.assign({}, assets, d.assets);
+    Object.keys(assets).forEach(function(k){ assets[k] = safeNum(assets[k], 0); });
+  }
+  logs = Array.isArray(d.logs) ? d.logs : [];
+  txs = Array.isArray(d.txs) ? d.txs : [];
+  history = Array.isArray(d.history) ? d.history : [];
+  noncash = Array.isArray(d.noncash) ? d.noncash : [];
+  netSeries = Array.isArray(d.netSeries) ? d.netSeries : [];
+  notebook = Array.isArray(d.notebook) ? d.notebook : [];
+  fcEvents = Array.isArray(d.fcEvents) ? d.fcEvents.filter(function(e){
+    return e && (e.type === 'payment' || e.type === 'deposit') &&
+      safeNum(e.amount) > 0 && e.date;
+  }).map(function(e){
+    return {
+      id: e.id, type: e.type, amount: safeNum(e.amount),
+      date: String(e.date).slice(0,10), time: e.time || ''
+    };
+  }) : [];
+  fcSnapshots = Array.isArray(d.fcSnapshots) ? d.fcSnapshots : [];
+  milestonesClaimed = (d.milestonesClaimed && typeof d.milestonesClaimed === 'object' && !Array.isArray(d.milestonesClaimed))
+    ? d.milestonesClaimed : {};
+  notes = Array.isArray(d.notes) ? d.notes : [];
+  financialGoals = Array.isArray(d.financialGoals) ? d.financialGoals.map(function(g){
+    return {
+      id: g.id,
+      title: String(g.title || '').slice(0, 80),
+      targetAmount: Math.max(0, safeNum(g.targetAmount, 0)),
+      deadline: g.deadline ? String(g.deadline).slice(0, 10) : null,
+      createdAt: g.createdAt || Date.now(),
+      updatedAt: g.updatedAt || Date.now()
+    };
+  }) : [];
+  bankCards = Array.isArray(d.bankCards) ? d.bankCards.filter(function(c){ return c && c.id != null; }).map(function(c){
+    return {
+      id: c.id,
+      name: String(c.name || '').slice(0, 40),
+      last4: String(c.last4 || '').replace(/\D/g, '').slice(-4),
+      color: String(c.color || (typeof BC_COLORS !== 'undefined' ? BC_COLORS[0] : '#3b82f6')),
+      balance: safeNum(c.balance, 0),
+      isDefault: !!c.isDefault
+    };
+  }) : [];
+  if(typeof ensureDefaultBankCard === 'function') ensureDefaultBankCard();
+  if(d.ownerProfile && typeof d.ownerProfile === 'object' && !Array.isArray(d.ownerProfile)){
+    ownerProfile = {
+      name: String(d.ownerProfile.name || '').slice(0, 60),
+      username: String(d.ownerProfile.username || '').slice(0, 32),
+      avatar: (typeof d.ownerProfile.avatar === 'string' && d.ownerProfile.avatar.indexOf('data:image/') === 0) ? d.ownerProfile.avatar : ''
+    };
+  }
+  if(Array.isArray(d.budgets)){
+    budgets = d.budgets.filter(function(b){ return b && b.category; }).map(function(b){
+      return {
+        id: b.id || ('b_' + Date.now()),
+        category: String(b.category || '').slice(0, 40),
+        limit: safeNum(b.limit, 0)
+      };
+    });
+  }
+  if(Array.isArray(d.assetDefs) && d.assetDefs.length) ASSET_DEFS = d.assetDefs;
+  if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
+  if(typeof initMilestonesBaseline === 'function') initMilestonesBaseline();
+  if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
+}
+
+async function restoreLatestAutoBackup(){
+  let row = null;
+  try{
+    row = await getLatestAutoBackup();
+  }catch(e){
+    console.error('getLatestAutoBackup', e);
+    if(typeof showToast === 'function') showToast('خطا در خواندن پشتیبان‌های خودکار', true);
+    return;
+  }
+  if(!row || !row.data){
+    if(typeof showToast === 'function') showToast('پشتیبان خودکار معتبری یافت نشد', true);
+    return;
+  }
+  const check = validateBackupPayload(row.data);
+  if(!check.ok){
+    if(typeof showToast === 'function') showToast(check.reason || 'پشتیبان نامعتبر است', true);
+    return;
+  }
+  let when = 'نامشخص';
+  try{
+    when = row.ts ? new Date(row.ts).toLocaleString('fa-IR') : when;
+  }catch(e){}
+  const doRestore = function(){
+    try{
+      applyAutoBackupPayload(row.data);
+      if(typeof persist === 'function') persist();
+      if(typeof render === 'function') render();
+      if(typeof renderForecast === 'function') renderForecast();
+      if(typeof showToast === 'function') showToast('بازگردانی از پشتیبان خودکار انجام شد');
+      updateAutoBackupStatusUI();
+    }catch(err){
+      console.error('restore auto backup', err);
+      if(typeof showToast === 'function') showToast('خطا در بازگردانی پشتیبان', true);
+    }
+  };
+  if(typeof showConfirmModal === 'function'){
+    showConfirmModal(
+      'بازگردانی آخرین پشتیبان خودکار؟',
+      'آخرین پشتیبان: ' + when + '\nداده‌های فعلی با این نسخه جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
+      doRestore,
+      'بازگردانی'
+    );
+  } else if(window.confirm('بازگردانی آخرین پشتیبان خودکار (' + when + ')؟')){
+    doRestore();
+  }
+}
 async function runAutoBackupIfDue(){
   const cfg = loadAutoBackupCfg();
   updateAutoBackupStatusUI(cfg);
@@ -726,29 +900,51 @@ async function runAutoBackupIfDue(){
     updateAutoBackupStatusUI(cfg);
   }catch(e){ console.error('auto backup', e); }
 }
+/* note: updateAutoBackupStatusUI also refreshes latest-backup meta from IDB */
 function updateAutoBackupStatusUI(cfg){
   cfg = cfg || loadAutoBackupCfg();
   const el = document.getElementById('autoBackupStatus');
   const tog = document.getElementById('autoBackupToggle');
   const sel = document.getElementById('autoBackupInterval');
+  const meta = document.getElementById('autoBackupLatestMeta');
   if(tog) tog.checked = !!cfg.enabled;
   if(sel) sel.value = cfg.interval === 'daily' ? 'daily' : 'weekly';
-  if(!el) return;
-  if(!cfg.enabled){
-    el.textContent = 'وضعیت: غیرفعال';
-    return;
+  if(el){
+    if(!cfg.enabled){
+      el.textContent = 'وضعیت: غیرفعال';
+    } else {
+      let last = 'هنوز اجرا نشده';
+      if(cfg.lastRun){
+        try{ last = new Date(cfg.lastRun).toLocaleString('fa-IR'); }catch(e){}
+      }
+      el.textContent = 'وضعیت: فعال · بازه: ' + (cfg.interval === 'daily' ? 'روزانه' : 'هفتگی') + ' · آخرین اجرا: ' + last;
+    }
   }
-  let last = 'هنوز اجرا نشده';
-  if(cfg.lastRun){
-    try{ last = new Date(cfg.lastRun).toLocaleString('fa-IR'); }catch(e){}
+  // متادیتای آخرین پشتیبان ذخیره‌شده در IndexedDB (برای UI بازیابی)
+  if(meta){
+    meta.textContent = 'در حال بررسی پشتیبان‌های محلی…';
+    listAutoBackups().then(function(rows){
+      const valid = (rows || []).filter(function(r){
+        return r && r.data && typeof r.data === 'object' && !Array.isArray(r.data);
+      });
+      if(!valid.length){
+        meta.textContent = 'آخرین پشتیبان خودکار: موجود نیست';
+        return;
+      }
+      let when = 'نامشخص';
+      try{ when = valid[0].ts ? new Date(valid[0].ts).toLocaleString('fa-IR') : when; }catch(e){}
+      meta.textContent = 'آخرین پشتیبان خودکار: ' + when + ' (' + valid.length + ' نسخه)';
+    }).catch(function(){
+      meta.textContent = 'آخرین پشتیبان خودکار: قابل خواندن نیست';
+    });
   }
-  el.textContent = 'وضعیت: فعال · بازه: ' + (cfg.interval === 'daily' ? 'روزانه' : 'هفتگی') + ' · آخرین اجرا: ' + last;
 }
 function bindAutoBackupUI(){
   if(window.__autoBackupBound) return;
   window.__autoBackupBound = true;
   const tog = document.getElementById('autoBackupToggle');
   const sel = document.getElementById('autoBackupInterval');
+  const restoreBtn = document.getElementById('autoBackupRestoreBtn');
   function persistCfg(){
     const cfg = loadAutoBackupCfg();
     cfg.enabled = !!(tog && tog.checked);
@@ -759,6 +955,11 @@ function bindAutoBackupUI(){
   }
   if(tog) tog.addEventListener('change', persistCfg);
   if(sel) sel.addEventListener('change', persistCfg);
+  if(restoreBtn){
+    restoreBtn.addEventListener('click', function(){
+      restoreLatestAutoBackup();
+    });
+  }
   updateAutoBackupStatusUI();
 }
 // init after DOM

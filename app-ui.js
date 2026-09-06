@@ -613,8 +613,24 @@ function renderTxs(){
     const d = safeNum(t.delta);
     const pos = d >= 0;
     const note = t.note || '—';
-    return `<div class="log-item"><span class="d">${toJalaliStr(t.date)||'—'}</span><span class="n">${note}</span><span class="p ${pos?'':'neg'}">${pos?'+':''}${fmt(d)} ت</span></div>`;
+    // متن داخل .n-track برای marquee فقط در صورت overflow
+    return `<div class="log-item"><span class="d">${toJalaliStr(t.date)||'—'}</span><span class="n"><span class="n-track">${note}</span></span><span class="p ${pos?'':'neg'}">${pos?'+':''}${fmt(d)} ت</span></div>`;
   }).join('');
+  // فعال‌سازی animation فقط برای متن‌های واقعاً overflow
+  requestAnimationFrame(function(){
+    el.querySelectorAll('.log-item .n').forEach(function(nEl){
+      const track = nEl.querySelector('.n-track');
+      if(!track) return;
+      nEl.classList.remove('is-overflow');
+      // reset transform for accurate measure
+      track.style.removeProperty('--marquee-distance');
+      if(track.scrollWidth > nEl.clientWidth + 2){
+        nEl.classList.add('is-overflow');
+        const dist = Math.max(0, track.scrollWidth - nEl.clientWidth);
+        track.style.setProperty('--marquee-distance', dist + 'px');
+      }
+    });
+  });
 }
 
 function updateTxFilterCounts(){
@@ -3223,10 +3239,38 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
 });
 
 $('snapshotBtn').addEventListener('click', ()=>{
-  const date = todayISO();
-  history = history.filter(h=>h.date !== date);
-  history.push({date, total: computeTotal()});
-  if(persist()){ showToast('نقطه امروز ثبت شد'); render(); }
+  try{
+    // تاریخ امروز محلی (YYYY-MM-DD) — بدون وابستگی به timezone UTC
+    const date = (typeof todayISO === 'function') ? todayISO() : (function(){
+      const d = new Date();
+      const p = function(n){ return String(n).padStart(2,'0'); };
+      return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+    })();
+    if(!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      showToast('خطا در تشخیص تاریخ امروز', true);
+      return;
+    }
+    if(!Array.isArray(history)) history = [];
+    // حذف رکورد هم‌تاریخ (جلوگیری از duplicate روی Refresh/کلیک مکرر)
+    const before = history.length;
+    history = history.filter(function(h){
+      if(!h || h.date == null) return true;
+      return String(h.date).slice(0, 10) !== date;
+    });
+    const total = (typeof computeTotal === 'function') ? computeTotal() : 0;
+    const totalNum = (typeof safeNum === 'function') ? safeNum(total, 0) : (Number(total) || 0);
+    history.push({ date: date, total: totalNum });
+    if(typeof persist === 'function' && persist()){
+      showToast(before !== history.length - 1 ? 'وضعیت امروز به‌روز شد' : 'نقطه امروز ثبت شد');
+      if(typeof render === 'function') render();
+      else if(typeof renderHistory === 'function') renderHistory();
+    } else {
+      showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
+    }
+  }catch(err){
+    console.error('snapshotBtn', err);
+    showToast('خطا در ثبت وضعیت امروز', true);
+  }
 });
 
 $('exportBtn').addEventListener('click', async ()=>{

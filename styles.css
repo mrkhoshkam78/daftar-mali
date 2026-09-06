@@ -1862,9 +1862,38 @@ html[data-design="classic"] #nbList .nb-day-head{border-radius:0 !important; bac
   .log-item .d{color:var(--ink-dim); font-family:'Martian Mono',monospace; direction:ltr; flex-shrink:0;}
   .log-item .p{font-family:'Martian Mono',monospace; direction:ltr; color:var(--green); font-weight:600;}
   .log-item .p.neg{color:var(--red);}
-  .log-item .n{flex:1; color:var(--ink-dim); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .log-item .n{flex:1; min-width:0; color:var(--ink-dim); font-size:11.5px; overflow:hidden; white-space:nowrap; position:relative;}
+  .log-item .n .n-track{display:inline-block; max-width:100%; vertical-align:bottom;}
+  /* marquee فقط وقتی JS کلاس is-overflow را بگذارد — بدون loop آزاردهنده */
+  .log-item .n.is-overflow .n-track{
+    max-width:none;
+    padding-inline-end:1.5em;
+    animation: hist-marquee 6s ease-in-out 1s infinite alternate;
+  }
+  .log-item .n.is-overflow:hover .n-track,
+  .log-item .n.is-overflow:focus-within .n-track{
+    animation-play-state: paused;
+  }
+  @keyframes hist-marquee{
+    0%, 12%{ transform: translateX(0); }
+    88%, 100%{ transform: translateX(calc(-1 * var(--marquee-distance, 0px))); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .log-item .n.is-overflow .n-track{
+      animation: none !important;
+      max-width:100%;
+      white-space:normal;
+      overflow:visible;
+      word-break:break-word;
+    }
+    .log-item .n.is-overflow{
+      white-space:normal;
+      overflow:visible;
+    }
+  }
   #nbList .log-item{flex-wrap:wrap; align-items:flex-start;}
   #nbList .log-item .n{white-space:normal; overflow:visible; text-overflow:unset; word-break:break-word; flex-basis:100%; order:3; margin-top:2px;}
+  #nbList .log-item .n .n-track{max-width:none; animation:none !important; white-space:normal;}
 
   .loan-remain{
     background:var(--blue-soft); border:1px solid var(--border-strong);
@@ -7993,7 +8022,10 @@ html[data-design="editorial-finance"] #page-history #txList .log-item .n{
   color:var(--ink);
   white-space:nowrap;
   overflow:hidden;
-  text-overflow:ellipsis;
+  min-width:0;
+}
+html[data-design="editorial-finance"] #page-history #txList .log-item .n.is-overflow .n-track{
+  animation: hist-marquee 6s ease-in-out 1s infinite alternate;
 }
 html[data-design="editorial-finance"] #page-history #txList .log-item .p{
   font-size:14px;
