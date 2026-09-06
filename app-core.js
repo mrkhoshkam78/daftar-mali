@@ -785,11 +785,18 @@ document.addEventListener('keydown', (e)=>{
 /* --- UI chrome (toast, confirm) --- */
 function showToast(msg, isErr){
   const t = $('toast');
+  if(!t) return;
+  if(t._hideTimer){ clearTimeout(t._hideTimer); t._hideTimer = null; }
   t.textContent = msg;
   t.classList.toggle('err', !!isErr);
+  // force reflow so re-show animates even if already visible
+  t.classList.remove('show');
+  void t.offsetWidth;
   t.classList.add('show');
-  if(t._hideTimer) clearTimeout(t._hideTimer);
-  t._hideTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+  t._hideTimer = setTimeout(()=>{
+    t.classList.remove('show');
+    t._hideTimer = null;
+  }, 2200);
 }
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
@@ -1188,11 +1195,17 @@ function initMilestonesBaseline(){
 function showMilestoneCelebration(name, amount){
   const el = $('msToast');
   if(!el) return;
+  if(el._hideTimer){ clearTimeout(el._hideTimer); el._hideTimer = null; }
   $('msTitle').textContent = 'هدف محقق شد';
   $('msName').textContent = name || 'سرمایه‌گذاری';
   $('msAmt').textContent = fmt(amount) + ' ت';
+  el.classList.remove('show');
+  void el.offsetWidth;
   el.classList.add('show');
-  setTimeout(()=> el.classList.remove('show'), 4000);
+  el._hideTimer = setTimeout(()=>{
+    el.classList.remove('show');
+    el._hideTimer = null;
+  }, 4000);
 }
 
 function checkMilestones(key, prevVal, newVal){

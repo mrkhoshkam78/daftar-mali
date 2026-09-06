@@ -7037,7 +7037,7 @@ html[data-design="editorial-finance"] .note-modal-box,
 html[data-design="editorial-finance"] .lock-box{
   animation: efScaleIn .3s cubic-bezier(.22,.8,.25,1) both;
 }
-html[data-design="editorial-finance"] .toast{
+html[data-design="editorial-finance"] .toast.show{
   animation: efFadeUp .28s ease both;
 }
 
@@ -7086,4 +7086,186 @@ html[data-design="editorial-finance"][data-anim="off"] .ef-wave-b,
 html[data-design="editorial-finance"][data-anim="off"] .ef-blob-1,
 html[data-design="editorial-finance"][data-anim="off"] .ef-blob-2{
   animation:none !important;
+}
+
+/* =========================================================
+   Editorial Finance — Responsive + Notes/Transactions polish
+   (scoped only to data-design="editorial-finance")
+   ========================================================= */
+
+/* Prevent horizontal overflow */
+html[data-design="editorial-finance"] .content,
+html[data-design="editorial-finance"] .page,
+html[data-design="editorial-finance"] .section,
+html[data-design="editorial-finance"] .notes-shell,
+html[data-design="editorial-finance"] .notes-toolbar,
+html[data-design="editorial-finance"] #page-notebook {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+html[data-design="editorial-finance"] .notes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+html[data-design="editorial-finance"] .notes-search-wrap {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+html[data-design="editorial-finance"] .notes-search {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+html[data-design="editorial-finance"] .notes-view-toggle,
+html[data-design="editorial-finance"] .notes-layout-toggle {
+  flex-shrink: 0;
+}
+html[data-design="editorial-finance"] .notes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+html[data-design="editorial-finance"] .note-card {
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--blue) 6%, transparent);
+  padding: 14px 16px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+html[data-design="editorial-finance"] .note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+html[data-design="editorial-finance"] .notes-cats,
+html[data-design="editorial-finance"] .notes-tags-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+html[data-design="editorial-finance"] .notes-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+}
+
+/* Transactions / notebook feed polish */
+html[data-design="editorial-finance"] #page-notebook .nb-feed-card,
+html[data-design="editorial-finance"] #page-notebook .nb-item {
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--blue) 5%, transparent);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+html[data-design="editorial-finance"] #page-notebook .nb-feed-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+html[data-design="editorial-finance"] #page-notebook .nb-day-head {
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+/* Tables / forms / cards stay fluid */
+html[data-design="editorial-finance"] table,
+html[data-design="editorial-finance"] .log-list,
+html[data-design="editorial-finance"] .asset-list {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+html[data-design="editorial-finance"] .btn {
+  max-width: 100%;
+}
+
+/* Mobile-first breakpoints for EF */
+@media (max-width: 640px) {
+  html[data-design="editorial-finance"] .topbar {
+    padding-inline: 10px;
+  }
+  html[data-design="editorial-finance"] .content {
+    padding-inline: 12px;
+  }
+  html[data-design="editorial-finance"] .hero {
+    padding: 18px 16px;
+  }
+  html[data-design="editorial-finance"] .hero .total,
+  html[data-design="editorial-finance"] #totalNet {
+    font-size: clamp(22px, 7vw, 32px);
+  }
+  html[data-design="editorial-finance"] .notes-toolbar {
+    gap: 6px;
+  }
+  html[data-design="editorial-finance"] .notes-sort,
+  html[data-design="editorial-finance"] .notes-view-toggle button,
+  html[data-design="editorial-finance"] .notes-layout-toggle button {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  html[data-design="editorial-finance"] .design-switcher {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  html[data-design="editorial-finance"] .theme-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  html[data-design="editorial-finance"] .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  html[data-design="editorial-finance"] .section-title {
+    font-size: 15px;
+  }
+  html[data-design="editorial-finance"] .donut-wrap {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  html[data-design="editorial-finance"] .notes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-design="editorial-finance"] .theme-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 901px) {
+  html[data-design="editorial-finance"] .notes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-design="editorial-finance"] .content {
+    max-width: 920px;
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  html[data-design="editorial-finance"] .notes-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  html[data-design="editorial-finance"] .content {
+    max-width: 1080px;
+  }
+}
+
+/* Ensure live-dot and section dots do not create stray fixed green artifacts */
+html[data-design="editorial-finance"] .live-dot {
+  background: var(--blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 20%, transparent);
+}
+html[data-design="editorial-finance"] .section-title .dot {
+  background: var(--blue);
+}
+
+/* Toast exit remains transition-based (animation only on enter via .show) */
+html[data-design="editorial-finance"] .toast {
+  transition: opacity .28s ease, transform .28s ease;
+}
+html[data-design="editorial-finance"] .ms-toast {
+  transition: opacity .28s ease, transform .28s ease;
 }
