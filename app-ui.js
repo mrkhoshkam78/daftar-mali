@@ -3790,6 +3790,7 @@ function renderEditorialDashPersonal(){
   try{ isEf = document.documentElement.getAttribute('data-design') === 'editorial-finance'; }catch(e){}
   root.hidden = !isEf;
   if(!isEf) return;
+  try{ root.classList.add('in-view'); }catch(e){}
 
   var name = 'مالک پنل';
   try{

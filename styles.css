@@ -5755,9 +5755,11 @@ html[data-design="editorial-finance"] body{
     radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--blue) 16%, transparent), transparent 60%),
     radial-gradient(900px 500px at 100% 0%, color-mix(in srgb, var(--blue-light) 12%, transparent), transparent 55%),
     var(--bg);
+  padding-bottom:calc(72px + env(safe-area-inset-bottom, 0px));
 }
 /* محتوا بالای لایه تزئینی — بدون شکستن sticky/fixed منو */
 html[data-design="editorial-finance"] .layout,
+html[data-design="editorial-finance"] .main,
 html[data-design="editorial-finance"] .content{
   position:relative;
   z-index:1;
@@ -5860,9 +5862,14 @@ html[data-design="editorial-finance"] .topbar{
   border-bottom:1px solid color-mix(in srgb, var(--border) 80%, transparent);
   box-shadow:0 10px 30px color-mix(in srgb, var(--blue) 8%, transparent);
 }
-html[data-design="editorial-finance"] .hamburger-btn{
+html[data-design="editorial-finance"] .hamburger-btn,
+html[data-design="editorial-finance"] .theme-dn-btn{
   border-radius:12px;
   flex-shrink:0;
+}
+html[data-design="editorial-finance"] .topbar-date{
+  min-width:0;
+  overflow:hidden;
 }
 html[data-design="editorial-finance"] .topbar-main{
   min-width:0;
@@ -5875,8 +5882,11 @@ html[data-design="editorial-finance"] .topbar .brand-title{
 }
 
 /* Content spacing + soft shells */
+html[data-design="editorial-finance"] .main,
 html[data-design="editorial-finance"] .content{
   padding-top:8px;
+  padding-bottom:16px;
+  min-width:0;
 }
 html[data-design="editorial-finance"] .section,
 html[data-design="editorial-finance"] .hero,
@@ -5982,13 +5992,14 @@ html[data-design="editorial-finance"] .btn.ghost{
 
 /* Bottom nav — بدون تغییر position پایه */
 html[data-design="editorial-finance"] .bottom-nav{
+  display:flex;
   background:color-mix(in srgb, var(--card) 90%, transparent);
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
   border-top:1px solid color-mix(in srgb, var(--border) 85%, transparent);
   box-shadow:0 -10px 28px color-mix(in srgb, var(--blue) 10%, transparent);
   border-radius:18px 18px 0 0;
-  z-index:50;
+  z-index:55;
 }
 html[data-design="editorial-finance"] .bn-item.active{
   color:var(--blue);
@@ -6028,7 +6039,6 @@ html[data-design="editorial-finance"] .lock-box{
   border-radius:24px;
   box-shadow:0 24px 60px color-mix(in srgb, var(--blue) 18%, rgba(0,0,0,.25));
   border:1px solid color-mix(in srgb, var(--border) 90%, transparent);
-  animation: efRise .28s ease both;
 }
 
 /* Inputs */
@@ -6074,6 +6084,30 @@ html[data-design="editorial-finance"] .side-drawer .menu-item.active{
 html[data-design="editorial-finance"] body.menu-open{
   overflow:hidden;
 }
+html[data-design="editorial-finance"] .side-drawer{
+  overflow:hidden;
+}
+html[data-design="editorial-finance"] .side-drawer-nav{
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+html[data-design="editorial-finance"] .page,
+html[data-design="editorial-finance"] .section,
+html[data-design="editorial-finance"] .asset-card,
+html[data-design="editorial-finance"] .layout,
+html[data-design="editorial-finance"] .main{
+  min-width:0;
+  max-width:100%;
+}
+html[data-design="editorial-finance"] .grid2{
+  min-width:0;
+}
+@media (max-width:420px){
+  html[data-design="editorial-finance"] .grid2{
+    grid-template-columns:1fr;
+  }
+}
 
 /* Mobile editorial */
 @media (max-width:640px){
@@ -6082,8 +6116,10 @@ html[data-design="editorial-finance"] body.menu-open{
     border-radius:20px;
   }
   html[data-design="editorial-finance"] .hero .total,
-  html[data-design="editorial-finance"] #totalNet{
-    font-size:clamp(32px, 11vw, 44px) !important;
+  html[data-design="editorial-finance"] #totalNet,
+  html[data-design="editorial-finance"] #page-dashboard #totalNet,
+  html[data-design="editorial-finance"] #page-dashboard .hero-num{
+    font-size:clamp(28px, 10vw, 40px) !important;
   }
   html[data-design="editorial-finance"] .section,
   html[data-design="editorial-finance"] .asset-card,
@@ -6095,9 +6131,6 @@ html[data-design="editorial-finance"] body.menu-open{
   html[data-design="editorial-finance"] .ef-blob-1{ width:180px; height:180px; opacity:.14; }
   html[data-design="editorial-finance"] .ef-blob-2{ width:150px; height:150px; opacity:.12; }
   html[data-design="editorial-finance"] .ef-wave{ height:28vh; opacity:.1; }
-  html[data-design="editorial-finance"] .content{
-    padding-bottom:88px;
-  }
 }
 
 /* Desktop asymmetry */
@@ -6105,9 +6138,8 @@ html[data-design="editorial-finance"] body.menu-open{
   html[data-design="editorial-finance"] #page-dashboard .hero{
     max-width:92%;
   }
-  html[data-design="editorial-finance"] #page-dashboard .section:nth-of-type(2){
-    margin-inline-start:auto;
-    width:min(100%, 940px);
+  html[data-design="editorial-finance"] #page-dashboard .dash-metrics{
+    max-width:96%;
   }
 }
 
@@ -6365,13 +6397,16 @@ html[data-design="editorial-finance"] #page-dashboard .trend-tabs{
   padding:4px;
   border-radius:999px;
   background:color-mix(in srgb, var(--bg) 55%, transparent);
-  width:fit-content;
+  width:100%;
+  max-width:100%;
 }
 html[data-design="editorial-finance"] #page-dashboard .trend-tab{
   border-radius:999px;
   border:none;
   padding:8px 12px;
   font-weight:700;
+  flex:1 1 auto;
+  min-width:0;
 }
 html[data-design="editorial-finance"] #page-dashboard .trend-tab.active{
   background:var(--blue);
@@ -6397,14 +6432,17 @@ html[data-design="editorial-finance"] #page-assets .section{
   padding:16px;
 }
 html[data-design="editorial-finance"] #page-assets .asset-grid,
-html[data-design="editorial-finance"] #page-assets #assetGrid{
-  display:grid !important;
+html[data-design="editorial-finance"] #page-assets #assetGrid,
+html[data-design="editorial-finance"] #page-assets #assetCards{
+  display:grid;
   grid-template-columns:1fr;
   gap:12px;
+  min-width:0;
 }
 @media (min-width:640px){
   html[data-design="editorial-finance"] #page-assets .asset-grid,
-  html[data-design="editorial-finance"] #page-assets #assetGrid{
+  html[data-design="editorial-finance"] #page-assets #assetGrid,
+  html[data-design="editorial-finance"] #page-assets #assetCards{
     grid-template-columns:1fr 1fr;
   }
 }
@@ -6491,8 +6529,8 @@ html[data-design="editorial-finance"] #page-snapp #logList{
   margin-top:14px;
 }
 html[data-design="editorial-finance"] #page-snapp #logList .log-item{
-  display:grid;
-  grid-template-columns:1fr auto auto;
+  display:flex;
+  flex-wrap:nowrap;
   gap:10px;
   align-items:center;
   padding:12px 14px;
@@ -6500,6 +6538,7 @@ html[data-design="editorial-finance"] #page-snapp #logList .log-item{
   border-radius:16px;
   background:color-mix(in srgb, var(--card) 94%, transparent);
   border-bottom:1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  min-width:0;
 }
 html[data-design="editorial-finance"] #page-snapp #logList .log-item .p{
   font-weight:900;
@@ -6627,7 +6666,8 @@ html[data-design="editorial-finance"] #page-history .net-hist-total{
   html[data-design="editorial-finance"] #page-dashboard .hero{ border-radius:22px; padding:20px 16px; }
   html[data-design="editorial-finance"] #page-dashboard #legendList{ grid-template-columns:1fr; }
   html[data-design="editorial-finance"] #page-assets .asset-grid,
-  html[data-design="editorial-finance"] #page-assets #assetGrid{ grid-template-columns:1fr; }
+  html[data-design="editorial-finance"] #page-assets #assetGrid,
+  html[data-design="editorial-finance"] #page-assets #assetCards{ grid-template-columns:1fr; }
 }
 
 /* =========================================================
@@ -6636,8 +6676,11 @@ html[data-design="editorial-finance"] #page-history .net-hist-total{
 html:not([data-design="editorial-finance"]) #efDashPersonal{
   display:none !important;
 }
-html[data-design="editorial-finance"] #efDashPersonal{
+html[data-design="editorial-finance"] #efDashPersonal,
+html[data-design="editorial-finance"] #efDashPersonal.reveal{
   display:block;
+  opacity:1;
+  transform:none;
   margin:0 0 14px;
   padding:18px 18px 16px;
   border-radius:28px;
@@ -6649,6 +6692,9 @@ html[data-design="editorial-finance"] #efDashPersonal{
       var(--card) 55%,
       color-mix(in srgb, var(--card) 92%, var(--blue-light) 8%) 100%);
   box-shadow:0 20px 48px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+html[data-design="editorial-finance"] #efDashPersonal[hidden]{
+  display:none;
 }
 html[data-design="editorial-finance"] .ef-dash-greet{
   font-size:12px;
@@ -6972,37 +7018,7 @@ html[data-design="editorial-finance"] .page.active > *:nth-child(7){ animation-d
 html[data-design="editorial-finance"] .page.active > *:nth-child(8){ animation-delay:.30s; }
 html[data-design="editorial-finance"] .page.active > *:nth-child(n+9){ animation-delay:.34s; }
 
-/* Cards / list items soft appear */
-html[data-design="editorial-finance"] .page.active .asset-card,
-html[data-design="editorial-finance"] .page.active .goal-card,
-html[data-design="editorial-finance"] .page.active .budget-card,
-html[data-design="editorial-finance"] .page.active .note-card,
-html[data-design="editorial-finance"] .page.active .nb-feed-card,
-html[data-design="editorial-finance"] .page.active .nc-item,
-html[data-design="editorial-finance"] .page.active .nc-card,
-html[data-design="editorial-finance"] .page.active .log-item,
-html[data-design="editorial-finance"] .page.active .net-hist-item,
-html[data-design="editorial-finance"] .page.active .hist-filter,
-html[data-design="editorial-finance"] .page.active .loan-item,
-html[data-design="editorial-finance"] .page.active .ef-dash-chip{
-  animation: efScaleIn .4s cubic-bezier(.22,.8,.25,1) both;
-}
-html[data-design="editorial-finance"] .page.active .asset-card:nth-child(1),
-html[data-design="editorial-finance"] .page.active .goal-card:nth-child(1),
-html[data-design="editorial-finance"] .page.active .budget-card:nth-child(1),
-html[data-design="editorial-finance"] .page.active .note-card:nth-child(1){ animation-delay:.08s; }
-html[data-design="editorial-finance"] .page.active .asset-card:nth-child(2),
-html[data-design="editorial-finance"] .page.active .goal-card:nth-child(2),
-html[data-design="editorial-finance"] .page.active .budget-card:nth-child(2),
-html[data-design="editorial-finance"] .page.active .note-card:nth-child(2){ animation-delay:.12s; }
-html[data-design="editorial-finance"] .page.active .asset-card:nth-child(3),
-html[data-design="editorial-finance"] .page.active .goal-card:nth-child(3),
-html[data-design="editorial-finance"] .page.active .budget-card:nth-child(3),
-html[data-design="editorial-finance"] .page.active .note-card:nth-child(3){ animation-delay:.16s; }
-html[data-design="editorial-finance"] .page.active .asset-card:nth-child(n+4),
-html[data-design="editorial-finance"] .page.active .goal-card:nth-child(n+4),
-html[data-design="editorial-finance"] .page.active .budget-card:nth-child(n+4),
-html[data-design="editorial-finance"] .page.active .note-card:nth-child(n+4){ animation-delay:.2s; }
+/* Nested list/card enter: only first paint of a page, not every innerHTML refresh */
 
 /* Interactive micro-motion */
 html[data-design="editorial-finance"] .btn:not(.ghost){
@@ -7032,13 +7048,23 @@ html[data-design="editorial-finance"] .nb-feed-card{
 }
 
 /* Modal / toast motion */
-html[data-design="editorial-finance"] .confirm-box,
-html[data-design="editorial-finance"] .note-modal-box,
-html[data-design="editorial-finance"] .lock-box{
+html[data-design="editorial-finance"] .confirm-modal[style*="flex"] .confirm-box,
+html[data-design="editorial-finance"] .note-modal.open .note-modal-box,
+html[data-design="editorial-finance"] .lock-screen:not([style*="none"]) .lock-box{
   animation: efScaleIn .3s cubic-bezier(.22,.8,.25,1) both;
 }
+html[data-design="editorial-finance"] .toast{
+  z-index:90;
+  left:50%;
+  right:auto;
+  bottom:calc(88px + env(safe-area-inset-bottom, 0px));
+  transform:translateX(-50%);
+}
 html[data-design="editorial-finance"] .toast.show{
-  animation: efFadeUp .28s ease both;
+  transform:translateX(-50%) translateY(-6px);
+}
+html[data-design="editorial-finance"] .ms-toast{
+  z-index:90;
 }
 
 /* Bottom nav / topbar soft */
@@ -7123,9 +7149,12 @@ html[data-design="editorial-finance"] .notes-layout-toggle {
   flex-shrink: 0;
 }
 html[data-design="editorial-finance"] .notes-grid {
+  gap: 12px;
+  min-width: 0;
+}
+html[data-design="editorial-finance"] .notes-grid:not(.notes-layout-vertical):not(.notes-layout-horizontal) {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
 }
 html[data-design="editorial-finance"] .note-card {
   border-radius: 18px;
@@ -7187,6 +7216,7 @@ html[data-design="editorial-finance"] .btn {
   html[data-design="editorial-finance"] .topbar {
     padding-inline: 10px;
   }
+  html[data-design="editorial-finance"] .main,
   html[data-design="editorial-finance"] .content {
     padding-inline: 12px;
   }
@@ -7194,8 +7224,10 @@ html[data-design="editorial-finance"] .btn {
     padding: 18px 16px;
   }
   html[data-design="editorial-finance"] .hero .total,
-  html[data-design="editorial-finance"] #totalNet {
-    font-size: clamp(22px, 7vw, 32px);
+  html[data-design="editorial-finance"] #totalNet,
+  html[data-design="editorial-finance"] #page-dashboard #totalNet,
+  html[data-design="editorial-finance"] #page-dashboard .hero-num {
+    font-size: clamp(28px, 10vw, 40px) !important;
   }
   html[data-design="editorial-finance"] .notes-toolbar {
     gap: 6px;
@@ -7214,7 +7246,7 @@ html[data-design="editorial-finance"] .btn {
     grid-template-columns: repeat(2, 1fr);
   }
   html[data-design="editorial-finance"] .bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   }
   html[data-design="editorial-finance"] .section-title {
     font-size: 15px;
@@ -7226,7 +7258,7 @@ html[data-design="editorial-finance"] .btn {
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
-  html[data-design="editorial-finance"] .notes-grid {
+  html[data-design="editorial-finance"] .notes-grid:not(.notes-layout-vertical) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   html[data-design="editorial-finance"] .theme-grid {
@@ -7235,21 +7267,14 @@ html[data-design="editorial-finance"] .btn {
 }
 
 @media (min-width: 901px) {
-  html[data-design="editorial-finance"] .notes-grid {
+  html[data-design="editorial-finance"] .notes-grid:not(.notes-layout-vertical) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  html[data-design="editorial-finance"] .content {
-    max-width: 920px;
-    margin-inline: auto;
   }
 }
 
 @media (min-width: 1200px) {
-  html[data-design="editorial-finance"] .notes-grid {
+  html[data-design="editorial-finance"] .notes-grid:not(.notes-layout-vertical) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  html[data-design="editorial-finance"] .content {
-    max-width: 1080px;
   }
 }
 

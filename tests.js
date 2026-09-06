@@ -119,7 +119,7 @@
   /* --- shell --- */
   test('design attribute preserved', function () {
     const d = document.documentElement.getAttribute('data-design');
-    assert(d === 'aurora' || d === 'neobank' || d === 'classic', 'valid design');
+    assert(d === 'aurora' || d === 'neobank' || d === 'classic' || d === 'editorial-finance', 'valid design');
   });
 
   /* --- runner --- */
