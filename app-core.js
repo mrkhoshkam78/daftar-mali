@@ -322,8 +322,6 @@ function applyDesign(d){
         try{ drawer.style[k] = ''; }catch(_e){}
       });
     }
-    var back = document.getElementById('menuBackdrop');
-    if(back){ back.style.left=''; back.style.right=''; }
   }catch(e){}
   try{ if(typeof renderEditorialDashPersonal === 'function') renderEditorialDashPersonal(); }catch(e){}
   try{ if(typeof closeMenu === 'function') closeMenu(); }catch(e){}
