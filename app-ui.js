@@ -23,6 +23,7 @@ function render(){
   if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
   if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
   if(typeof renderBudgets === 'function') renderBudgets();
+  try{ if(typeof renderEditorialDashPersonal === 'function') renderEditorialDashPersonal(); }catch(e){}
 }
 
 let selectedDonutKey = null;
@@ -3464,6 +3465,7 @@ function syncOwnerNameDependents(){
     // کارت‌های بانکی — فقط ownerName
     if(typeof renderBankCards === 'function') renderBankCards();
     if(typeof updateLastVisitUI === 'function') updateLastVisitUI();
+    if(typeof renderEditorialDashPersonal === 'function') renderEditorialDashPersonal();
   }catch(e){ console.error('syncOwnerNameDependents', e); }
 }
 function renderOwnerProfile(){
@@ -3777,4 +3779,73 @@ function bindBudgetUI(){
 if(typeof document !== 'undefined'){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindBudgetUI);
   else bindBudgetUI();
+}
+
+
+/* —— Editorial personalized dashboard (UI only) —— */
+function renderEditorialDashPersonal(){
+  var root = document.getElementById('efDashPersonal');
+  if(!root) return;
+  var isEf = false;
+  try{ isEf = document.documentElement.getAttribute('data-design') === 'editorial-finance'; }catch(e){}
+  root.hidden = !isEf;
+  if(!isEf) return;
+
+  var name = 'مالک پنل';
+  try{
+    if(typeof getOwnerDisplayName === 'function') name = getOwnerDisplayName() || name;
+  }catch(e){}
+
+  var hour = (new Date()).getHours();
+  var greet = 'سلام';
+  if(hour < 5) greet = 'شب بخیر';
+  else if(hour < 12) greet = 'صبح بخیر';
+  else if(hour < 18) greet = 'روز بخیر';
+  else greet = 'عصر بخیر';
+
+  var elG = document.getElementById('efDashGreet');
+  var elN = document.getElementById('efDashName');
+  var elT = document.getElementById('efDashTagline');
+  if(elG) elG.textContent = greet;
+  if(elN) elN.textContent = name;
+  if(elT) elT.textContent = 'داشبورد شخصی · خلاصه وضعیت مالی';
+
+  var chips = document.getElementById('efDashChips');
+  if(!chips) return;
+
+  var total = 0, cash = 0, invest = 0, goals = 0, budgetsN = 0;
+  try{ if(typeof computeTotal === 'function') total = computeTotal(); }catch(e){}
+  try{ if(typeof computeCash === 'function') cash = computeCash(); }catch(e){}
+  try{ if(typeof computeInvest === 'function') invest = computeInvest(); }catch(e){}
+  try{ if(typeof financialGoals !== 'undefined' && Array.isArray(financialGoals)) goals = financialGoals.length; }catch(e){}
+  try{ if(typeof budgets !== 'undefined' && Array.isArray(budgets)) budgetsN = budgets.length; }catch(e){}
+
+  var monthExp = 0, monthInc = 0;
+  try{
+    (typeof notebook !== 'undefined' && notebook || []).forEach(function(e){
+      if(!e) return;
+      if(typeof nbEntryInCurrentMonth === 'function' && !nbEntryInCurrentMonth(e)) return;
+      var a = (typeof safeNum === 'function') ? safeNum(e.amount, 0) : Number(e.amount)||0;
+      if(e.type === 'payment') monthExp += a;
+      if(e.type === 'deposit') monthInc += a;
+    });
+  }catch(e){}
+
+  function f(n){
+    try{ return (typeof fmt === 'function') ? fmt(n) : String(Math.round(n||0)); }
+    catch(e){ return '—'; }
+  }
+
+  var items = [
+    { k: 'نقد', v: f(cash) },
+    { k: 'سرمایه', v: f(invest) },
+    { k: 'خرج ماه', v: f(monthExp) },
+    { k: 'درآمد ماه', v: f(monthInc) }
+  ];
+  if(goals) items.push({ k: 'اهداف', v: String(goals) });
+  if(budgetsN) items.push({ k: 'بودجه', v: String(budgetsN) });
+
+  chips.innerHTML = items.map(function(it){
+    return '<div class="ef-dash-chip"><span class="ef-dash-chip-k">' + it.k + '</span><span class="ef-dash-chip-v">' + it.v + '</span></div>';
+  }).join('');
 }

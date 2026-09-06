@@ -323,6 +323,7 @@ function applyDesign(d){
       });
     }
   }catch(e){}
+  try{ if(typeof renderEditorialDashPersonal === 'function') renderEditorialDashPersonal(); }catch(e){}
   try{ if(typeof closeMenu === 'function') closeMenu(); }catch(e){}
   try{
     if(document.body){
