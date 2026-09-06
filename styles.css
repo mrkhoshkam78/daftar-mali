@@ -6749,3 +6749,341 @@ html[data-design="editorial-finance"] #page-dashboard #totalNet{
   font-weight:900 !important;
   letter-spacing:-.045em !important;
 }
+
+/* =========================================================
+   Editorial Finance — Site-wide Unification + Motion
+   All remaining pages + consistent language
+   ========================================================= */
+
+/* Global page shell */
+html[data-design="editorial-finance"] .page{
+  max-width:920px;
+  margin:0 auto;
+}
+html[data-design="editorial-finance"] .page .section-title{
+  font-size:1.12rem;
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+html[data-design="editorial-finance"] .page .section-sub{
+  font-size:12.5px;
+  line-height:1.55;
+  max-width:46ch;
+}
+html[data-design="editorial-finance"] .page .section,
+html[data-design="editorial-finance"] .page .notes-shell,
+html[data-design="editorial-finance"] .page .goal-card,
+html[data-design="editorial-finance"] .page .budget-card,
+html[data-design="editorial-finance"] .page .note-card,
+html[data-design="editorial-finance"] .page .ai-panel,
+html[data-design="editorial-finance"] .page .settings-stack > .section{
+  border-radius:22px;
+  border:1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background:color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow:0 14px 34px color-mix(in srgb, var(--blue) 9%, transparent);
+}
+html[data-design="editorial-finance"] .page .btn:not(.ghost){
+  border-radius:16px;
+  font-weight:800;
+  box-shadow:0 10px 22px color-mix(in srgb, var(--blue) 18%, transparent);
+}
+html[data-design="editorial-finance"] .page .btn.ghost{
+  border-radius:16px;
+}
+html[data-design="editorial-finance"] .page input,
+html[data-design="editorial-finance"] .page select,
+html[data-design="editorial-finance"] .page textarea{
+  border-radius:14px;
+}
+
+/* —— Goals —— */
+html[data-design="editorial-finance"] #page-goals .goals-cap-card,
+html[data-design="editorial-finance"] #page-goals .goal-card{
+  border-radius:22px;
+  padding:16px;
+  border:1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background:
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--card) 90%, var(--blue) 10%),
+      var(--card));
+  box-shadow:0 14px 32px color-mix(in srgb, var(--blue) 10%, transparent);
+}
+html[data-design="editorial-finance"] #page-goals .goal-card .goal-title,
+html[data-design="editorial-finance"] #page-goals .goal-card h3{
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+html[data-design="editorial-finance"] #page-goals #goalsList{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* —— Budget —— */
+html[data-design="editorial-finance"] #page-budget .budget-card{
+  border-radius:20px;
+  background:
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--card) 92%, var(--blue) 8%),
+      var(--card));
+}
+html[data-design="editorial-finance"] #page-budget .budget-stats{
+  background:color-mix(in srgb, var(--bg) 45%, transparent);
+  border-radius:14px;
+}
+html[data-design="editorial-finance"] #page-budget .budget-cat{
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+
+/* —— Notes —— */
+html[data-design="editorial-finance"] #page-notes .notes-shell{
+  padding:14px;
+  border-radius:24px;
+}
+html[data-design="editorial-finance"] #page-notes .notes-toolbar{
+  gap:10px;
+  margin-bottom:12px;
+}
+html[data-design="editorial-finance"] #page-notes .notes-search,
+html[data-design="editorial-finance"] #page-notes .notes-sort{
+  border-radius:14px;
+}
+html[data-design="editorial-finance"] #page-notes .note-card{
+  border-radius:18px;
+  border:1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background:color-mix(in srgb, var(--card) 96%, transparent);
+  box-shadow:0 12px 28px color-mix(in srgb, var(--blue) 8%, transparent);
+  transition:box-shadow .2s ease, border-color .2s ease;
+}
+html[data-design="editorial-finance"] #page-notes .note-card:hover{
+  border-color:color-mix(in srgb, var(--blue) 28%, var(--border));
+  box-shadow:0 16px 34px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+html[data-design="editorial-finance"] #page-notes .note-card-title{
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+
+/* —— AI Advisor —— */
+html[data-design="editorial-finance"] #page-ai-advisor .section,
+html[data-design="editorial-finance"] #page-ai-advisor .ai-shell,
+html[data-design="editorial-finance"] #page-ai-advisor .ai-panel{
+  border-radius:24px;
+}
+html[data-design="editorial-finance"] #page-ai-advisor .ai-msg,
+html[data-design="editorial-finance"] #page-ai-advisor .ai-bubble{
+  border-radius:16px;
+  border:1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background:color-mix(in srgb, var(--card) 94%, transparent);
+}
+html[data-design="editorial-finance"] #page-ai-advisor .ai-chip,
+html[data-design="editorial-finance"] #page-ai-advisor .ai-suggest-row button{
+  border-radius:999px;
+  font-weight:700;
+}
+html[data-design="editorial-finance"] #page-ai-advisor input,
+html[data-design="editorial-finance"] #page-ai-advisor textarea{
+  border-radius:16px;
+}
+
+/* —— Settings —— */
+html[data-design="editorial-finance"] #page-settings .settings-stack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+html[data-design="editorial-finance"] #page-settings .section,
+html[data-design="editorial-finance"] #page-settings .settings-collapsible,
+html[data-design="editorial-finance"] #page-settings .owner-profile-section{
+  border-radius:22px;
+  border:1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background:color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow:0 12px 30px color-mix(in srgb, var(--blue) 8%, transparent);
+  padding:14px 16px;
+}
+html[data-design="editorial-finance"] #page-settings .design-card,
+html[data-design="editorial-finance"] #page-settings .theme-card{
+  border-radius:16px;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+html[data-design="editorial-finance"] #page-settings .design-card:hover,
+html[data-design="editorial-finance"] #page-settings .theme-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 24px color-mix(in srgb, var(--blue) 14%, transparent);
+}
+html[data-design="editorial-finance"] #page-settings .design-card.active,
+html[data-design="editorial-finance"] #page-settings .theme-card.active{
+  border-color:color-mix(in srgb, var(--blue) 45%, transparent);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--blue) 22%, transparent);
+}
+html[data-design="editorial-finance"] #page-settings .settings-collapse-head{
+  border-radius:12px;
+}
+
+/* —— Bank cards / common lists —— */
+html[data-design="editorial-finance"] .bc-card,
+html[data-design="editorial-finance"] .bank-card{
+  border-radius:20px;
+  box-shadow:0 14px 32px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+html[data-design="editorial-finance"] .empty{
+  border-radius:16px;
+  padding:16px;
+  background:color-mix(in srgb, var(--bg) 40%, transparent);
+}
+
+/* —— Site-wide motion (Editorial only) —— */
+@keyframes efFadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:none; }
+}
+@keyframes efFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes efScaleIn {
+  from { opacity:0; transform:scale(.97); }
+  to   { opacity:1; transform:none; }
+}
+@keyframes efSlideSoft {
+  from { opacity:0; transform:translateX(10px); }
+  to   { opacity:1; transform:none; }
+}
+
+/* Page enter: staggered sections */
+html[data-design="editorial-finance"] .page.active > .ef-dash-personal,
+html[data-design="editorial-finance"] .page.active > .hero,
+html[data-design="editorial-finance"] .page.active > .dash-metrics,
+html[data-design="editorial-finance"] .page.active > .section,
+html[data-design="editorial-finance"] .page.active > .notes-shell,
+html[data-design="editorial-finance"] .page.active .settings-stack > .section,
+html[data-design="editorial-finance"] .page.active > .owner-profile-section{
+  animation: efFadeUp .48s cubic-bezier(.22,.8,.25,1) both;
+}
+html[data-design="editorial-finance"] .page.active > *:nth-child(1){ animation-delay:.02s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(2){ animation-delay:.06s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(3){ animation-delay:.10s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(4){ animation-delay:.14s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(5){ animation-delay:.18s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(6){ animation-delay:.22s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(7){ animation-delay:.26s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(8){ animation-delay:.30s; }
+html[data-design="editorial-finance"] .page.active > *:nth-child(n+9){ animation-delay:.34s; }
+
+/* Cards / list items soft appear */
+html[data-design="editorial-finance"] .page.active .asset-card,
+html[data-design="editorial-finance"] .page.active .goal-card,
+html[data-design="editorial-finance"] .page.active .budget-card,
+html[data-design="editorial-finance"] .page.active .note-card,
+html[data-design="editorial-finance"] .page.active .nb-feed-card,
+html[data-design="editorial-finance"] .page.active .nc-item,
+html[data-design="editorial-finance"] .page.active .nc-card,
+html[data-design="editorial-finance"] .page.active .log-item,
+html[data-design="editorial-finance"] .page.active .net-hist-item,
+html[data-design="editorial-finance"] .page.active .hist-filter,
+html[data-design="editorial-finance"] .page.active .loan-item,
+html[data-design="editorial-finance"] .page.active .ef-dash-chip{
+  animation: efScaleIn .4s cubic-bezier(.22,.8,.25,1) both;
+}
+html[data-design="editorial-finance"] .page.active .asset-card:nth-child(1),
+html[data-design="editorial-finance"] .page.active .goal-card:nth-child(1),
+html[data-design="editorial-finance"] .page.active .budget-card:nth-child(1),
+html[data-design="editorial-finance"] .page.active .note-card:nth-child(1){ animation-delay:.08s; }
+html[data-design="editorial-finance"] .page.active .asset-card:nth-child(2),
+html[data-design="editorial-finance"] .page.active .goal-card:nth-child(2),
+html[data-design="editorial-finance"] .page.active .budget-card:nth-child(2),
+html[data-design="editorial-finance"] .page.active .note-card:nth-child(2){ animation-delay:.12s; }
+html[data-design="editorial-finance"] .page.active .asset-card:nth-child(3),
+html[data-design="editorial-finance"] .page.active .goal-card:nth-child(3),
+html[data-design="editorial-finance"] .page.active .budget-card:nth-child(3),
+html[data-design="editorial-finance"] .page.active .note-card:nth-child(3){ animation-delay:.16s; }
+html[data-design="editorial-finance"] .page.active .asset-card:nth-child(n+4),
+html[data-design="editorial-finance"] .page.active .goal-card:nth-child(n+4),
+html[data-design="editorial-finance"] .page.active .budget-card:nth-child(n+4),
+html[data-design="editorial-finance"] .page.active .note-card:nth-child(n+4){ animation-delay:.2s; }
+
+/* Interactive micro-motion */
+html[data-design="editorial-finance"] .btn:not(.ghost){
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+html[data-design="editorial-finance"] .btn:not(.ghost):hover{
+  transform:translateY(-1px);
+}
+html[data-design="editorial-finance"] .btn:not(.ghost):active{
+  transform:scale(.98);
+}
+html[data-design="editorial-finance"] .menu-item,
+html[data-design="editorial-finance"] .bn-item,
+html[data-design="editorial-finance"] .hist-filter,
+html[data-design="editorial-finance"] .trend-tab{
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+html[data-design="editorial-finance"] .side-drawer .menu-item:hover{
+  transform:translateX(-2px);
+}
+html[data-design="editorial-finance"] .asset-card,
+html[data-design="editorial-finance"] .goal-card,
+html[data-design="editorial-finance"] .budget-card,
+html[data-design="editorial-finance"] .note-card,
+html[data-design="editorial-finance"] .nb-feed-card{
+  transition: box-shadow .22s ease, border-color .22s ease;
+}
+
+/* Modal / toast motion */
+html[data-design="editorial-finance"] .confirm-box,
+html[data-design="editorial-finance"] .note-modal-box,
+html[data-design="editorial-finance"] .lock-box{
+  animation: efScaleIn .3s cubic-bezier(.22,.8,.25,1) both;
+}
+html[data-design="editorial-finance"] .toast{
+  animation: efFadeUp .28s ease both;
+}
+
+/* Bottom nav / topbar soft */
+html[data-design="editorial-finance"] .bottom-nav .bn-item{
+  border-radius:14px;
+}
+html[data-design="editorial-finance"] .bottom-nav .bn-item.active{
+  background:color-mix(in srgb, var(--blue-soft) 80%, transparent);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  html[data-design="editorial-finance"] .page.active > *,
+  html[data-design="editorial-finance"] .page.active .asset-card,
+  html[data-design="editorial-finance"] .page.active .goal-card,
+  html[data-design="editorial-finance"] .page.active .budget-card,
+  html[data-design="editorial-finance"] .page.active .note-card,
+  html[data-design="editorial-finance"] .page.active .nb-feed-card,
+  html[data-design="editorial-finance"] .page.active .log-item,
+  html[data-design="editorial-finance"] .page.active .net-hist-item,
+  html[data-design="editorial-finance"] .page.active .ef-dash-chip,
+  html[data-design="editorial-finance"] .confirm-box,
+  html[data-design="editorial-finance"] .note-modal-box,
+  html[data-design="editorial-finance"] .toast,
+  html[data-design="editorial-finance"] .ef-wave-a,
+  html[data-design="editorial-finance"] .ef-wave-b,
+  html[data-design="editorial-finance"] .ef-blob-1,
+  html[data-design="editorial-finance"] .ef-blob-2,
+  html[data-design="editorial-finance"] .ef-curve{
+    animation:none !important;
+    transition:none !important;
+  }
+}
+html[data-design="editorial-finance"][data-anim="off"] .page.active > *,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .asset-card,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .goal-card,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .budget-card,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .note-card,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .nb-feed-card,
+html[data-design="editorial-finance"][data-anim="off"] .page.active .log-item,
+html[data-design="editorial-finance"][data-anim="off"] .confirm-box,
+html[data-design="editorial-finance"][data-anim="off"] .toast,
+html[data-design="editorial-finance"][data-anim="off"] .ef-wave-a,
+html[data-design="editorial-finance"][data-anim="off"] .ef-wave-b,
+html[data-design="editorial-finance"][data-anim="off"] .ef-blob-1,
+html[data-design="editorial-finance"][data-anim="off"] .ef-blob-2{
+  animation:none !important;
+}
