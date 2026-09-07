@@ -6140,14 +6140,40 @@ html[data-design="editorial-finance"] body.menu-open{
   }
 }
 
-/* Desktop asymmetry */
-@media (min-width:900px){
-  html[data-design="editorial-finance"] #page-dashboard .hero{
-    max-width:92%;
+/* Laptop / desktop: full-width content within .layout (no artificial narrow caps) */
+@media (min-width:1024px){
+  html[data-design="editorial-finance"] #page-dashboard.active > .hero{
+    max-width:none;
+    width:100%;
   }
-  html[data-design="editorial-finance"] #page-dashboard .section:nth-of-type(2){
-    margin-inline-start:auto;
-    width:min(100%, 940px);
+  html[data-design="editorial-finance"] .dash-metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  html[data-design="editorial-finance"] #page-dashboard.active .donut-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px 28px;
+  }
+  html[data-design="editorial-finance"] .content{
+    padding-bottom:100px;
+  }
+  html[data-design="editorial-finance"] .main{
+    padding-bottom:72px;
+  }
+}
+@media (min-width:1280px){
+  html[data-design="editorial-finance"] #page-history .hist-filters{
+    grid-template-columns:repeat(4, 1fr);
+  }
+  html[data-design="editorial-finance"] #page-goals .goals-list,
+  html[data-design="editorial-finance"] #sec-goals .goals-list{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
   }
 }
 
@@ -6324,29 +6350,28 @@ html[data-design="editorial-finance"] #page-history{
   max-width:none;
   margin:0;
 }
+
+/* Laptop dashboard: 2-col ONLY when .active so .page{display:none} is not overridden */
 @media (min-width:1024px){
-  html[data-design="editorial-finance"] #page-dashboard{
+  html[data-design="editorial-finance"] #page-dashboard.active{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
     gap:16px 20px;
     align-items:start;
   }
-  html[data-design="editorial-finance"] #page-dashboard > .ef-dash-personal,
-  html[data-design="editorial-finance"] #page-dashboard > .hero,
-  html[data-design="editorial-finance"] #page-dashboard > .dash-metrics{
-    grid-column:1 / -1;
-  }
-  /* allocation + trend side-by-side; forecast & analysis full width */
-  html[data-design="editorial-finance"] #page-dashboard > .section:nth-of-type(3),
-  html[data-design="editorial-finance"] #page-dashboard > .section:nth-of-type(4){
+  html[data-design="editorial-finance"] #page-dashboard.active > .ef-dash-personal,
+  html[data-design="editorial-finance"] #page-dashboard.active > .hero,
+  html[data-design="editorial-finance"] #page-dashboard.active > .dash-metrics,
+  html[data-design="editorial-finance"] #page-dashboard.active > #sec-forecast,
+  html[data-design="editorial-finance"] #page-dashboard.active > #sec-analysis{
     grid-column:1 / -1;
   }
 }
 @media (min-width:1280px){
-  html[data-design="editorial-finance"] #page-dashboard{
+  html[data-design="editorial-finance"] #page-dashboard.active{
     gap:18px 24px;
   }
-  html[data-design="editorial-finance"] #page-dashboard #legendList{
+  html[data-design="editorial-finance"] #page-dashboard.active #legendList{
     grid-template-columns:1fr 1fr;
   }
 }
@@ -8079,4 +8104,42 @@ html[data-design="editorial-finance"] #page-history #txList .log-item .p{
 html[data-design="editorial-finance"] #page-history #txList .log-item .p.neg{
   background:color-mix(in srgb, var(--red) 12%, transparent);
   color:var(--red);
+}
+
+
+/* ==== LAPTOP LAYOUT FINAL (v3.05-EF-LAPTOP) ==== */
+@media (min-width:1024px){
+  /* Wider usable content; keep mobile rules untouched */
+  html[data-design="editorial-finance"] .layout{
+    max-width:min(100%, 1180px);
+  }
+  /* Side drawer: more comfortable width on laptop */
+  html[data-design="editorial-finance"]{
+    --sidebar-w: 280px;
+  }
+  /* Bottom nav: keep full width on laptop (fixed bar); content already constrained by .layout */
+  html[data-design="editorial-finance"] .bottom-nav{
+    /* leave left/right 0 — full-bleed bar is intended; only content width changes */
+  }
+  /* Cards denser horizontal spacing */
+  html[data-design="editorial-finance"] .section{
+    margin-bottom:18px;
+  }
+  /* Notebook summary already 4-col from base; ensure gap */
+  html[data-design="editorial-finance"] .nb-summary-grid{
+    gap:12px;
+  }
+}
+@media (min-width:1280px){
+  html[data-design="editorial-finance"] .layout{
+    max-width:min(100%, 1280px);
+  }
+  html[data-design="editorial-finance"]{
+    --sidebar-w: 300px;
+  }
+}
+@media (min-width:1440px){
+  html[data-design="editorial-finance"] .layout{
+    max-width:min(100%, 1360px);
+  }
 }
