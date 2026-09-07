@@ -8207,14 +8207,12 @@ html[data-design="immersive"] .im-overlay{
   inset:0;
   z-index:1;
   pointer-events:none;
-  /* Subtle wash only — keep city lights / cinematic scene visible */
-  background:
-    linear-gradient(105deg,
-      rgba(6, 12, 24, 0.38) 0%,
-      rgba(8, 18, 36, 0.16) 40%,
-      rgba(10, 22, 42, 0.26) 70%,
-      rgba(6, 14, 28, 0.40) 100%),
-    linear-gradient(180deg, rgba(4,10,20,0.12) 0%, transparent 30%, transparent 70%, rgba(4,10,20,0.32) 100%);
+  /* Shadow top→bottom: light at top, stronger at bottom */
+  background: linear-gradient(180deg,
+    rgba(4, 10, 20, 0.18) 0%,
+    rgba(4, 10, 20, 0.28) 28%,
+    rgba(4, 10, 20, 0.48) 58%,
+    rgba(4, 10, 20, 0.72) 100%);
 }
 html[data-design="immersive"] .ef-decor{ display:none !important; }
 
@@ -8679,11 +8677,11 @@ html[data-design="immersive"] .im-header-avatar:hover{
   }
   html[data-design="immersive"] .im-overlay{
     display:block;
-    background:
-      linear-gradient(180deg,
-        rgba(6,12,24,0.45) 0%,
-        rgba(8,16,32,0.32) 45%,
-        rgba(6,12,24,0.55) 100%);
+    background: linear-gradient(180deg,
+      rgba(4, 10, 20, 0.22) 0%,
+      rgba(4, 10, 20, 0.38) 40%,
+      rgba(4, 10, 20, 0.58) 70%,
+      rgba(4, 10, 20, 0.78) 100%);
   }
 
   html[data-design="immersive"] .layout{
