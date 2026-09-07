@@ -8146,62 +8146,59 @@ html[data-design="editorial-finance"] #page-history #txList .log-item .p.neg{
 }
 
 /* =========================================================
-   IMMERSIVE SKIN — Full-screen cinematic financial dashboard
-   data-design="immersive" | Desktop-first, mobile fallback
+   IMMERSIVE SKIN v2 — lighter overlay, real glass, layout fix
+   data-design="immersive"
    ========================================================= */
 
 html:not([data-design="immersive"]) .im-bg,
 html:not([data-design="immersive"]) .im-overlay,
-html:not([data-design="immersive"]) .im-sidebar{
+html:not([data-design="immersive"]) .im-sidebar,
+html:not([data-design="immersive"]) .im-header-avatar{
   display:none !important;
 }
 
-
-/* Force readable tokens on immersive */
+/* ---- Tokens ---- */
 html[data-design="immersive"]{
-  --bg: #060b16;
-  --bg-2: rgba(12,22,40,0.6);
-  --card: rgba(12, 22, 40, 0.55);
-  --card-2: rgba(15, 28, 48, 0.72);
-  --ink: #e8eef8;
-  --ink-dim: rgba(200, 214, 235, 0.72);
-  --border: rgba(148, 185, 255, 0.14);
-  --border-strong: rgba(148, 185, 255, 0.28);
-  --blue: #3b82f6;
-  --blue-light: #60a5fa;
-  --blue-soft: rgba(59,130,246,0.15);
-  --shadow: 0 12px 36px rgba(0,0,0,0.25);
-}
-
-html[data-design="immersive"]{
-  --im-sidebar-w: 240px;
-  --im-glass: rgba(10, 18, 34, 0.78);
-  --im-glass-2: rgba(12, 24, 44, 0.85);
-  --im-border: rgba(148, 185, 255, 0.14);
-  --im-text: #e8eef8;
-  --im-muted: rgba(200, 214, 235, 0.72);
+  --im-sidebar-w: 236px;
+  --im-glass-primary: rgba(12, 22, 40, 0.62);
+  --im-glass-secondary: rgba(14, 26, 46, 0.50);
+  --im-glass-tertiary: rgba(255, 255, 255, 0.08);
+  --im-border: rgba(180, 210, 255, 0.18);
+  --im-border-strong: rgba(180, 210, 255, 0.32);
+  --im-text: #f0f5fc;
+  --im-muted: rgba(210, 224, 242, 0.78);
   --im-accent: #3b82f6;
   --im-cyan: #22d3ee;
   --im-emerald: #34d399;
   --im-purple: #a78bfa;
-  --im-orange: #fb923c;
+  --bg: transparent;
+  --bg-2: rgba(12,22,40,0.35);
+  --card: rgba(12, 22, 40, 0.48);
+  --card-2: rgba(15, 28, 48, 0.55);
+  --ink: #f0f5fc;
+  --ink-dim: rgba(210, 224, 242, 0.78);
+  --border: rgba(180, 210, 255, 0.18);
+  --border-strong: rgba(180, 210, 255, 0.32);
+  --blue: #3b82f6;
+  --blue-light: #60a5fa;
+  --blue-soft: rgba(59,130,246,0.18);
+  --shadow: 0 14px 40px rgba(0,0,0,0.22);
   color-scheme: dark;
 }
 
 html[data-design="immersive"] body{
-  background: #060b16 !important;
+  background: #0a1220 !important;
   color: var(--im-text) !important;
   min-height: 100vh;
 }
 
-/* Background layers */
+/* ---- Background: visible cinematic scene + soft layered overlay ---- */
 html[data-design="immersive"] .im-bg{
   display:block;
   position:fixed;
   inset:0;
   z-index:0;
-  background:
-    url("bg-immersive.jpg") center / cover no-repeat;
+  background: url("bg-immersive.jpg") center / cover no-repeat;
   pointer-events:none;
 }
 html[data-design="immersive"] .im-overlay{
@@ -8210,14 +8207,47 @@ html[data-design="immersive"] .im-overlay{
   inset:0;
   z-index:1;
   pointer-events:none;
+  /* Lighter, non-flat: keep sky/mountains readable */
   background:
-    linear-gradient(135deg, rgba(4,10,22,0.88) 0%, rgba(8,18,36,0.68) 42%, rgba(6,12,24,0.85) 100%),
-    radial-gradient(900px 500px at 85% 15%, rgba(59,130,246,0.14), transparent 60%),
-    radial-gradient(700px 400px at 10% 90%, rgba(15,23,42,0.55), transparent 55%);
+    linear-gradient(105deg,
+      rgba(6, 12, 24, 0.48) 0%,
+      rgba(8, 18, 36, 0.22) 38%,
+      rgba(10, 22, 42, 0.35) 68%,
+      rgba(6, 14, 28, 0.50) 100%),
+    radial-gradient(1000px 520px at 78% 12%, rgba(59,130,246,0.12), transparent 58%),
+    radial-gradient(800px 480px at 12% 88%, rgba(15,23,42,0.35), transparent 55%),
+    linear-gradient(180deg, rgba(4,10,20,0.18) 0%, transparent 28%, transparent 72%, rgba(4,10,20,0.45) 100%);
 }
 html[data-design="immersive"] .ef-decor{ display:none !important; }
 
-/* Hide mobile chrome on desktop immersive */
+/* ---- Header avatar (immersive only) ---- */
+html[data-design="immersive"] .im-header-avatar{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1.5px solid rgba(180,210,255,0.35);
+  background: rgba(15,28,48,0.55) center/cover no-repeat;
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  flex-shrink:0;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.12), 0 4px 14px rgba(0,0,0,0.25);
+  transition: box-shadow .18s, border-color .18s;
+  padding:0;
+  overflow:hidden;
+}
+html[data-design="immersive"] .im-header-avatar:hover{
+  border-color: rgba(96,165,250,0.55);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.22), 0 6px 18px rgba(0,0,0,0.3);
+}
+
+/* =========================================================
+   DESKTOP / LAPTOP (≥1024)
+   ========================================================= */
 @media (min-width:1024px){
   html[data-design="immersive"] .bottom-nav{ display:none !important; }
   html[data-design="immersive"] .hamburger-btn{ display:none !important; }
@@ -8225,56 +8255,82 @@ html[data-design="immersive"] .ef-decor{ display:none !important; }
   html[data-design="immersive"] #dropdownMenu,
   html[data-design="immersive"] .menu-backdrop{ display:none !important; }
   html[data-design="immersive"] body{ padding-bottom:0 !important; }
-}
 
-/* Sidebar — left, fixed (LTR placement while content stays RTL) */
-html[data-design="immersive"] .im-sidebar{
-  display:none;
-}
-@media (min-width:1024px){
+  /* ---- Sidebar: real glass (background shows through) ---- */
   html[data-design="immersive"] .im-sidebar{
     display:flex;
     flex-direction:column;
     position:fixed;
-    top:12px; bottom:12px; left:12px;
+    top:14px; bottom:14px; left:14px;
     width: var(--im-sidebar-w);
     z-index:40;
-    border-radius:22px;
-    background: rgba(8, 16, 32, 0.72);
-    backdrop-filter: blur(22px) saturate(1.2);
-    -webkit-backdrop-filter: blur(22px) saturate(1.2);
-    border: 1px solid var(--im-border);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-    padding: 18px 12px 14px;
+    border-radius:24px;
+    /* True glass: low opacity so bg is visible behind blur */
+    background: rgba(10, 18, 36, 0.28);
+    backdrop-filter: blur(28px) saturate(1.35);
+    -webkit-backdrop-filter: blur(28px) saturate(1.35);
+    border: 1px solid rgba(200, 220, 255, 0.22);
+    box-shadow:
+      0 24px 60px rgba(0,0,0,0.28),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    padding: 16px 10px 12px;
     direction: rtl;
+    overflow: hidden;
   }
   html[data-design="immersive"] .im-sidebar-brand{
     display:flex;
     align-items:center;
     gap:10px;
-    padding: 4px 8px 16px;
-    border-bottom: 1px solid rgba(148,185,255,0.1);
-    margin-bottom: 12px;
+    padding: 4px 10px 14px;
+    border-bottom: 1px solid rgba(180,210,255,0.12);
+    margin-bottom: 10px;
+    flex-shrink:0;
   }
   html[data-design="immersive"] .im-logo{
-    width:32px; height:32px; border-radius:10px;
-    box-shadow: 0 0 16px rgba(59,130,246,0.35);
+    width:30px; height:30px; border-radius:10px;
+    box-shadow: 0 0 14px rgba(59,130,246,0.3);
   }
   html[data-design="immersive"] .im-brand-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   html[data-design="immersive"] .im-brand-name{
-    font-weight:800; font-size:13.5px; letter-spacing:-.02em; color:#fff;
+    font-weight:800; font-size:13px; letter-spacing:-.02em; color:#fff;
   }
   html[data-design="immersive"] .im-brand-sub{
-    font-size:10px; color:var(--im-muted);
+    font-size:10px; color: var(--im-muted);
   }
+
+  /* Nav scroll area with custom scrollbar */
   html[data-design="immersive"] .im-nav{
-    display:flex; flex-direction:column; gap:4px;
-    flex:1; overflow-y:auto; padding: 0 2px;
+    display:flex; flex-direction:column; gap:3px;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding: 0 4px 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,185,255,0.28) transparent;
   }
+  html[data-design="immersive"] .im-nav::-webkit-scrollbar{
+    width: 5px;
+  }
+  html[data-design="immersive"] .im-nav::-webkit-scrollbar-track{
+    background: transparent;
+    margin: 4px 0;
+  }
+  html[data-design="immersive"] .im-nav::-webkit-scrollbar-thumb{
+    background: rgba(148,185,255,0.22);
+    border-radius: 999px;
+  }
+  html[data-design="immersive"] .im-nav:hover::-webkit-scrollbar-thumb{
+    background: rgba(148,185,255,0.42);
+  }
+  html[data-design="immersive"] .im-nav::-webkit-scrollbar-thumb:hover{
+    background: rgba(148,185,255,0.55);
+  }
+
   html[data-design="immersive"] .im-nav-item{
     display:flex; align-items:center; gap:10px;
-    padding: 10px 12px;
-    border-radius: 14px;
+    padding: 9px 11px;
+    border-radius: 13px;
     color: var(--im-muted);
     text-decoration:none;
     font-size:12.5px; font-weight:600;
@@ -8283,29 +8339,33 @@ html[data-design="immersive"] .im-sidebar{
   html[data-design="immersive"] .im-nav-item .im-ic{
     width:28px; height:28px; border-radius:10px;
     display:grid; place-items:center; flex-shrink:0;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
   }
   html[data-design="immersive"] .im-nav-item .im-ic svg{ width:15px; height:15px; }
   html[data-design="immersive"] .im-nav-item:hover{
-    color:#fff; background: rgba(59,130,246,0.1);
+    color:#fff; background: rgba(59,130,246,0.14);
   }
   html[data-design="immersive"] .im-nav-item.active{
     color:#fff;
-    background: linear-gradient(135deg, rgba(37,99,235,0.85), rgba(59,130,246,0.55));
-    box-shadow: 0 8px 22px rgba(37,99,235,0.35), 0 0 0 1px rgba(147,197,253,0.25) inset;
+    background: linear-gradient(135deg, rgba(37,99,235,0.88), rgba(59,130,246,0.55));
+    box-shadow: 0 8px 22px rgba(37,99,235,0.32), inset 0 0 0 1px rgba(147,197,253,0.22);
   }
   html[data-design="immersive"] .im-nav-item.active .im-ic{
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.16);
     border-color: transparent;
   }
-  html[data-design="immersive"] .im-sidebar-foot{ margin-top:auto; padding-top:12px; }
+
+  html[data-design="immersive"] .im-sidebar-foot{
+    margin-top:auto; padding-top:10px; flex-shrink:0;
+  }
   html[data-design="immersive"] .im-insight-card{
     padding:12px;
     border-radius:16px;
-    background: rgba(15, 40, 70, 0.45);
-    border: 1px solid rgba(59,130,246,0.2);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(59,130,246,0.22);
     margin-bottom:10px;
+    backdrop-filter: blur(8px);
   }
   html[data-design="immersive"] .im-insight-ic{ color: var(--im-cyan); font-size:14px; margin-bottom:6px; }
   html[data-design="immersive"] .im-insight-txt{
@@ -8321,125 +8381,196 @@ html[data-design="immersive"] .im-sidebar{
     box-shadow: 0 0 8px rgba(34,197,94,0.7);
   }
 
-  /* Main workspace offset for left sidebar */
+  /* Main workspace */
   html[data-design="immersive"] .layout{
     max-width: none !important;
     margin: 0 !important;
-    margin-left: calc(var(--im-sidebar-w) + 24px) !important;
+    margin-left: calc(var(--im-sidebar-w) + 28px) !important;
     width: auto !important;
     position: relative;
     z-index: 2;
   }
   html[data-design="immersive"] .main{
-    padding: 12px 20px 28px !important;
-    max-width: 1400px;
+    padding: 8px 22px 32px !important;
+    max-width: 1380px;
   }
   html[data-design="immersive"] .page{
     max-width: none !important;
     margin: 0 !important;
   }
-}
 
-/* Topbar → immersive header */
-@media (min-width:1024px){
+  /* Header */
   html[data-design="immersive"] .topbar{
     position: sticky;
     top: 0;
     z-index: 30;
-    margin-left: calc(var(--im-sidebar-w) + 24px);
+    margin-left: calc(var(--im-sidebar-w) + 28px);
     background: transparent !important;
     backdrop-filter: none !important;
     border-bottom: none !important;
-    padding: 14px 20px 8px !important;
-    gap: 14px;
+    padding: 12px 22px 6px !important;
+    gap: 12px;
+    align-items: center;
   }
   html[data-design="immersive"] .topbar-main{
     flex: 1;
-    justify-content: flex-start;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    justify-content: flex-end;
   }
   html[data-design="immersive"] .app-logo{ display:none !important; }
   html[data-design="immersive"] .topbar-date{
-    margin-inline-start: auto;
     font-size: 11.5px;
     color: var(--im-muted);
-    background: rgba(8,16,32,0.45);
+    background: rgba(8,16,32,0.35);
     border: 1px solid var(--im-border);
-    backdrop-filter: blur(12px);
-    padding: 8px 14px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 7px 14px;
     border-radius: 999px;
   }
   html[data-design="immersive"] .theme-dn-btn{
     border-radius: 12px;
-    background: rgba(8,16,32,0.5) !important;
+    background: rgba(8,16,32,0.4) !important;
     border-color: var(--im-border) !important;
     color: var(--im-text) !important;
+    backdrop-filter: blur(12px);
   }
-}
 
-/* Glass panels for cards/sections */
-@media (min-width:1024px){
+  /* ---- Glass hierarchy ---- */
+  /* Primary */
   html[data-design="immersive"] .section,
   html[data-design="immersive"] .hero,
+  html[data-design="immersive"] .forecast-card,
+  html[data-design="immersive"] .analysis-card{
+    background: var(--im-glass-primary) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid var(--im-border-strong) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.2) !important;
+    color: var(--im-text);
+  }
+  /* Secondary */
+  html[data-design="immersive"] .dash-metric,
   html[data-design="immersive"] .asset-card,
   html[data-design="immersive"] .goal-card,
   html[data-design="immersive"] .note-card,
   html[data-design="immersive"] .budget-card,
-  html[data-design="immersive"] .forecast-card,
-  html[data-design="immersive"] .analysis-card,
-  html[data-design="immersive"] .notes-shell,
-  html[data-design="immersive"] .proj-card,
-  html[data-design="immersive"] .ef-dash-personal,
-  html[data-design="immersive"] .dash-metric{
-    background: var(--im-glass) !important;
-    backdrop-filter: blur(18px) saturate(1.15);
-    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  html[data-design="immersive"] .log-item,
+  html[data-design="immersive"] .net-hist-item,
+  html[data-design="immersive"] .hist-filter,
+  html[data-design="immersive"] .nb-feed-card{
+    background: var(--im-glass-secondary) !important;
+    backdrop-filter: blur(16px) saturate(1.15);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
     border: 1px solid var(--im-border) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.22) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.16) !important;
     color: var(--im-text);
   }
+  /* Tertiary */
+  html[data-design="immersive"] .trend-tab,
+  html[data-design="immersive"] .btn.ghost{
+    background: var(--im-glass-tertiary) !important;
+    border-color: var(--im-border) !important;
+    color: var(--im-text) !important;
+  }
+
   html[data-design="immersive"] .section-title,
-  html[data-design="immersive"] .hero-label,
-  html[data-design="immersive"] .ef-dash-name,
-  html[data-design="immersive"] .ef-dash-greet{
+  html[data-design="immersive"] .hero-label{
     color: #fff !important;
   }
   html[data-design="immersive"] .section-sub,
-  html[data-design="immersive"] .ef-dash-tagline,
-  html[data-design="immersive"] .hero-sub,
   html[data-design="immersive"] .note{
     color: var(--im-muted) !important;
   }
   html[data-design="immersive"] .hero-num,
   html[data-design="immersive"] #totalNet{
     color: #fff !important;
-    text-shadow: 0 0 24px rgba(59,130,246,0.25);
+    text-shadow: 0 0 28px rgba(59,130,246,0.2);
   }
   html[data-design="immersive"] .section-title .dot{
     background: var(--im-accent) !important;
-    box-shadow: 0 0 10px rgba(59,130,246,0.6);
+    box-shadow: 0 0 10px rgba(59,130,246,0.55);
   }
-}
 
-/* Dashboard grid workspace */
-@media (min-width:1024px){
+  /* ---- Welcome: independent full-width block ---- */
+  html[data-design="immersive"] #efDashPersonal{
+    display:block !important;
+    grid-column: 1 / -1 !important;
+    margin: 2px 0 8px !important;
+    padding: 6px 2px 12px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-chips{ display:none !important; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-personal-main{
+    display: grid !important;
+    grid-template-columns: auto auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0;
+    row-gap: 6px;
+    align-items: baseline;
+    justify-items: start;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-greet{
+    display:inline !important;
+    grid-column: 1;
+    grid-row: 1;
+    font-size: clamp(26px, 2.8vw, 34px) !important;
+    font-weight: 900 !important;
+    color: #fff !important;
+    line-height: 1.25 !important;
+    letter-spacing: -.02em;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-greet::after{ content: "،\00a0"; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-name{
+    display:inline !important;
+    grid-column: 2;
+    grid-row: 1;
+    font-size: clamp(26px, 2.8vw, 34px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+    color: #fff !important;
+    line-height: 1.25 !important;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-name::after{ content: "\00a0👋"; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-tagline{
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 13.5px !important;
+    line-height: 1.65 !important;
+    color: var(--im-muted) !important;
+    max-width: 46em;
+    margin: 0;
+  }
+
+  /* ---- Dashboard grid: Welcome → Summary row → Charts ---- */
   html[data-design="immersive"] #page-dashboard.active{
     display: grid !important;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 14px 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 14px;
     align-items: start;
   }
   html[data-design="immersive"] #page-dashboard.active > .ef-dash-personal{
     grid-column: 1 / -1;
   }
+  /* Summary: hero spans 2 cols, metrics fill rest */
   html[data-design="immersive"] #page-dashboard.active > .hero{
-    grid-column: 1 / 2;
+    grid-column: span 2;
+    padding: 18px 20px !important;
+    min-height: 0;
   }
   html[data-design="immersive"] #page-dashboard.active > .dash-metrics{
-    grid-column: 2 / 3;
+    grid-column: span 2;
     display: grid !important;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -8448,58 +8579,43 @@ html[data-design="immersive"] .im-sidebar{
     margin: 0 !important;
   }
   html[data-design="immersive"] #page-dashboard.active > .dash-metrics .dash-metric{
-    padding: 16px 18px;
+    padding: 16px 16px;
+    margin: 0;
   }
-  /* sections flow: allocation & trend side by side via auto-placement after full-width items */
-  html[data-design="immersive"] #page-dashboard.active > #sec-forecast,
-  html[data-design="immersive"] #page-dashboard.active > #sec-analysis{
-    grid-column: 1 / -1;
-  }
-}
-
-@media (min-width:1280px){
-  html[data-design="immersive"]{
-    --im-sidebar-w: 250px;
-  }
-  html[data-design="immersive"] #page-dashboard.active{
-    grid-template-columns: 1.4fr 1fr;
-    gap: 16px 18px;
-  }
-  html[data-design="immersive"] .dash-metrics{
-    grid-template-columns: 1fr 1fr !important;
-  }
-}
-
-/* Summary metrics styling */
-@media (min-width:1024px){
   html[data-design="immersive"] .dash-metric .dm-l{
     color: var(--im-muted); font-size:11px; font-weight:600;
   }
   html[data-design="immersive"] .dash-metric b{
-    color:#fff; font-size:20px; font-weight:800; letter-spacing:-.03em;
+    color:#fff; font-size:18px; font-weight:800; letter-spacing:-.03em;
   }
+  /* Chart + allocation side by side */
+  html[data-design="immersive"] #page-dashboard.active > .section{
+    grid-column: span 2;
+  }
+  html[data-design="immersive"] #page-dashboard.active > #sec-forecast,
+  html[data-design="immersive"] #page-dashboard.active > #sec-analysis{
+    grid-column: 1 / -1;
+  }
+
   html[data-design="immersive"] .trend-tab.active{
     background: var(--im-accent) !important;
     color:#fff !important;
-    box-shadow: 0 4px 14px rgba(59,130,246,0.4);
+    box-shadow: 0 4px 14px rgba(59,130,246,0.35);
   }
   html[data-design="immersive"] .trend-tabs{
-    background: rgba(0,0,0,0.25) !important;
+    background: rgba(0,0,0,0.2) !important;
     border-radius: 999px;
   }
   html[data-design="immersive"] .donut,
   html[data-design="immersive"] #donutChart{
-    filter: drop-shadow(0 8px 20px rgba(59,130,246,0.25));
+    filter: drop-shadow(0 8px 18px rgba(59,130,246,0.2));
   }
   html[data-design="immersive"] #legendList .legend-item{
-    background: rgba(255,255,255,0.04) !important;
+    background: rgba(255,255,255,0.06) !important;
     border-color: var(--im-border) !important;
     color: var(--im-text);
   }
-}
 
-/* Assets / lists on immersive */
-@media (min-width:1024px){
   html[data-design="immersive"] #page-assets .asset-grid,
   html[data-design="immersive"] #page-assets #assetGrid{
     display:grid !important;
@@ -8510,90 +8626,226 @@ html[data-design="immersive"] .im-sidebar{
   html[data-design="immersive"] #page-assets .asset-card .val{
     color:#fff !important;
   }
-  html[data-design="immersive"] .log-item,
-  html[data-design="immersive"] .net-hist-item,
-  html[data-design="immersive"] .nb-feed-card,
-  html[data-design="immersive"] .hist-filter{
-    background: var(--im-glass) !important;
-    border-color: var(--im-border) !important;
-    color: var(--im-text);
-  }
-  html[data-design="immersive"] .btn{
-    border-radius: 14px;
-  }
   html[data-design="immersive"] .btn:not(.ghost):not(.danger){
     background: linear-gradient(135deg, #2563eb, #3b82f6);
     border: none;
     color: #fff;
-    box-shadow: 0 6px 18px rgba(37,99,235,0.35);
-  }
-  html[data-design="immersive"] .btn.ghost{
-    background: rgba(255,255,255,0.06);
-    border-color: var(--im-border);
-    color: var(--im-text);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.32);
   }
   html[data-design="immersive"] input,
   html[data-design="immersive"] select,
   html[data-design="immersive"] textarea{
-    background: rgba(0,0,0,0.28) !important;
+    background: rgba(0,0,0,0.22) !important;
     border-color: var(--im-border) !important;
     color: var(--im-text) !important;
   }
 }
 
-/* Mobile / tablet immersive: keep usability without permanent sidebar */
+/* Laptop 1280+ */
+@media (min-width:1280px){
+  html[data-design="immersive"]{ --im-sidebar-w: 248px; }
+  html[data-design="immersive"] #page-dashboard.active{
+    gap: 14px 16px;
+  }
+  html[data-design="immersive"] #page-assets .asset-grid,
+  html[data-design="immersive"] #page-assets #assetGrid{
+    grid-template-columns: repeat(4, minmax(0,1fr));
+  }
+}
+
+/* Laptop compact 1024–1365: tighter vertical rhythm */
+@media (min-width:1024px) and (max-width:1365px){
+  html[data-design="immersive"] .main{ padding: 6px 16px 24px !important; }
+  html[data-design="immersive"] #page-dashboard.active{ gap: 10px 12px; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-name{
+    font-size: 24px !important;
+  }
+  html[data-design="immersive"] #page-dashboard.active > .hero{
+    padding: 14px 16px !important;
+  }
+  html[data-design="immersive"] .dash-metric b{ font-size:16px; }
+  html[data-design="immersive"] .section{ padding: 14px !important; }
+}
+
+/* =========================================================
+   MOBILE / TABLET (<1024) — dedicated immersive layout
+   ========================================================= */
 @media (max-width:1023px){
   html[data-design="immersive"] .im-sidebar{ display:none !important; }
+
   html[data-design="immersive"] .im-bg{
     display:block;
-    opacity: 0.55;
+    background-position: 55% center;
+    background-size: cover;
   }
   html[data-design="immersive"] .im-overlay{
     display:block;
-    background: linear-gradient(180deg, rgba(6,11,22,0.88), rgba(6,11,22,0.95));
+    background:
+      linear-gradient(180deg,
+        rgba(6,12,24,0.62) 0%,
+        rgba(8,16,32,0.48) 40%,
+        rgba(6,12,24,0.72) 100%),
+      radial-gradient(600px 360px at 50% 0%, rgba(59,130,246,0.1), transparent 60%);
   }
+
   html[data-design="immersive"] .layout{
-    max-width: 640px !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
   }
-  html[data-design="immersive"] .bottom-nav{
-    display:flex !important;
-    background: rgba(8,16,32,0.88) !important;
-    backdrop-filter: blur(16px);
-    border-top-color: var(--im-border) !important;
+  html[data-design="immersive"] .main{
+    padding: 10px 14px 96px !important;
   }
-  html[data-design="immersive"] .hamburger-btn{ display:flex !important; }
-  html[data-design="immersive"] .side-drawer,
-  html[data-design="immersive"] #dropdownMenu{
+
+  /* Mobile header */
+  html[data-design="immersive"] .topbar{
+    background: rgba(8,16,32,0.45) !important;
+    backdrop-filter: blur(18px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+    border-bottom: 1px solid rgba(180,210,255,0.12) !important;
+    padding: 10px 12px !important;
+  }
+  html[data-design="immersive"] .app-logo{
     display:block !important;
+    width:28px !important; height:28px !important;
   }
+  html[data-design="immersive"] .hamburger-btn{
+    display:flex !important;
+    background: rgba(255,255,255,0.08) !important;
+    border-color: var(--im-border) !important;
+    color: #fff !important;
+  }
+  html[data-design="immersive"] .topbar-date{
+    font-size: 11px;
+    color: var(--im-muted);
+  }
+  html[data-design="immersive"] .im-header-avatar{
+    width:32px; height:32px; font-size:12px;
+  }
+  html[data-design="immersive"] .theme-dn-btn{
+    background: rgba(255,255,255,0.08) !important;
+    border-color: var(--im-border) !important;
+    color: #fff !important;
+  }
+
+  /* Glass panels mobile */
   html[data-design="immersive"] .section,
   html[data-design="immersive"] .hero,
-  html[data-design="immersive"] .asset-card{
-    background: rgba(12,22,40,0.72) !important;
-    border-color: var(--im-border) !important;
+  html[data-design="immersive"] .asset-card,
+  html[data-design="immersive"] .goal-card,
+  html[data-design="immersive"] .dash-metric,
+  html[data-design="immersive"] .forecast-card,
+  html[data-design="immersive"] .note-card{
+    background: rgba(10, 18, 34, 0.58) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(180,210,255,0.16) !important;
+    border-radius: 18px !important;
     color: var(--im-text);
   }
-}
 
-/* Welcome text emphasis */
-@media (min-width:1024px){
-  html[data-design="immersive"] .ef-dash-name{
-    font-size: clamp(26px, 3vw, 36px) !important;
+  /* Welcome independent */
+  html[data-design="immersive"] #efDashPersonal{
+    display:block !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 6px 2px 12px !important;
+    margin: 0 0 4px !important;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-chips{ display:none !important; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-personal-main{
+    display:flex; flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:0 2px;
+  }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-greet{
+    display:inline !important;
+    font-size: 22px !important;
     font-weight: 900 !important;
-    letter-spacing: -.03em;
+    color: #fff !important;
   }
-  html[data-design="immersive"] .ef-dash-greet{
-    font-size: 14px !important;
-    opacity: 0.9;
+  html[data-design="immersive"] #efDashPersonal .ef-dash-greet::after{ content: "، "; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-name{
+    display:inline !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    color: #fff !important;
   }
-  html[data-design="immersive"] .ef-dash-personal{
-    background:
-      linear-gradient(135deg, rgba(15,30,55,0.55), rgba(12,22,40,0.4)) !important;
+  html[data-design="immersive"] #efDashPersonal .ef-dash-name::after{ content: " 👋"; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-tagline{ flex-basis:100%; width:100%; }
+  html[data-design="immersive"] #efDashPersonal .ef-dash-tagline{
+    font-size: 12.5px !important;
+    color: var(--im-muted) !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Summary cards 2-col grid */
+  html[data-design="immersive"] #page-dashboard.active{
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+  html[data-design="immersive"] #page-dashboard.active > .dash-metrics{
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  html[data-design="immersive"] #page-dashboard.active > .hero{
+    padding: 16px !important;
+  }
+  html[data-design="immersive"] .dash-metric{
+    padding: 14px !important;
+  }
+  html[data-design="immersive"] .dash-metric b{
+    color:#fff; font-size:16px; font-weight:800;
+  }
+  html[data-design="immersive"] .dash-metric .dm-l{
+    color: var(--im-muted); font-size:11px;
+  }
+
+  /* Charts stack full width */
+  html[data-design="immersive"] .donut-wrap{
+    flex-direction: column;
+    align-items: center;
+  }
+  html[data-design="immersive"] #legendList{
+    width: 100%;
+  }
+
+  /* Bottom nav glass */
+  html[data-design="immersive"] .bottom-nav{
+    display:flex !important;
+    background: rgba(8,16,32,0.72) !important;
+    backdrop-filter: blur(20px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+    border-top: 1px solid rgba(180,210,255,0.14) !important;
+    border-radius: 18px 18px 0 0;
+  }
+  html[data-design="immersive"] .bn-item{ color: var(--im-muted); }
+  html[data-design="immersive"] .bn-item.active{ color: #60a5fa; }
+
+  /* Drawer glass when open */
+  html[data-design="immersive"] .side-drawer,
+  html[data-design="immersive"] #dropdownMenu{
+    background: rgba(8,16,32,0.55) !important;
+    backdrop-filter: blur(28px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.3) !important;
+    border-color: rgba(180,210,255,0.18) !important;
+  }
+  html[data-design="immersive"] .menu-item{
+    color: var(--im-muted);
+  }
+  html[data-design="immersive"] .menu-item.active{
+    color: #fff;
+    background: rgba(37,99,235,0.45);
   }
 }
 
-/* Ensure page switching still hides inactive pages */
+/* Page visibility always */
 html[data-design="immersive"] .page{ display:none; }
 html[data-design="immersive"] .page.active{ display:block; }
 @media (min-width:1024px){
@@ -8602,27 +8854,4 @@ html[data-design="immersive"] .page.active{ display:block; }
   }
 }
 
-
-html[data-design="immersive"] #efDashPersonal{
-  display:block !important;
-  margin: 0 0 16px;
-  padding: 22px 24px;
-  border-radius: 22px;
-  background: rgba(12, 22, 40, 0.55) !important;
-  border: 1px solid rgba(148,185,255,0.16) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  color: #fff;
-}
-html[data-design="immersive"] #efDashPersonal .ef-dash-name{
-  font-size: 28px !important;
-  font-weight: 900 !important;
-  color: #fff !important;
-}
-html[data-design="immersive"] #efDashPersonal .ef-dash-greet{
-  color: rgba(200,214,235,0.85) !important;
-  font-size: 13px !important;
-}
-html[data-design="immersive"] #efDashPersonal .ef-dash-tagline{
-  color: rgba(200,214,235,0.65) !important;
-}
+/* Header avatar click → settings (optional UX, no logic change to data) */

@@ -3494,6 +3494,7 @@ function syncOwnerNameDependents(){
     const menuName = document.getElementById('menuOwnerName');
     if(menuName) menuName.textContent = displayName;
     applyAvatarToEl(document.getElementById('menuOwnerAvatar'), p);
+    applyAvatarToEl(document.getElementById('imHeaderAvatar'), p);
 
     // خلاصه پروفایل
     const sumName = document.getElementById('ownerSummaryName');
@@ -3852,7 +3853,13 @@ function renderEditorialDashPersonal(){
   var elT = document.getElementById('efDashTagline');
   if(elG) elG.textContent = greet;
   if(elN) elN.textContent = name;
-  if(elT) elT.textContent = 'داشبورد شخصی · خلاصه وضعیت مالی';
+  if(elT){
+    var dsgn = '';
+    try{ dsgn = document.documentElement.getAttribute('data-design') || ''; }catch(e){}
+    elT.textContent = (dsgn === 'immersive')
+      ? 'به داشبورد مالی خودت خوش آمدی. همیشه یک قدم جلوتر، با مدیریت هوشمند دارایی‌ها.'
+      : 'داشبورد شخصی · خلاصه وضعیت مالی';
+  }
 
   var chips = document.getElementById('efDashChips');
   if(!chips) return;

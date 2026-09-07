@@ -606,6 +606,11 @@ function bindNavOnce(){
       }
       if(p) showPage(p);
     }
+    const av = e.target && e.target.closest && e.target.closest('#imHeaderAvatar');
+    if(av){
+      e.preventDefault();
+      if(typeof showPage === 'function') showPage('page-settings');
+    }
   });
 }
 bindNavOnce();
