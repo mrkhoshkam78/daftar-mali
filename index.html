@@ -6,7 +6,7 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#0B1220">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260906v305efunify">
+<meta name="app-build" content="20260907v305immersive">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -19,7 +19,8 @@
   if(d==="original"||d==="glass"||d==="premium")d="classic";
   if(d==="adaptive"||d==="canvas"||d==="afc"||d==="adaptivecanvas"||d==="adaptive-canvas")d="aurora";
   if(d==="editorial"||d==="editorialfinance"||d==="ef")d="editorial-finance";
-  if(["aurora","neobank","classic","editorial-finance"].indexOf(d)<0)d="aurora";
+  if(d==="immersive"||d==="cinema"||d==="premium-dash"||d==="monkey")d="immersive";
+  if(["aurora","neobank","classic","editorial-finance","immersive"].indexOf(d)<0)d="aurora";
   document.documentElement.setAttribute("data-design",d);
   var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
@@ -31,11 +32,46 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260906v305efunify" as="style">
+<link rel="preload" href="styles.css?v=20260907v305immersive" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260906v305efunify">
+<link rel="stylesheet" href="styles.css?v=20260907v305immersive">
 </head>
 <body>
+
+<!-- Immersive skin layers -->
+<div id="imBg" class="im-bg" aria-hidden="true"></div>
+<div id="imOverlay" class="im-overlay" aria-hidden="true"></div>
+
+<aside id="imSidebar" class="im-sidebar" aria-label="ناوبری اصلی">
+  <div class="im-sidebar-brand">
+    <img src="logo.png" alt="" class="im-logo" width="28" height="28">
+    <div class="im-brand-text">
+      <span class="im-brand-name">مبحث درآمد</span>
+      <span class="im-brand-sub">داشبورد مالی</span>
+    </div>
+  </div>
+  <nav class="im-nav">
+    <a href="#" class="im-nav-item active" data-page="page-dashboard"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg></span><span>داشبورد</span></a>
+    <a href="#" class="im-nav-item" data-page="page-assets"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 14h3"/></svg></span><span>دارایی‌ها</span></a>
+    <a href="#" class="im-nav-item" data-page="page-notebook"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h13M7 12h13M7 17h13M4 7h.01M4 12h.01M4 17h.01"/></svg></span><span>تراکنش‌ها</span></a>
+    <a href="#" class="im-nav-item" data-page="page-snapp"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-5 3 3 7-8"/><path d="M15 6h4v4"/></svg></span><span>سرمایه‌گذاری</span></a>
+    <a href="#" class="im-nav-item" data-page="page-noncash"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/></svg></span><span>غیرنقد</span></a>
+    <a href="#" class="im-nav-item" data-page="page-history"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span><span>گزارش‌ها</span></a>
+    <a href="#" class="im-nav-item" data-page="page-budget"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M8 19V9M12 19v-6M16 19V7M20 19V3"/></svg></span><span>بودجه</span></a>
+    <a href="#" class="im-nav-item" data-page="page-goals"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/><path d="M5 21h14"/></svg></span><span>اهداف</span></a>
+    <a href="#" class="im-nav-item" data-page="page-notes"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v5h5"/></svg></span><span>تقویم / یادداشت</span></a>
+    <a href="#" class="im-nav-item" data-page="page-ai-advisor"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 17v3"/><path d="M9 21h6"/></svg></span><span>مشاور هوشمند</span></a>
+    <a href="#" class="im-nav-item" data-page="page-settings"><span class="im-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></span><span>تنظیمات</span></a>
+  </nav>
+  <div class="im-sidebar-foot">
+    <div class="im-insight-card">
+      <div class="im-insight-ic" aria-hidden="true">✦</div>
+      <div class="im-insight-txt">آینده مالی کسی که<br>امروز درست تصمیم می‌گیرد.</div>
+    </div>
+    <div class="im-status"><span class="im-status-dot"></span> اتصال به سرور — همه چیز در دسترس است</div>
+  </div>
+</aside>
+
 <!-- Editorial Finance decorative layer (scoped via CSS) -->
 <div id="efDecor" class="ef-decor" aria-hidden="true">
   <svg class="ef-wave ef-wave-a" viewBox="0 0 1440 320" preserveAspectRatio="none">
@@ -811,6 +847,11 @@
           <button type="button" class="design-card" data-design-val="editorial-finance" role="option" aria-selected="false">
             <span class="design-name">Editorial Finance</span>
           </button>
+          <button type="button" class="design-card" data-design-val="immersive" role="option" aria-selected="false">
+            <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="theme-preview" style="background:linear-gradient(135deg,#0a1628 0%,#1e3a5f 40%,#f59e0b 100%)"></span>
+            <span class="theme-name">ایمرسیو</span>
+          </button>
         </div>
       </div>
 <div class="settings-stack">
@@ -1058,10 +1099,10 @@
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
 <script src="prices-api.js?v=20260906v305efunify"></script>
-<script src="app-core.js?v=20260906v305efunify"></script>
-<script src="app-ui.js?v=20260906v305efunify"></script>
-<script src="app-notes.js?v=20260906v305efunify"></script>
-<script src="app-boot.js?v=20260906v305efunify"></script>
+<script src="app-core.js?v=20260907v305immersive"></script>
+<script src="app-ui.js?v=20260907v305immersive"></script>
+<script src="app-notes.js?v=20260907v305immersive"></script>
+<script src="app-boot.js?v=20260907v305immersive"></script>
 <script src="financial-ai.js?v=20260906v305efunifyai"></script>
 <script>
 (function(){

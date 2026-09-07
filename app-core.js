@@ -281,7 +281,7 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance'];
+const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
@@ -289,6 +289,7 @@ function normalizeDesignId(d){
   if(d === 'app' || d === 'shell') return 'aurora';
   if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc' || d === 'adaptive-canvas') return 'aurora';
   if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
+  if(d === 'immersive' || d === 'cinema' || d === 'premium-dash' || d === 'monkey') return 'immersive';
   return d;
 }
 function applyDesign(d){
@@ -313,6 +314,9 @@ function applyDesign(d){
     } else if(d === 'editorial-finance'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = ''; }
+    } else if(d === 'immersive'){
+      if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
+      if(ham){ ham.style.display = 'none'; }
     } else {
       if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
       if(ham){ ham.style.display = ''; }
@@ -534,6 +538,10 @@ function showPage(pageId){
   document.querySelectorAll('.menu-item').forEach(m=>{
     m.classList.toggle('active', m.dataset.page === pageId);
   });
+  document.querySelectorAll('.im-nav-item').forEach(m=>{
+    const mp = m.getAttribute('data-page') || m.dataset.page;
+    m.classList.toggle('active', mp === pageId);
+  });
   // همگام‌سازی ناوبری پایین (فقط UI)
   const primary = new Set(['page-dashboard','page-notebook','page-assets','page-history','page-settings']);
   document.querySelectorAll('.bn-item').forEach(b=>{
@@ -571,7 +579,7 @@ function bindNavOnce(){
   if(window.__navBound) return;
   window.__navBound = true;
   document.addEventListener('click', (e)=>{
-    const menuEl = e.target && e.target.closest && e.target.closest('.menu-item');
+    const menuEl = e.target && e.target.closest && e.target.closest('.menu-item, .im-nav-item');
     if(menuEl){
       e.preventDefault();
       const page = menuEl.getAttribute('data-page') || menuEl.dataset.page;

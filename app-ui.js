@@ -3831,7 +3831,7 @@ function renderEditorialDashPersonal(){
   var root = document.getElementById('efDashPersonal');
   if(!root) return;
   var isEf = false;
-  try{ isEf = document.documentElement.getAttribute('data-design') === 'editorial-finance'; }catch(e){}
+  try{ var d0 = document.documentElement.getAttribute('data-design'); isEf = (d0 === 'editorial-finance' || d0 === 'immersive'); }catch(e){}
   root.hidden = !isEf;
   if(!isEf) return;
 
