@@ -998,26 +998,34 @@
   /* ---- LAYOUT ---- */
   .layout{display:flex; max-width:640px; margin:0 auto; width:100%;}
   .main{flex:1; padding:16px 14px 40px; min-width:0;}
-  /* لپ‌تاپ / دسکتاپ باریک */
+  /* لپ‌تاپ / دسکتاپ — استفاده بهینه از فضای افقی */
   @media (min-width:768px){
-    .layout{max-width:720px;}
-    .main{padding:20px 22px 48px;}
-    .topbar{padding:14px 22px;}
+    .layout{max-width:780px;}
+    .main{padding:20px 24px 48px;}
+    .topbar{padding:14px 24px;}
     .section{padding:18px; margin-bottom:16px;}
     .hero-num{font-size:36px;}
   }
   @media (min-width:1024px){
-    .layout{max-width:860px;}
-    .main{padding:24px 28px 56px;}
-    .topbar{padding:14px 28px;}
-    #assetCards{grid-template-columns:1fr 1fr 1fr; gap:14px;}
-    .donut-wrap{gap:28px;}
-    .donut{width:170px; height:170px;}
-    .grid2{gap:12px;}
+    .layout{max-width:1040px;}
+    .main{padding:22px 32px 56px;}
+    .topbar{padding:14px 32px;}
+    #assetCards{grid-template-columns:1fr 1fr 1fr; gap:16px;}
+    .donut-wrap{gap:32px;}
+    .donut{width:180px; height:180px;}
+    .grid2{gap:14px;}
     .nb-summary-grid{grid-template-columns:1fr 1fr 1fr 1fr;}
   }
   @media (min-width:1280px){
-    .layout{max-width:920px;}
+    .layout{max-width:1180px;}
+    .main{padding:24px 36px 60px;}
+    .topbar{padding:14px 36px;}
+  }
+  @media (min-width:1440px){
+    .layout{max-width:1280px;}
+  }
+  @media (min-width:1600px){
+    .layout{max-width:1360px;}
   }
   .page{display:none;}
   .page.active{display:block;}
@@ -6313,8 +6321,34 @@ html[data-design="editorial-finance"] #page-noncash,
 html[data-design="editorial-finance"] #page-snapp,
 html[data-design="editorial-finance"] #page-notebook,
 html[data-design="editorial-finance"] #page-history{
-  max-width:920px;
-  margin:0 auto;
+  max-width:none;
+  margin:0;
+}
+@media (min-width:1024px){
+  html[data-design="editorial-finance"] #page-dashboard{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 20px;
+    align-items:start;
+  }
+  html[data-design="editorial-finance"] #page-dashboard > .ef-dash-personal,
+  html[data-design="editorial-finance"] #page-dashboard > .hero,
+  html[data-design="editorial-finance"] #page-dashboard > .dash-metrics{
+    grid-column:1 / -1;
+  }
+  /* allocation + trend side-by-side; forecast & analysis full width */
+  html[data-design="editorial-finance"] #page-dashboard > .section:nth-of-type(3),
+  html[data-design="editorial-finance"] #page-dashboard > .section:nth-of-type(4){
+    grid-column:1 / -1;
+  }
+}
+@media (min-width:1280px){
+  html[data-design="editorial-finance"] #page-dashboard{
+    gap:18px 24px;
+  }
+  html[data-design="editorial-finance"] #page-dashboard #legendList{
+    grid-template-columns:1fr 1fr;
+  }
 }
 html[data-design="editorial-finance"] #page-dashboard .section-title,
 html[data-design="editorial-finance"] #page-assets .section-title,
@@ -6441,6 +6475,20 @@ html[data-design="editorial-finance"] #page-assets #assetGrid{
   html[data-design="editorial-finance"] #page-assets .asset-grid,
   html[data-design="editorial-finance"] #page-assets #assetGrid{
     grid-template-columns:1fr 1fr;
+  }
+}
+@media (min-width:1024px){
+  html[data-design="editorial-finance"] #page-assets .asset-grid,
+  html[data-design="editorial-finance"] #page-assets #assetGrid{
+    grid-template-columns:1fr 1fr 1fr;
+    gap:16px;
+  }
+}
+@media (min-width:1280px){
+  html[data-design="editorial-finance"] #page-assets .asset-grid,
+  html[data-design="editorial-finance"] #page-assets #assetGrid{
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:16px;
   }
 }
 html[data-design="editorial-finance"] #page-assets .asset-card{
@@ -6790,10 +6838,10 @@ html[data-design="editorial-finance"] #page-dashboard #totalNet{
    All remaining pages + consistent language
    ========================================================= */
 
-/* Global page shell */
+/* Global page shell — width follows .layout for laptop optimization */
 html[data-design="editorial-finance"] .page{
-  max-width:920px;
-  margin:0 auto;
+  max-width:none;
+  margin:0;
 }
 html[data-design="editorial-finance"] .page .section-title{
   font-size:1.12rem;
@@ -7273,18 +7321,11 @@ html[data-design="editorial-finance"] .btn {
   html[data-design="editorial-finance"] .notes-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  html[data-design="editorial-finance"] .content {
-    max-width: 920px;
-    margin-inline: auto;
-  }
 }
 
 @media (min-width: 1200px) {
   html[data-design="editorial-finance"] .notes-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  html[data-design="editorial-finance"] .content {
-    max-width: 1080px;
   }
 }
 
