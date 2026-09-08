@@ -6,24 +6,37 @@
 
 /* --- Orchestrator: refresh all visible panels --- */
 function render(){
-  $('sumInvest').textContent = fmt(computeInvest());
-  $('sumCash').textContent = fmt(computeCash());
-  $('totalNet').innerHTML = fmt(computeTotal()) + ' <small>تومان</small>';
-  renderDonut();
-  renderTrendChart(currentTrendRange);
-  renderAssetCards();
-  renderLogs();
-  renderTxs();
-  renderHistory();
-  renderNonCash();
-  renderNotebook();
-  renderForecast();
-  if(typeof renderFinancialAnalysis === 'function') renderFinancialAnalysis();
-  if(typeof renderNotes === 'function') renderNotes();
-  if(typeof renderFinancialGoals === 'function') renderFinancialGoals();
-  if(typeof renderOwnerProfile === 'function') renderOwnerProfile();
-  if(typeof renderBudgets === 'function') renderBudgets();
+  const sumInv = $('sumInvest'); if(sumInv) sumInv.textContent = fmt(computeInvest());
+  const sumCash = $('sumCash'); if(sumCash) sumCash.textContent = fmt(computeCash());
+  const totalNet = $('totalNet'); if(totalNet) totalNet.innerHTML = fmt(computeTotal()) + ' <small>تومان</small>';
+  try{ renderDonut(); }catch(e){ console.error(e); }
+  try{ renderTrendChart(currentTrendRange); }catch(e){ console.error(e); }
+  try{ renderAssetCards(); }catch(e){ console.error(e); }
+  try{ renderLogs(); }catch(e){ console.error(e); }
+  try{ renderTxs(); }catch(e){ console.error(e); }
+  try{ renderHistory(); }catch(e){ console.error(e); }
+  try{ renderNonCash(); }catch(e){ console.error(e); }
+  try{ renderNotebook(); }catch(e){ console.error(e); }
+  try{ renderForecast(); }catch(e){ console.error(e); }
+  if(typeof renderFinancialAnalysis === 'function') try{ renderFinancialAnalysis(); }catch(e){ console.error(e); }
+  if(typeof renderNotes === 'function') try{ renderNotes(); }catch(e){ console.error(e); }
+  if(typeof renderFinancialGoals === 'function') try{ renderFinancialGoals(); }catch(e){ console.error(e); }
+  if(typeof renderOwnerProfile === 'function') try{ renderOwnerProfile(); }catch(e){ console.error(e); }
+  if(typeof renderBudgets === 'function') try{ renderBudgets(); }catch(e){ console.error(e); }
   try{ if(typeof renderEditorialDashPersonal === 'function') renderEditorialDashPersonal(); }catch(e){}
+}
+
+/** قفل کوتاه برای جلوگیری از Double-Submit روی دکمه‌های مالی حساس */
+function withActionLock(key, fn){
+  const k = '_actLock_' + String(key || 'default');
+  if(window[k]) return;
+  window[k] = true;
+  try{
+    fn();
+  } finally {
+    // آزادسازی بعد از فریم بعدی تا double-click پشت‌سرهم قفل بماند
+    setTimeout(()=>{ window[k] = false; }, 400);
+  }
 }
 
 let selectedDonutKey = null;
@@ -2441,16 +2454,8 @@ function renderNotebook(){
       btn.addEventListener('click', ()=>{
         const entry = notebook.find(x=>String(x.id)===btn.dataset.id);
         showConfirmModal('حذف این تراکنش؟', entry ? `${NB_TYPES[entry.type].label} — ${fmt(entry.amount)} تومان` : '', ()=>{
-          if(entry && entry.applied && (entry.type === 'deposit' || entry.type === 'payment')){
-            const sign = (NB_TYPES[entry.type] && NB_TYPES[entry.type].sign) || 0;
-            const amt = safeNum(entry.amount, 0);
-            if(sign !== 0 && amt > 0){
-              // برگشت اثر از همان کارت/منبعی که در لحظه ثبت اعمال شده بود
-              const cardId = entry.cardId || '';
-              const label = 'حذف ' + ((NB_TYPES[entry.type] && NB_TYPES[entry.type].label) || entry.type) + (entry.desc ? ' — ' + entry.desc : '');
-              applyAmountToCard(cardId, -(sign * amt), label);
-            }
-          }
+          // برگشت دقیق اثر مالی — هر نوع تراکنش حداکثر یک‌بار Reverse شود
+          if(entry) reverseNotebookEntryEffect(entry);
           notebook = notebook.filter(x=>String(x.id)!==btn.dataset.id);
           fcEvents = fcEvents.filter(x=>String(x.id)!==btn.dataset.id);
           let ok = false;
@@ -2528,7 +2533,8 @@ function clearNcForm(){
 
 if($('ncAddBtn')){
   $('ncAddBtn').addEventListener('click', ()=>{
-    const category = $('ncCategory').value;
+    withActionLock('ncAdd', ()=>{
+    const category = $('ncCategory') ? $('ncCategory').value : '';
     const label = ($('ncLabel').value || '').trim();
     const manualValue = parseMoney($('ncManualValue').value);
     if(isNaN(manualValue) || manualValue < 0){ showToast('ارزش دفتری معتبر نیست', true); return; }
@@ -2592,6 +2598,7 @@ if($('ncAddBtn')){
         showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
       }
     }
+    }); // withActionLock
   });
 }
 if($('ncCategory')){
@@ -2603,6 +2610,7 @@ if($('ncGoldSoot')) $('ncGoldSoot').addEventListener('input', updateGoldSumUI);
 
 /* --- Event: Snapp profit submit --- */
 if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
+  withActionLock('addLog', ()=>{
   const date = selectedLogDateISO();
   const profit = parseMoney($('logProfit') && $('logProfit').value);
   if(!date || isNaN(profit) || profit<=0){ showToast('تاریخ و سود را به‌درستی وارد کنید', true); return; }
@@ -2624,6 +2632,7 @@ if($('addLogBtn')) $('addLogBtn').addEventListener('click', ()=>{
   showToast(ok ? 'سود ثبت شد' : 'سود اعمال شد (ذخیره پایدار ناموفق)', !ok);
   // فوراً UI و محاسبات را به‌روز کن
   try{ if(typeof render === 'function') render(); }catch(e){ console.error(e); }
+  }); // withActionLock
 });
 
 /* ---- کارت‌های بانکی (فقط بخش تراکنش‌ها) ---- */
@@ -2672,6 +2681,72 @@ function applyAmountToCard(cardId, delta, note){
   if(!Array.isArray(txs)) txs = [];
   txs.push({date: todayISO(), key:'card', delta, note: note || ''});
   if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+}
+/**
+ * برگشت اثر مالی یک ورودی دفترچه هنگام حذف.
+ * هر نوع فقط یک‌بار Reverse می‌شود تا Double Subtraction / باقی‌ماندن اثر رخ ندهد.
+ * - deposit/payment: reverse از همان کارت (اگر applied)
+ * - transfer: برگشت از/به دارایی‌های مبدأ و مقصد
+ * - lent/borrowed: اگر applied یا settledApplied بود، اثر کارت را برگردان
+ */
+function reverseNotebookEntryEffect(entry){
+  if(!entry || !entry.type) return;
+  const type = entry.type;
+  const amt = safeNum(entry.amount, 0);
+  const label = 'حذف ' + ((NB_TYPES[type] && NB_TYPES[type].label) || type) + (entry.desc ? ' — ' + entry.desc : '');
+
+  if(type === 'deposit' || type === 'payment'){
+    if(!entry.applied) return;
+    const sign = (NB_TYPES[type] && NB_TYPES[type].sign) || (type === 'deposit' ? 1 : -1);
+    if(sign !== 0 && amt > 0){
+      const cardId = entry.cardId || '';
+      applyAmountToCard(cardId, -(sign * amt), label);
+    }
+    return;
+  }
+
+  if(type === 'transfer'){
+    // انتقال مستقیماً روی assets اعمال شده (حتی بدون پرچم applied)
+    const fromKey = entry.fromKey;
+    const toKey = entry.toKey;
+    if(fromKey && toKey && amt > 0){
+      assets[fromKey] = safeNum(assets[fromKey], 0) + amt;
+      assets[toKey] = safeNum(assets[toKey], 0) - amt;
+      if(!Array.isArray(txs)) txs = [];
+      txs.push({date: todayISO(), key: fromKey, delta: amt, note: label});
+      txs.push({date: todayISO(), key: toKey, delta: -amt, note: label});
+      if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+    }
+    return;
+  }
+
+  if(type === 'lent' || type === 'borrowed'){
+    // اگر تسویه باعث تغییر کارت شده بود، همان دلتا را برگردان
+    if(entry.settledApplied && entry.settleCardDelta){
+      const d = safeNum(entry.settleCardDelta, 0);
+      if(Math.abs(d) > 0.5){
+        assets.card = safeNum(assets.card, 0) - d;
+        if(!Array.isArray(txs)) txs = [];
+        txs.push({date: todayISO(), key: 'card', delta: -d, note: label});
+        if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+      }
+      entry.settledApplied = false;
+      entry.settleCardDelta = 0;
+      return;
+    }
+    // اگر قرض در بستن ماه (یا مسیر مشابه) applied شده و هنوز تسویه نشده
+    if(entry.applied && !entry.settled){
+      const rem = typeof loanRemaining === 'function' ? loanRemaining(entry) : Math.max(0, amt - safeNum(entry.paidAmount, 0));
+      const sign = (NB_TYPES[type] && NB_TYPES[type].sign) || 0;
+      const d = sign * rem;
+      if(Math.abs(d) > 0.5){
+        assets.card = safeNum(assets.card, 0) - d;
+        if(!Array.isArray(txs)) txs = [];
+        txs.push({date: todayISO(), key: 'card', delta: -d, note: label});
+        if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
+      }
+    }
+  }
 }
 /** همگام‌سازی یک‌بارهٔ تراکنش‌های payment/deposit قدیمی که هنوز applied نیستند
  *  تا «موجودی فعلی کارت» با «موجودی محاسبه‌شده» برای این نوع تراکنش‌ها یکی شود.
@@ -3158,8 +3233,9 @@ if($('nbType')){
 }
 
 if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  withActionLock('nbAdd', ()=>{
   try{
-    if(ev){ ev.preventDefault(); ev.stopPropagation(); }
     const type = ($('nbType') && $('nbType').value) || 'payment';
     if(!NB_TYPES[type]){ showToast('نوع تراکنش نامعتبر است', true); return; }
     const person = ($('nbPerson') && $('nbPerson').value || '').trim();
@@ -3236,9 +3312,11 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
     console.error('nbAdd', err);
     showToast('خطا در ثبت تراکنش: ' + (err && err.message ? err.message : err), true);
   }
+  }); // withActionLock
 });
 
-$('snapshotBtn').addEventListener('click', ()=>{
+if($('snapshotBtn')) $('snapshotBtn').addEventListener('click', ()=>{
+  withActionLock('snapshot', ()=>{
   try{
     // تاریخ امروز محلی (YYYY-MM-DD) — بدون وابستگی به timezone UTC
     const date = (typeof todayISO === 'function') ? todayISO() : (function(){
@@ -3271,9 +3349,10 @@ $('snapshotBtn').addEventListener('click', ()=>{
     console.error('snapshotBtn', err);
     showToast('خطا در ثبت وضعیت امروز', true);
   }
+  }); // withActionLock
 });
 
-$('exportBtn').addEventListener('click', async ()=>{
+if($('exportBtn')) $('exportBtn').addEventListener('click', async ()=>{
   try{
     const body = await buildBackupBlob();
     const encrypted = !!(sessionCryptoKey && loadPinRecord());
@@ -3287,8 +3366,8 @@ $('exportBtn').addEventListener('click', async ()=>{
     showToast(encrypted ? 'پشتیبان رمزشده دانلود شد' : 'پشتیبان بدون رمز دانلود شد');
   }catch(err){ showToast('خطا در ساخت پشتیبان', true); }
 });
-$('importBtn').addEventListener('click', ()=> $('importFile').click());
-$('importFile').addEventListener('change', (e)=>{
+if($('importBtn')) $('importBtn').addEventListener('click', ()=> { const f=$('importFile'); if(f) f.click(); });
+if($('importFile')) $('importFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -3373,10 +3452,11 @@ $('importFile').addEventListener('change', (e)=>{
 
 
 /* ================= TRANSFER ================= */
-$('tfBtn').addEventListener('click', ()=>{
-  const fromKey = $('tfFrom').value;
-  const toKey = $('tfTo').value;
-  const amount = parseMoney($('tfAmount').value);
+if($('tfBtn')) $('tfBtn').addEventListener('click', ()=>{
+  withActionLock('transfer', ()=>{
+  const fromKey = $('tfFrom') && $('tfFrom').value;
+  const toKey = $('tfTo') && $('tfTo').value;
+  const amount = parseMoney($('tfAmount') && $('tfAmount').value);
   if(!fromKey || !toKey){ showToast('مبدأ و مقصد را انتخاب کنید', true); return; }
   if(fromKey === toKey){ showToast('مبدأ و مقصد نباید یکی باشند', true); return; }
   if(isNaN(amount) || amount <= 0){ showToast('مبلغ معتبر وارد کنید', true); return; }
@@ -3406,25 +3486,28 @@ $('tfBtn').addEventListener('click', ()=>{
     desc: note,
     person: '',
     fromKey, toKey,
+    applied: true, // اثر مالی روی assets در همین لحظه اعمال شده
   });
 
   pushSeriesPoint();
   checkMilestones(toKey, prevTo, assets[toKey]);
   if(persist()){
-    $('tfAmount').value = '';
+    if($('tfAmount')) $('tfAmount').value = '';
     showToast(`${fmt(amount)} از ${fromName} به ${toName} منتقل شد`);
     render();
   } else {
     showToast('انتقال ناموفق — ذخیره انجام نشد', true);
   }
+  }); // withActionLock
 });
 
 /* ================= NEW ASSET ================= */
 const NEW_ASSET_PALETTE = ['#f472b6','#fb923c','#4ade80','#38bdf8','#c084fc','#f87171','#2dd4bf'];
-$('newAssetBtn').addEventListener('click', ()=>{
-  const name = $('newAssetName').value.trim();
-  const cat = $('newAssetCat').value;
-  const amount = parseMoney($('newAssetAmount').value) || 0;
+if($('newAssetBtn')) $('newAssetBtn').addEventListener('click', ()=>{
+  withActionLock('newAsset', ()=>{
+  const name = ($('newAssetName') && $('newAssetName').value || '').trim();
+  const cat = ($('newAssetCat') && $('newAssetCat').value) || 'نقدینگی';
+  const amount = parseMoney($('newAssetAmount') && $('newAssetAmount').value) || 0;
   if(!name){ showToast('نامی برای دارایی وارد کنید', true); return; }
   if(ASSET_DEFS.some(d=>d.name === name)){ showToast('دارایی‌ای با همین نام از قبل وجود دارد', true); return; }
   const key = 'custom_' + Date.now();
@@ -3438,12 +3521,14 @@ $('newAssetBtn').addEventListener('click', ()=>{
     buildRoundMilestones(amount).forEach(m => { if(m <= amount) claimMilestone(key, m); });
   }
   if(persist()){
-    $('newAssetName').value=''; $('newAssetAmount').value='';
+    if($('newAssetName')) $('newAssetName').value='';
+    if($('newAssetAmount')) $('newAssetAmount').value='';
     showToast(`دارایی «${name}» اضافه شد`);
     render();
   } else {
     showToast('ذخیره ناموفق — دوباره تلاش کنید', true);
   }
+  }); // withActionLock
 });
 
 

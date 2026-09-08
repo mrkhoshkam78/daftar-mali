@@ -766,7 +766,8 @@ if($('nbTime')) $('nbTime').value = todayDate().toTimeString().slice(0,5);
 document.addEventListener('input', (e)=>{
   if(!e.target.classList || !e.target.classList.contains('money-input')) return;
   const el = e.target;
-  const raw = el.value.replace(/,/g,'').replace(/[^\d]/g,'');
+  // normalizeDigits تا ارقام فارسی/عربی کیبورد سیستم حذف نشوند (قبل از strip غیررقمی)
+  const raw = normalizeDigits(el.value).replace(/,/g,'').replace(/[^\d]/g,'');
   const withCommas = raw ? Number(raw).toLocaleString('en-US') : '';
   const cursorFromEnd = el.value.length - el.selectionStart;
   el.value = withCommas;
@@ -814,24 +815,39 @@ function showToast(msg, isErr){
 
 /* ================= CUSTOM CONFIRM MODAL (بجای confirm() ناقابل‌اعتماد در مرورگرهای موبایل) ================= */
 function showConfirmModal(title, sub, onConfirm, okLabel){
-  $('confirmTitle').textContent = title;
-  $('confirmSub').textContent = sub || '';
-  $('confirmModal').style.display = 'flex';
+  const modal = $('confirmModal');
+  const titleEl = $('confirmTitle');
+  const subEl = $('confirmSub');
   const okBtn = $('confirmOkBtn');
   const cancelBtn = $('confirmCancelBtn');
+  if(!modal || !okBtn || !cancelBtn){
+    // fallback امن اگر DOM ناقص باشد
+    if(typeof onConfirm === 'function' && window.confirm(String(title||'') + (sub ? '\n' + sub : ''))) onConfirm();
+    return;
+  }
+  // اگر مودال قبلی هنوز باز است، listenerهای قبلی را پاک کن (جلوگیری از stack شدن)
+  if(typeof window._confirmCleanup === 'function'){
+    try{ window._confirmCleanup(); }catch(_e){}
+    window._confirmCleanup = null;
+  }
+  if(titleEl) titleEl.textContent = title;
+  if(subEl) subEl.textContent = sub || '';
+  modal.style.display = 'flex';
   // برچسب دکمه تأیید: پیش‌فرض «حذف» (سازگار با حذف‌ها)؛ برای خروج می‌توان «خروج» داد
-  const prevOkText = okBtn ? okBtn.textContent : '';
-  if(okBtn) okBtn.textContent = (okLabel && String(okLabel).trim()) ? String(okLabel).trim() : 'حذف';
+  const prevOkText = okBtn.textContent || 'حذف';
+  okBtn.textContent = (okLabel && String(okLabel).trim()) ? String(okLabel).trim() : 'حذف';
   const cleanup = ()=>{
-    $('confirmModal').style.display = 'none';
-    if(okBtn) okBtn.textContent = prevOkText || 'حذف';
+    modal.style.display = 'none';
+    okBtn.textContent = prevOkText || 'حذف';
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
     document.removeEventListener('keydown', onKey);
+    if(window._confirmCleanup === cleanup) window._confirmCleanup = null;
   };
-  const onOk = ()=>{ cleanup(); onConfirm(); };
+  const onOk = ()=>{ cleanup(); if(typeof onConfirm === 'function') onConfirm(); };
   const onCancel = ()=>{ cleanup(); };
   const onKey = (e)=>{ if(e.key === 'Escape'){ e.preventDefault(); onCancel(); } };
+  window._confirmCleanup = cleanup;
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
   document.addEventListener('keydown', onKey);
@@ -979,7 +995,14 @@ function loadAll(){
       if(d && typeof d === 'object' && d.enc === true && d.ct && d.iv && d.salt){
         window._pendingEncStore = d;
       } else if(d && typeof d === 'object'){
-        if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)) assets = {...assets, ...d.assets};
+        if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
+          assets = {...assets, ...d.assets};
+          // sanitize: مقدار غیرعددی/NaN نباید باعث خرابی computeTotal یا render شود
+          Object.keys(assets).forEach(k => {
+            const v = Number(assets[k]);
+            assets[k] = (isFinite(v) && !isNaN(v)) ? v : 0;
+          });
+        }
         if(Array.isArray(d.logs)) logs = d.logs;
         if(Array.isArray(d.txs)) txs = d.txs;
         if(Array.isArray(d.history)) history = d.history;
@@ -1061,7 +1084,13 @@ function getStatePayload(){
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
   // همان اعتبارسنجی نوع فیلدهای loadAll — داده رمزگشایی‌شدهٔ ناسازگار نباید state را خراب کند
-  if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)) assets = Object.assign({}, assets, d.assets);
+  if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
+    assets = Object.assign({}, assets, d.assets);
+    Object.keys(assets).forEach(k => {
+      const v = Number(assets[k]);
+      assets[k] = (isFinite(v) && !isNaN(v)) ? v : 0;
+    });
+  }
   if(Array.isArray(d.logs)) logs = d.logs;
   if(Array.isArray(d.txs)) txs = d.txs;
   if(Array.isArray(d.history)) history = d.history;
@@ -1255,7 +1284,7 @@ function ensureCoreAssets(){
 
 function investKeys(){ return ASSET_DEFS.filter(d=>d.cat==='سرمایه‌گذاری').map(d=>d.key); }
 function cashKeys(){ return ASSET_DEFS.filter(d=>d.cat==='نقدینگی').map(d=>d.key); }
-function sumKeys(keys){ return keys.reduce((s,k)=> s + (assets[k]||0), 0); }
+function sumKeys(keys){ return keys.reduce((s,k)=> s + (Number(assets[k]) || 0), 0); }
 function computeInvest(){ return sumKeys(investKeys()); }
 function computeCash(){ return sumKeys(cashKeys()); }
 function computeTotal(){ return computeInvest() + computeCash(); }

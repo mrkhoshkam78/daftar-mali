@@ -209,9 +209,9 @@ function closeNoteModal(){
   document.body.classList.remove('note-modal-open');
   noteModalCurrentId = null;
   noteModalMode = 'read';
-  $('noteEditId').value = '';
-  $('noteTitle').value = '';
-  $('noteBody').value = '';
+  const editId = $('noteEditId'); if(editId) editId.value = '';
+  const title = $('noteTitle'); if(title) title.value = '';
+  const body = $('noteBody'); if(body) body.value = '';
   noteDraftTags = [];
   if(typeof renderNoteTagList === 'function') renderNoteTagList();
 }
@@ -227,13 +227,14 @@ function setNoteModalMode(mode){
 function fillNoteReadView(note){
   if(!note) return;
   const cat = noteCatMeta(note.cat);
-  $('noteModalTitle').textContent = note.title || 'بدون عنوان';
+  const titleEl = $('noteModalTitle'); if(titleEl) titleEl.textContent = note.title || 'بدون عنوان';
   const tags = uniqTags(note.tags||[]).map(t => '<span class="note-mini-tag">#'+escapeHtml(t)+'</span>').join(' ');
-  $('noteModalMeta').innerHTML =
+  const metaEl = $('noteModalMeta');
+  if(metaEl) metaEl.innerHTML =
     '<span class="note-badge"><span style="background:'+cat.color+';width:6px;height:6px;border-radius:50%;display:inline-block;"></span>'+escapeHtml(cat.label)+'</span>' +
     '<span>'+escapeHtml(formatNoteStamp(note))+'</span>' +
     (tags ? '<span style="display:inline-flex;flex-wrap:wrap;gap:4px;">'+tags+'</span>' : '');
-  $('noteReadContent').innerHTML = renderMarkdown(note.body || '');
+  const readEl = $('noteReadContent'); if(readEl) readEl.innerHTML = renderMarkdown(note.body || '');
   const pinBtn = $('noteModalPin');
   if(pinBtn){
     pinBtn.style.color = note.pinned ? 'var(--blue-light)' : '';
@@ -252,9 +253,9 @@ function openNoteReader(note){
 function openNoteEditor(note){
   renderNoteCatPicks();
   noteModalCurrentId = note ? String(note.id) : null;
-  $('noteEditId').value = note ? String(note.id) : '';
-  $('noteTitle').value = note ? (note.title || '') : '';
-  $('noteBody').value = note ? (note.body || '') : '';
+  const editId = $('noteEditId'); if(editId) editId.value = note ? String(note.id) : '';
+  const titleInp = $('noteTitle'); if(titleInp) titleInp.value = note ? (note.title || '') : '';
+  const bodyInp = $('noteBody'); if(bodyInp) bodyInp.value = note ? (note.body || '') : '';
   noteDraftTags = uniqTags(note && note.tags ? note.tags : []);
   renderNoteTagList();
   const cat = note ? (note.cat || 'daily') : 'daily';
@@ -267,12 +268,15 @@ function openNoteEditor(note){
       ? ('ایجاد: <b>' + escapeHtml(formatNoteStamp({createdAt: note.createdAt, updatedAt: note.createdAt})) + '</b> · آخرین ویرایش: <b>' + escapeHtml(formatNoteStamp(note)) + '</b>')
       : ('تاریخ و ساعت هنگام ذخیره از زمان سیستم · امروز: <b>' + escapeHtml(formatNoteDateTime(todayISO(), nowSystemTimeHM())) + '</b>');
   }
+  const modalTitle = $('noteModalTitle');
+  const modalMeta = $('noteModalMeta');
+  const readContent = $('noteReadContent');
   if(note){
-    $('noteModalTitle').textContent = 'ویرایش · ' + (note.title || 'بدون عنوان');
+    if(modalTitle) modalTitle.textContent = 'ویرایش · ' + (note.title || 'بدون عنوان');
   } else {
-    $('noteModalTitle').textContent = 'یادداشت جدید';
-    $('noteModalMeta').innerHTML = '<span class="note-badge">جدید</span>';
-    $('noteReadContent').innerHTML = '';
+    if(modalTitle) modalTitle.textContent = 'یادداشت جدید';
+    if(modalMeta) modalMeta.innerHTML = '<span class="note-badge">جدید</span>';
+    if(readContent) readContent.innerHTML = '';
   }
   setNoteMdTab('write');
   setNoteModalMode('edit');
@@ -281,8 +285,8 @@ function openNoteEditor(note){
 
 function closeNoteEditor(){
   // از حالت ویرایش: اگر یادداشت موجود بود به خواندن برگرد، وگرنه بستن
-  const id = ($('noteEditId').value || noteModalCurrentId || '').trim();
-  if(id){
+  const id = ((($('noteEditId') && $('noteEditId').value) || noteModalCurrentId || '') + '').trim();
+  if(id && Array.isArray(notes)){
     const note = notes.find(x => String(x.id) === String(id));
     if(note){ openNoteReader(note); return; }
   }
@@ -670,13 +674,31 @@ if($('noteModalCopyBtn')){
 if($('noteModalEditBtn')){
   $('noteModalEditBtn').addEventListener('click', ()=>{
     const id = noteModalCurrentId;
+    if(!id || !Array.isArray(notes)) return;
     const note = notes.find(x => String(x.id) === String(id));
     if(note) openNoteEditor(note);
   });
 }
 if($('noteModalPin')){
   $('noteModalPin').addEventListener('click', ()=>{
+    if(typeof withActionLock === 'function'){
+      withActionLock('notePin', ()=>{
+        const id = noteModalCurrentId;
+        if(!id || !Array.isArray(notes)) return;
+        const note = notes.find(x => String(x.id) === String(id));
+        if(!note) return;
+        note.pinned = !note.pinned;
+        note.updatedAt = new Date().toISOString();
+        if(persist()){
+          showToast(note.pinned ? 'سنجاق شد' : 'سنجاق برداشته شد');
+          fillNoteReadView(note);
+          renderNotes();
+        }
+      });
+      return;
+    }
     const id = noteModalCurrentId;
+    if(!id || !Array.isArray(notes)) return;
     const note = notes.find(x => String(x.id) === String(id));
     if(!note) return;
     note.pinned = !note.pinned;
@@ -695,43 +717,49 @@ document.addEventListener('keydown', (e)=>{
 if($('noteCancelBtn')) $('noteCancelBtn').addEventListener('click', closeNoteEditor);
 if($('noteSaveBtn')){
   $('noteSaveBtn').addEventListener('click', ()=>{
-    const title = ($('noteTitle').value || '').trim();
-    const body = ($('noteBody').value || '').trim();
-    if(!title && !body){ showToast('عنوان یا متن را وارد کنید', true); return; }
-    const cat = getActiveNoteCat();
-    const tags = uniqTags(noteDraftTags);
-    const now = new Date().toISOString();
-    const id = ($('noteEditId').value || '').trim();
-    if(id){
-      const note = notes.find(x => String(x.id) === id);
-      if(!note){ showToast('یادداشت پیدا نشد', true); return; }
-      note.title = title; note.body = body; note.cat = cat; note.tags = tags;
-      note.updatedAt = now;
-    } else {
-      notes.push({
-        id: Date.now(), title, body, cat, tags,
-        pinned: false, createdAt: now, updatedAt: now
-      });
-    }
-    if(!Array.isArray(notes)) notes = [];
-    let ok = false;
-    try{ ok = !!persist(); }catch(err){ console.error(err); ok = false; }
-    if(!ok){
-      try{
-        localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload()));
-        ok = true;
-      }catch(err2){
-        console.error(err2);
-        showToast('ذخیره ناموفق — حافظه مرورگر در دسترس نیست', true);
-        return;
+    const run = ()=>{
+      if(!Array.isArray(notes)) notes = [];
+      const title = (($('noteTitle') && $('noteTitle').value) || '').trim();
+      const body = (($('noteBody') && $('noteBody').value) || '').trim();
+      if(!title && !body){ showToast('عنوان یا متن را وارد کنید', true); return; }
+      const cat = getActiveNoteCat();
+      const tags = uniqTags(noteDraftTags);
+      const now = new Date().toISOString();
+      const id = (($('noteEditId') && $('noteEditId').value) || '').trim();
+      let savedId = id;
+      if(id){
+        const note = notes.find(x => String(x.id) === id);
+        if(!note){ showToast('یادداشت پیدا نشد', true); return; }
+        note.title = title; note.body = body; note.cat = cat; note.tags = tags;
+        note.updatedAt = now;
+      } else {
+        // ID پایدار و یکتا — جلوگیری از collision در create سریع
+        savedId = String(Date.now()) + '-' + Math.floor(Math.random()*100000);
+        notes.push({
+          id: savedId, title, body, cat, tags,
+          pinned: false, createdAt: now, updatedAt: now
+        });
       }
-    }
-    showToast('ذخیره شد');
-    if(typeof renderNotes === 'function') renderNotes();
-    const savedId = id || String(notes[notes.length-1] && notes[notes.length-1].id);
-    const saved = notes.find(x => String(x.id) === String(savedId));
-    if(saved && typeof openNoteReader === 'function') openNoteReader(saved);
-    else if(typeof closeNoteModal === 'function') closeNoteModal();
+      let ok = false;
+      try{ ok = !!persist(); }catch(err){ console.error(err); ok = false; }
+      if(!ok){
+        try{
+          localStorage.setItem(STORE_KEY, JSON.stringify(getStatePayload()));
+          ok = true;
+        }catch(err2){
+          console.error(err2);
+          showToast('ذخیره ناموفق — حافظه مرورگر در دسترس نیست', true);
+          return;
+        }
+      }
+      showToast('ذخیره شد');
+      if(typeof renderNotes === 'function') renderNotes();
+      const saved = notes.find(x => String(x.id) === String(savedId));
+      if(saved && typeof openNoteReader === 'function') openNoteReader(saved);
+      else if(typeof closeNoteModal === 'function') closeNoteModal();
+    };
+    if(typeof withActionLock === 'function') withActionLock('noteSave', run);
+    else run();
   });
 }
 if($('noteDeleteBtn')){
