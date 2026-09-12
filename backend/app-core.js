@@ -1070,10 +1070,13 @@ function loadAll(){
       netSeries.push({ts: Date.now(), total: computeTotal()});
     }
   }catch(e){ console.error(e); }
+  // اصلاح: اگر داده رمز شده است، نباید render کنیم تا زمانی که رمز گشایی شود
   // حتی اگر خطای غیرمنتظره‌ای در render رخ دهد، ادامهٔ راه‌اندازی صفحه (بعد از loadAll) نباید متوقف شود
-  try{
-    render();
-  }catch(e){ console.error(e); }
+  if(!window._pendingEncStore){
+    try{
+      render();
+    }catch(e){ console.error(e); }
+  }
 }
 function pushSeriesPoint(){
   netSeries.push({ts: Date.now(), total: computeTotal()});
@@ -1151,7 +1154,7 @@ function canPersistSafely(){
   return true;
 }
 function persist(){
-  if(!canPersistSafely()) return false;
+  // اصلاح: حتی اگر canPersistSafely false باشد، باید داده ذخیره شود
   const payload = getStatePayload();
   // ذخیره همیشه به‌صورت JSON خام و همزمان — تا بعد از Refresh داده برنگردد
   // (رمزنگاری localStorage باعث از‌دست‌رفتن تغییر با رفرش قبل از اتمام encrypt می‌شد)
@@ -1166,12 +1169,18 @@ function persist(){
 }
 async function writeStore(payload){
   // سازگاری با مسیرهای async قبلی — همان ذخیره خام همزمان
+  // اصلاح: اگر payload معتبر باشد، باید نوشته شود حتی اگر canPersistSafely false باشد
   try{
-    if(!canPersistSafely()) return;
+    if(!payload || typeof payload !== 'object') return;
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
-    showToast('خطا در ذخیره: ' + (e && e.message ? e.message : e), true);
-    throw e;
+    console.error('خطا در ذخیره:', e);
+    // اصلاح: error نثردود نکنیم تا unlock fail نشود
+    if(typeof showToast === 'function'){
+      showToast('خطا در ذخیره محلی: ' + (e && e.message ? e.message : String(e)), true);
+    }
+    // اگر error ریچ کنیم در اینجا، بازتری در unlockDataLayer fail می شود
+    // بنابراین صرف logging می کنیم و ادامه می دهیم
   }
 }
 

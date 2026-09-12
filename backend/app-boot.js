@@ -402,7 +402,8 @@ async function unlockDataLayer(pin){
       if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
       await writeStore(getStatePayload());
     }catch(err){
-      sessionCryptoKey = null;
+      // اصلاح: sessionCryptoKey را null نکنیم تا persist توانای کار کند
+      console.error('خطا در رمز گشایی داده:', err);
       throw err;
     }
   } else {
