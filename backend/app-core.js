@@ -176,7 +176,7 @@ langObserver.observe(document.body,{childList:true,subtree:true});
 /* --- Theme, Design, Animation prefs --- */
 const THEME_KEY = 'daftar-theme';
 const ANIM_KEY = 'daftar-anim';
-const APP_VERSION = '2.03';
+const APP_VERSION = '5.0';
 const VALID_THEMES = ['dark','matte-green','teal-navy','black','gold','light','warm-sand','finverse-violet','navy-crimson','sage-mist'];
 /** نرمال‌سازی نام تم — نام‌های قدیمی/غلط را اصلاح می‌کند */
 function normalizeThemeId(t){
@@ -1083,7 +1083,13 @@ function pushSeriesPoint(){
   if(netSeries.length > 1000) netSeries = netSeries.slice(-1000); // جلوگیری از رشد بی‌حد
 }
 function getStatePayload(){
-  return {assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots, milestonesClaimed, notes, financialGoals, bankCards, ownerProfile, budgets, assetDefs: ASSET_DEFS};
+  return {
+    assets, logs, txs, history, noncash, netSeries, notebook, fcEvents, fcSnapshots,
+    milestonesClaimed, notes, financialGoals, bankCards, ownerProfile, budgets,
+    assetDefs: ASSET_DEFS,
+    _ts: Date.now(),
+    _v: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.0')
+  };
 }
 function applyStatePayload(d){
   if(!d || typeof d !== 'object') return;
@@ -1143,44 +1149,56 @@ const DATA_KDF_ITERS = 210000;
 const BACKUP_MAGIC = 'DMENC1';
 
 function canPersistSafely(){
-  // تا وقتی دادهٔ رمزشده هنوز در حافظه بار نشده، نباید state پیش‌فرض روی localStorage نوشته شود
+  // V5.0: تا وقتی دادهٔ رمزشده هنوز در حافظه بار نشده، نباید state پیش‌فرض روی localStorage نوشته شود
   if(window._pendingEncStore && !sessionCryptoKey) return false;
   try{
     if(typeof loadPinRecord === 'function'){
       const rec = loadPinRecord();
-      if(rec && !sessionCryptoKey) return false; // قفل است و کلید نشست نیست
+      // اگر PIN فعال است و کلید نشست نیست، فقط وقتی داده رمزشده pending داریم جلوگیری کن
+      // (بعد از V4 داده plain ذخیره می‌شود؛ session برای UI قفل است نه برای جلوگیری از persist دادهٔ واقعی)
+      if(rec && !sessionCryptoKey && window._pendingEncStore) return false;
     }
   }catch(e){}
   return true;
 }
 function persist(){
-  // اصلاح: حتی اگر canPersistSafely false باشد، باید داده ذخیره شود
+  // V5.0: هرگز state پیش‌فرض/خالی را روی دادهٔ واقعی یا pending رمزشده overwrite نکن
+  if(window._pendingEncStore && !sessionCryptoKey){
+    console.warn('persist skipped: encrypted data pending unlock');
+    return false;
+  }
   const payload = getStatePayload();
-  // ذخیره همیشه به‌صورت JSON خام و همزمان — تا بعد از Refresh داده برنگردد
-  // (رمزنگاری localStorage باعث از‌دست‌رفتن تغییر با رفرش قبل از اتمام encrypt می‌شد)
+  // برچسب زمان و نسخه برای تشخیص دادهٔ جدیدتر در recovery
+  payload._ts = Date.now();
+  payload._v = (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.0');
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
     console.error(e);
-    showToast('خطا در ذخیره محلی', true);
+    if(typeof showToast === 'function') showToast('خطا در ذخیره محلی', true);
     return false;
   }
   return true;
 }
 async function writeStore(payload){
-  // سازگاری با مسیرهای async قبلی — همان ذخیره خام همزمان
-  // اصلاح: اگر payload معتبر باشد، باید نوشته شود حتی اگر canPersistSafely false باشد
+  // V5.0: محافظت در برابر overwrite دادهٔ رمزشدهٔ pending با state خالی
   try{
     if(!payload || typeof payload !== 'object') return;
+    if(window._pendingEncStore && !sessionCryptoKey){
+      // فقط اگر payload خودش envelope رمزشده است اجازه بده
+      if(!(payload.enc === true && payload.ct)){
+        console.warn('writeStore skipped: would overwrite pending encrypted store');
+        return;
+      }
+    }
+    payload._ts = payload._ts || Date.now();
+    payload._v = payload._v || (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '5.0');
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
     console.error('خطا در ذخیره:', e);
-    // اصلاح: error نثردود نکنیم تا unlock fail نشود
     if(typeof showToast === 'function'){
       showToast('خطا در ذخیره محلی: ' + (e && e.message ? e.message : String(e)), true);
     }
-    // اگر error ریچ کنیم در اینجا، بازتری در unlockDataLayer fail می شود
-    // بنابراین صرف logging می کنیم و ادامه می دهیم
   }
 }
 

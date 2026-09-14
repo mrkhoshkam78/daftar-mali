@@ -616,9 +616,11 @@ if($('menuLogoutBtn')){
 // همگام UI آخرین بازدید پس از آماده شدن DOM
 try{ updateLastVisitUI(); }catch(e){}
 
-checkLock();
+/* V5.0: loadAll قبل از checkLock — تا _pendingEncStore قبل از تصمیم قفل تنظیم شود
+   و از نمایش state پیش‌فرض / overwrite تصادفی جلوگیری شود */
 loadAll();
 ensureCoreAssets();
+checkLock();
 scheduleDateRollover();
 updateTopbarDate();
 
@@ -860,8 +862,25 @@ async function restoreLatestAutoBackup(){
   try{
     when = row.ts ? new Date(row.ts).toLocaleString('fa-IR') : when;
   }catch(e){}
+  // V5.0: هشدار اگر داده فعلی جدیدتر از پشتیبان است
+  let newerWarn = '';
+  try{
+    const curTs = (typeof getStatePayload === 'function' && getStatePayload()._ts) || 0;
+    const bakTs = (row.data && row.data._ts) || row.ts || 0;
+    if(curTs && bakTs && curTs > bakTs + 5000){
+      newerWarn = '\n⚠️ داده فعلی جدیدتر از این پشتیبان است. با بازگردانی ممکن است تغییرات اخیر از دست برود.';
+    }
+  }catch(e){}
   const doRestore = function(){
     try{
+      // قبل از restore مخرب، یک snapshot از state فعلی در IDB نگه دار (بهترین تلاش)
+      try{
+        if(typeof getStatePayload === 'function' && typeof saveBackupToIdb === 'function'){
+          const snap = getStatePayload();
+          snap._restoreGuard = true;
+          saveBackupToIdb(JSON.parse(JSON.stringify(snap)));
+        }
+      }catch(_s){}
       applyAutoBackupPayload(row.data);
       if(typeof persist === 'function') persist();
       if(typeof render === 'function') render();
@@ -876,11 +895,11 @@ async function restoreLatestAutoBackup(){
   if(typeof showConfirmModal === 'function'){
     showConfirmModal(
       'بازگردانی آخرین پشتیبان خودکار؟',
-      'آخرین پشتیبان: ' + when + '\nداده‌های فعلی با این نسخه جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
+      'آخرین پشتیبان: ' + when + newerWarn + '\nداده‌های فعلی با این نسخه جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
       doRestore,
       'بازگردانی'
     );
-  } else if(window.confirm('بازگردانی آخرین پشتیبان خودکار (' + when + ')؟')){
+  } else if(window.confirm('بازگردانی آخرین پشتیبان خودکار (' + when + ')؟' + newerWarn)){
     doRestore();
   }
 }
@@ -889,12 +908,24 @@ async function runAutoBackupIfDue(){
   updateAutoBackupStatusUI(cfg);
   await checkStorageWarning();
   if(!cfg.enabled) return;
+  // V5.0: هرگز از state خالی/پیش‌فرض یا قبل از unlock بکاپ نگیر
+  if(window._pendingEncStore && !sessionCryptoKey) return;
+  try{
+    if(typeof canPersistSafely === 'function' && !canPersistSafely()) return;
+  }catch(e){}
   const intervalMs = cfg.interval === 'daily' ? 86400000 : 604800000;
   const now = Date.now();
   if(cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
   try{
     if(typeof getStatePayload !== 'function') return;
     const payload = getStatePayload();
+    // فقط اگر حداقل یک دارایی/تراکنش/لاگ واقعی وجود دارد
+    const hasData = (payload.assets && Object.keys(payload.assets).some(k => Number(payload.assets[k]) > 0))
+      || (Array.isArray(payload.txs) && payload.txs.length > 0)
+      || (Array.isArray(payload.logs) && payload.logs.length > 0)
+      || (Array.isArray(payload.notes) && payload.notes.length > 0)
+      || (payload.ownerProfile && (payload.ownerProfile.name || payload.ownerProfile.username));
+    if(!hasData) return;
     // فقط کپی داده — بدون تغییر state اصلی
     await saveBackupToIdb(JSON.parse(JSON.stringify(payload)));
     cfg.lastRun = now;
