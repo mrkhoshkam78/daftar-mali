@@ -998,37 +998,34 @@
   /* ---- LAYOUT ---- */
   .layout{display:flex; max-width:640px; margin:0 auto; width:100%;}
   .main{flex:1; padding:16px 14px 40px; min-width:0;}
-  /* V5.0 لپ‌تاپ / دسکتاپ — استفاده حداکثری منطقی از فضای افقی */
+  /* لپ‌تاپ / دسکتاپ — استفاده بهینه از فضای افقی */
   @media (min-width:768px){
-    .layout{max-width:860px;}
-    .main{padding:18px 20px 44px;}
-    .topbar{padding:12px 20px;}
-    .section{padding:16px; margin-bottom:14px;}
+    .layout{max-width:780px;}
+    .main{padding:20px 24px 48px;}
+    .topbar{padding:14px 24px;}
+    .section{padding:18px; margin-bottom:16px;}
     .hero-num{font-size:36px;}
   }
   @media (min-width:1024px){
-    .layout{max-width:1120px;}
-    .main{padding:20px 28px 48px;}
-    .topbar{padding:12px 28px;}
-    #assetCards{grid-template-columns:1fr 1fr 1fr; gap:14px;}
-    .donut-wrap{gap:28px;}
+    .layout{max-width:1040px;}
+    .main{padding:22px 32px 56px;}
+    .topbar{padding:14px 32px;}
+    #assetCards{grid-template-columns:1fr 1fr 1fr; gap:16px;}
+    .donut-wrap{gap:32px;}
     .donut{width:180px; height:180px;}
-    .grid2{gap:12px;}
+    .grid2{gap:14px;}
     .nb-summary-grid{grid-template-columns:1fr 1fr 1fr 1fr;}
   }
   @media (min-width:1280px){
-    .layout{max-width:1280px;}
-    .main{padding:20px 32px 52px;}
-    .topbar{padding:12px 32px;}
+    .layout{max-width:1180px;}
+    .main{padding:24px 36px 60px;}
+    .topbar{padding:14px 36px;}
   }
   @media (min-width:1440px){
-    .layout{max-width:1400px;}
+    .layout{max-width:1280px;}
   }
   @media (min-width:1600px){
-    .layout{max-width:1520px;}
-  }
-  @media (min-width:1920px){
-    .layout{max-width:1680px;}
+    .layout{max-width:1360px;}
   }
   .page{display:none;}
   .page.active{display:block;}
@@ -8380,20 +8377,18 @@ html[data-design="immersive"] .im-header-avatar:hover{
     box-shadow: 0 0 8px rgba(34,197,94,0.7);
   }
 
-  /* Main workspace — V5.0 Full-Width / High-Utilization on Laptop */
+  /* Main workspace */
   html[data-design="immersive"] .layout{
     max-width: none !important;
     margin: 0 !important;
-    margin-left: calc(var(--im-sidebar-w) + 16px) !important;
-    margin-right: 12px !important;
+    margin-left: calc(var(--im-sidebar-w) + 28px) !important;
     width: auto !important;
     position: relative;
     z-index: 2;
   }
   html[data-design="immersive"] .main{
-    padding: 8px 16px 28px !important;
-    max-width: none !important; /* استفاده کامل از فضای باقی‌مانده */
-    width: 100%;
+    padding: 8px 22px 32px !important;
+    max-width: 1380px;
   }
   html[data-design="immersive"] .page{
     max-width: none !important;
@@ -8405,12 +8400,11 @@ html[data-design="immersive"] .im-header-avatar:hover{
     position: sticky;
     top: 0;
     z-index: 30;
-    margin-left: calc(var(--im-sidebar-w) + 16px);
-    margin-right: 12px;
+    margin-left: calc(var(--im-sidebar-w) + 28px);
     background: transparent !important;
     backdrop-filter: none !important;
     border-bottom: none !important;
-    padding: 10px 16px 6px !important;
+    padding: 12px 22px 6px !important;
     gap: 12px;
     align-items: center;
   }
