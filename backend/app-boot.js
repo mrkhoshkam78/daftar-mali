@@ -402,13 +402,21 @@ async function unlockDataLayer(pin){
       if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
       await writeStore(getStatePayload());
     }catch(err){
-      // اصلاح: sessionCryptoKey را null نکنیم تا persist توانای کار کند
+      // sessionCryptoKey را null نکنیم تا persist بعداً کار کند
       console.error('خطا در رمز گشایی داده:', err);
       throw err;
     }
   } else {
+    // داده از قبل plain در حافظه است — فقط اطمینان از ذخیره پایدار
     await writeStore(getStatePayload());
   }
+  // بعد از ورود موفق: اگر پشتیبان خودکار فعال است، یک نسخهٔ معتبر از وضعیت فعلی بگیر
+  // (جبران پشتیبان‌های صفر که قبلاً ممکن بود با lastRun فاصله ایجاد کرده باشند)
+  try{
+    if(typeof runAutoBackupIfDue === 'function'){
+      setTimeout(function(){ runAutoBackupIfDue(true); }, 800);
+    }
+  }catch(e){}
 }
 async function buildBackupBlob(){
   // بکاپ همیشه JSON خام برای بازیابی مطمئن
@@ -616,11 +624,9 @@ if($('menuLogoutBtn')){
 // همگام UI آخرین بازدید پس از آماده شدن DOM
 try{ updateLastVisitUI(); }catch(e){}
 
-/* V5.0: loadAll قبل از checkLock — تا _pendingEncStore قبل از تصمیم قفل تنظیم شود
-   و از نمایش state پیش‌فرض / overwrite تصادفی جلوگیری شود */
+checkLock();
 loadAll();
 ensureCoreAssets();
-checkLock();
 scheduleDateRollover();
 updateTopbarDate();
 
@@ -737,13 +743,14 @@ async function listAutoBackups(){
   });
 }
 
-/** آخرین پشتیبان خودکار معتبر (دارای data آبجکت) */
+/** آخرین پشتیبان خودکار معتبر (دارای data واقعی، نه state صفر) */
 async function getLatestAutoBackup(){
   const rows = await listAutoBackups();
   for(let i = 0; i < rows.length; i++){
     const r = rows[i];
     if(r && r.data && typeof r.data === 'object' && !Array.isArray(r.data)){
-      return r;
+      const check = validateBackupPayload(r.data);
+      if(check.ok) return r;
     }
   }
   return null;
@@ -752,18 +759,29 @@ async function getLatestAutoBackup(){
 /** اعتبارسنجی کامل بودن داده پشتیبان برای restore */
 function validateBackupPayload(d){
   if(!d || typeof d !== 'object' || Array.isArray(d)) return { ok: false, reason: 'ساختار داده نامعتبر است' };
-  // حداقل یکی از فیلدهای اصلی باید وجود داشته باشد
-  const hasAssets = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
-  const hasTxs = Array.isArray(d.txs);
-  const hasHistory = Array.isArray(d.history);
-  const hasLogs = Array.isArray(d.logs);
-  const hasNotebook = Array.isArray(d.notebook);
-  if(!hasAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook){
-    return { ok: false, reason: 'پشتیبان خالی یا ناقص است (بدون دارایی/تراکنش/تاریخچه)' };
-  }
   // جلوگیری از envelope رمزشدهٔ خام به‌عنوان payload
   if(d.enc === true || d.magic === BACKUP_MAGIC || d.ct || d.iv){
     return { ok: false, reason: 'فرمت پشتیبان خودکار با دادهٔ رمزشده سازگار نیست' };
+  }
+  // باگ رفع‌شده: فقط وجود کلید assets کافی نیست — state تمام‌صفر (بعد از لاگین/قفل) نباید «معتبر» شمرده شود
+  const hasAssetsObj = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
+  let assetsSum = 0;
+  if(hasAssetsObj){
+    try{
+      Object.keys(d.assets).forEach(function(k){
+        const v = Number(d.assets[k]);
+        if(isFinite(v) && !isNaN(v)) assetsSum += Math.abs(v);
+      });
+    }catch(e){}
+  }
+  const hasMeaningfulAssets = hasAssetsObj && assetsSum > 0;
+  const hasTxs = Array.isArray(d.txs) && d.txs.length > 0;
+  const hasHistory = Array.isArray(d.history) && d.history.length > 0;
+  const hasLogs = Array.isArray(d.logs) && d.logs.length > 0;
+  const hasNotebook = Array.isArray(d.notebook) && d.notebook.length > 0;
+  const hasNoncash = Array.isArray(d.noncash) && d.noncash.length > 0;
+  if(!hasMeaningfulAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook && !hasNoncash){
+    return { ok: false, reason: 'پشتیبان خالی یا بدون دادهٔ واقعی است (همه صفر / بدون تراکنش)' };
   }
   return { ok: true };
 }
@@ -773,10 +791,13 @@ function validateBackupPayload(d){
  * همان الگوی import دستی — جایگزینی تمیز، بدون duplicate
  */
 function applyAutoBackupPayload(d){
+  // جایگزینی کامل دارایی‌ها (validateBackupPayload قبلاً دادهٔ معنادار را تضمین کرده)
   if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
-    // جایگزینی کامل — جلوگیری از نشت مقادیر پیش‌فرض اولیه
     assets = Object.assign({}, d.assets);
     Object.keys(assets).forEach(function(k){ assets[k] = safeNum(assets[k], 0); });
+  } else {
+    // نباید با state قبلی مخلوط شود
+    assets = { snapp: 0, hami: 0, farabi: 0, card: 0, wallet: 0 };
   }
   logs = Array.isArray(d.logs) ? d.logs : [];
   txs = Array.isArray(d.txs) ? d.txs : [];
@@ -862,25 +883,8 @@ async function restoreLatestAutoBackup(){
   try{
     when = row.ts ? new Date(row.ts).toLocaleString('fa-IR') : when;
   }catch(e){}
-  // V5.0: هشدار اگر داده فعلی جدیدتر از پشتیبان است
-  let newerWarn = '';
-  try{
-    const curTs = (typeof getStatePayload === 'function' && getStatePayload()._ts) || 0;
-    const bakTs = (row.data && row.data._ts) || row.ts || 0;
-    if(curTs && bakTs && curTs > bakTs + 5000){
-      newerWarn = '\n⚠️ داده فعلی جدیدتر از این پشتیبان است. با بازگردانی ممکن است تغییرات اخیر از دست برود.';
-    }
-  }catch(e){}
   const doRestore = function(){
     try{
-      // قبل از restore مخرب، یک snapshot از state فعلی در IDB نگه دار (بهترین تلاش)
-      try{
-        if(typeof getStatePayload === 'function' && typeof saveBackupToIdb === 'function'){
-          const snap = getStatePayload();
-          snap._restoreGuard = true;
-          saveBackupToIdb(JSON.parse(JSON.stringify(snap)));
-        }
-      }catch(_s){}
       applyAutoBackupPayload(row.data);
       if(typeof persist === 'function') persist();
       if(typeof render === 'function') render();
@@ -895,37 +899,48 @@ async function restoreLatestAutoBackup(){
   if(typeof showConfirmModal === 'function'){
     showConfirmModal(
       'بازگردانی آخرین پشتیبان خودکار؟',
-      'آخرین پشتیبان: ' + when + newerWarn + '\nداده‌های فعلی با این نسخه جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
+      'آخرین پشتیبان: ' + when + '\nداده‌های فعلی با این نسخه جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
       doRestore,
       'بازگردانی'
     );
-  } else if(window.confirm('بازگردانی آخرین پشتیبان خودکار (' + when + ')؟' + newerWarn)){
+  } else if(window.confirm('بازگردانی آخرین پشتیبان خودکار (' + when + ')؟')){
     doRestore();
   }
 }
-async function runAutoBackupIfDue(){
+/** آیا الان امن است پشتیبان خودکار گرفته شود؟ (قفل باز، داده بارشده، state خالی نباشد) */
+function canRunAutoBackupNow(){
+  try{
+    // صفحه قفل / داده رمزشده هنوز باز نشده
+    if(window._pendingEncStore && !sessionCryptoKey) return false;
+    if(typeof canPersistSafely === 'function' && !canPersistSafely()) return false;
+    // قفل ورود هنوز نمایش داده می‌شود
+    const lock = document.getElementById('lockScreen');
+    if(lock && lock.style.display && lock.style.display !== 'none') return false;
+  }catch(e){}
+  return true;
+}
+async function runAutoBackupIfDue(force){
   const cfg = loadAutoBackupCfg();
   updateAutoBackupStatusUI(cfg);
   await checkStorageWarning();
   if(!cfg.enabled) return;
-  // V5.0: هرگز از state خالی/پیش‌فرض یا قبل از unlock بکاپ نگیر
-  if(window._pendingEncStore && !sessionCryptoKey) return;
-  try{
-    if(typeof canPersistSafely === 'function' && !canPersistSafely()) return;
-  }catch(e){}
+  // باگ رفع‌شده: روی صفحه قفل یا قبل از unlock اجرا نشود (وگرنه state صفر ذخیره می‌شود)
+  if(!canRunAutoBackupNow()){
+    console.warn('auto backup skipped: not safe yet (lock/pending)');
+    return;
+  }
   const intervalMs = cfg.interval === 'daily' ? 86400000 : 604800000;
   const now = Date.now();
-  if(cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
+  if(!force && cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
   try{
     if(typeof getStatePayload !== 'function') return;
     const payload = getStatePayload();
-    // فقط اگر حداقل یک دارایی/تراکنش/لاگ واقعی وجود دارد
-    const hasData = (payload.assets && Object.keys(payload.assets).some(k => Number(payload.assets[k]) > 0))
-      || (Array.isArray(payload.txs) && payload.txs.length > 0)
-      || (Array.isArray(payload.logs) && payload.logs.length > 0)
-      || (Array.isArray(payload.notes) && payload.notes.length > 0)
-      || (payload.ownerProfile && (payload.ownerProfile.name || payload.ownerProfile.username));
-    if(!hasData) return;
+    // باگ رفع‌شده: state خالی/صفر را ذخیره نکن و lastRun را هم جلو نینداز
+    const check = validateBackupPayload(payload);
+    if(!check.ok){
+      console.warn('auto backup skipped: empty/invalid payload', check.reason);
+      return;
+    }
     // فقط کپی داده — بدون تغییر state اصلی
     await saveBackupToIdb(JSON.parse(JSON.stringify(payload)));
     cfg.lastRun = now;
@@ -958,7 +973,8 @@ function updateAutoBackupStatusUI(cfg){
     meta.textContent = 'در حال بررسی پشتیبان‌های محلی…';
     listAutoBackups().then(function(rows){
       const valid = (rows || []).filter(function(r){
-        return r && r.data && typeof r.data === 'object' && !Array.isArray(r.data);
+        if(!r || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) return false;
+        try{ return validateBackupPayload(r.data).ok; }catch(e){ return false; }
       });
       if(!valid.length){
         meta.textContent = 'آخرین پشتیبان خودکار: موجود نیست';
