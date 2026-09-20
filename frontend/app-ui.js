@@ -2676,7 +2676,7 @@ function getBankCardDisplayBalance(card){
   return safeNum(card.balance, 0);
 }
 /** اعمال فوری مبلغ روی کارت انتخاب‌شده (یا کارت پیش‌فرض / assets.card) — برای همگام‌سازی Real-Time */
-function applyAmountToCard(cardId, delta, note, dateIso){
+function applyAmountToCard(cardId, delta, note){
   delta = safeNum(delta, 0);
   if(Math.abs(delta) < 0.5) return;
   const card = findBankCard(cardId);
@@ -2686,10 +2686,7 @@ function applyAmountToCard(cardId, delta, note, dateIso){
     assets.card = safeNum(assets.card, 0) + delta;
   }
   if(!Array.isArray(txs)) txs = [];
-  // تاریخ واقعی تراکنش (از فرم دفترچه) — نه همیشه امروز؛ وگرنه تاریخچه همه را روی امروز نشان می‌دهد
-  let d = (dateIso && /^\d{4}-\d{2}-\d{2}/.test(String(dateIso))) ? String(dateIso).slice(0, 10) : null;
-  if(!d) d = (typeof todayISO === 'function') ? todayISO() : '';
-  txs.push({date: d, key:'card', delta, note: note || ''});
+  txs.push({date: todayISO(), key:'card', delta, note: note || ''});
   if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
 }
 /**
@@ -2710,8 +2707,7 @@ function reverseNotebookEntryEffect(entry){
     const sign = (NB_TYPES[type] && NB_TYPES[type].sign) || (type === 'deposit' ? 1 : -1);
     if(sign !== 0 && amt > 0){
       const cardId = entry.cardId || '';
-      const entryDate = entry.date ? String(entry.date).slice(0, 10) : null;
-      applyAmountToCard(cardId, -(sign * amt), label, entryDate);
+      applyAmountToCard(cardId, -(sign * amt), label);
     }
     return;
   }
@@ -2724,25 +2720,21 @@ function reverseNotebookEntryEffect(entry){
       assets[fromKey] = safeNum(assets[fromKey], 0) + amt;
       assets[toKey] = safeNum(assets[toKey], 0) - amt;
       if(!Array.isArray(txs)) txs = [];
-      const entryDate = (entry.date && /^\d{4}-\d{2}-\d{2}/.test(String(entry.date)))
-        ? String(entry.date).slice(0, 10) : todayISO();
-      txs.push({date: entryDate, key: fromKey, delta: amt, note: label});
-      txs.push({date: entryDate, key: toKey, delta: -amt, note: label});
+      txs.push({date: todayISO(), key: fromKey, delta: amt, note: label});
+      txs.push({date: todayISO(), key: toKey, delta: -amt, note: label});
       if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
     }
     return;
   }
 
   if(type === 'lent' || type === 'borrowed'){
-    const entryDate = (entry.date && /^\d{4}-\d{2}-\d{2}/.test(String(entry.date)))
-      ? String(entry.date).slice(0, 10) : todayISO();
     // اگر تسویه باعث تغییر کارت شده بود، همان دلتا را برگردان
     if(entry.settledApplied && entry.settleCardDelta){
       const d = safeNum(entry.settleCardDelta, 0);
       if(Math.abs(d) > 0.5){
         assets.card = safeNum(assets.card, 0) - d;
         if(!Array.isArray(txs)) txs = [];
-        txs.push({date: entryDate, key: 'card', delta: -d, note: label});
+        txs.push({date: todayISO(), key: 'card', delta: -d, note: label});
         if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
       }
       entry.settledApplied = false;
@@ -2757,7 +2749,7 @@ function reverseNotebookEntryEffect(entry){
       if(Math.abs(d) > 0.5){
         assets.card = safeNum(assets.card, 0) - d;
         if(!Array.isArray(txs)) txs = [];
-        txs.push({date: entryDate, key: 'card', delta: -d, note: label});
+        txs.push({date: todayISO(), key: 'card', delta: -d, note: label});
         if(typeof pushSeriesPoint === 'function') pushSeriesPoint();
       }
     }
@@ -2778,8 +2770,7 @@ function syncUnappliedPaymentsDeposits(){
     const delta = sign * amt;
     const cardId = e.cardId || '';
     const label = (NB_TYPES[e.type] && NB_TYPES[e.type].label) || e.type;
-    const entryDate = e.date ? String(e.date).slice(0, 10) : null;
-    applyAmountToCard(cardId, delta, label + (e.desc ? ' — ' + e.desc : '') + ' (همگام‌سازی)', entryDate);
+    applyAmountToCard(cardId, delta, label + (e.desc ? ' — ' + e.desc : '') + ' (همگام‌سازی)');
     e.applied = true;
     changed = true;
   });
@@ -3302,8 +3293,7 @@ if($('nbAddBtn')) $('nbAddBtn').addEventListener('click', (ev)=>{
       const delta = sign * amt;
       const cardId = entry.cardId || (($('nbCardSelect') && $('nbCardSelect').value) || '');
       const label = (NB_TYPES[type] && NB_TYPES[type].label) || type;
-      // تاریخ انتخاب‌شده در فرم (نه امروز) تا تاریخچه درست جدا شود
-      applyAmountToCard(cardId, delta, label + (desc ? ' — ' + desc : ''), date);
+      applyAmountToCard(cardId, delta, label + (desc ? ' — ' + desc : ''));
       entry.applied = true;
     }
     notebook.push(entry);
@@ -3401,23 +3391,11 @@ if($('importFile')) $('importFile').addEventListener('change', (e)=>{
       } else {
         d = parsed.data;
       }
-      // باگ رفع‌شده: پشتیبان خالی/صفر را اعمال نکن (همان اعتبارسنجی پشتیبان خودکار)
-      if(typeof validateBackupPayload === 'function'){
-        const check = validateBackupPayload(d);
-        if(!check.ok){
-          showToast(check.reason || 'فایل پشتیبان خالی یا نامعتبر است', true);
-          e.target.value = '';
-          return;
-        }
-      }
       // بازگردانی کامل و تمیز — بدون مخلوط شدن با state قبلی
       if(d.assets && typeof d.assets === 'object'){
         assets = Object.assign({}, d.assets);
         // نرمال‌سازی مبالغ دارایی
         Object.keys(assets).forEach(k=>{ assets[k] = safeNum(assets[k], 0); });
-      } else {
-        // اگر assets نبود، state قبلی را صفر نکن بی‌دلیل — اما اعتبارسنجی بالا معمولاً جلویش را گرفته
-        assets = Object.assign({}, assets || {});
       }
       logs = Array.isArray(d.logs) ? d.logs : [];
       txs = Array.isArray(d.txs) ? d.txs : [];
