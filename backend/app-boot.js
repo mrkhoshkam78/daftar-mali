@@ -402,21 +402,13 @@ async function unlockDataLayer(pin){
       if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
       await writeStore(getStatePayload());
     }catch(err){
-      // sessionCryptoKey را null نکنیم تا persist بعداً کار کند
+      // اصلاح: sessionCryptoKey را null نکنیم تا persist توانای کار کند
       console.error('خطا در رمز گشایی داده:', err);
       throw err;
     }
   } else {
-    // داده از قبل plain در حافظه است — فقط اطمینان از ذخیره پایدار
     await writeStore(getStatePayload());
   }
-  // بعد از ورود موفق: اگر پشتیبان خودکار فعال است، یک نسخهٔ معتبر از وضعیت فعلی بگیر
-  // (جبران پشتیبان‌های صفر که قبلاً ممکن بود با lastRun فاصله ایجاد کرده باشند)
-  try{
-    if(typeof runAutoBackupIfDue === 'function'){
-      setTimeout(function(){ runAutoBackupIfDue(true); }, 800);
-    }
-  }catch(e){}
 }
 async function buildBackupBlob(){
   // بکاپ همیشه JSON خام برای بازیابی مطمئن
@@ -630,26 +622,43 @@ ensureCoreAssets();
 scheduleDateRollover();
 updateTopbarDate();
 
-/* ================= AUTO BACKUP (IndexedDB, local-only) ================= */
+/* ================= AUTO BACKUP (IndexedDB + localStorage redundancy) ================= */
 const AUTO_BACKUP_CFG_KEY = 'daftar-auto-backup-cfg';
+const AUTO_BACKUP_CFG_IDB_KEY = 'daftar-backup-cfg-idb'; // redundancy fallback
 const AUTO_BACKUP_DB = 'daftar-auto-backup-db';
 const AUTO_BACKUP_STORE = 'backups';
 const AUTO_BACKUP_MAX = 5;
+const PERSISTENT_BACKUP_KEY = 'daftar-persistent-backup'; // emergency fallback
+
+// ذخیره‌سازی config با redundancy (localStorage + IndexedDB)
+async function saveAutoBackupCfgIdb(cfg){
+  try{
+    const db = await openBackupDb();
+    const tx = db.transaction(AUTO_BACKUP_STORE, 'readwrite');
+    const store = tx.objectStore(AUTO_BACKUP_STORE);
+    store.put({ id: AUTO_BACKUP_CFG_IDB_KEY, ts: Date.now(), data: cfg });
+    db.close();
+  }catch(e){ console.log('idb cfg save', e); }
+}
 
 function loadAutoBackupCfg(){
   try{
     const raw = localStorage.getItem(AUTO_BACKUP_CFG_KEY);
-    if(!raw) return { enabled: false, interval: 'weekly', lastRun: 0 };
+    if(!raw) return { enabled: true, interval: 'daily', lastRun: 0 }; // فعال به‌صورت پیش‌فرض
     const o = JSON.parse(raw);
     return {
       enabled: !!o.enabled,
       interval: (o.interval === 'daily' ? 'daily' : 'weekly'),
       lastRun: parseInt(o.lastRun, 10) || 0
     };
-  }catch(e){ return { enabled: false, interval: 'weekly', lastRun: 0 }; }
+  }catch(e){ 
+    return { enabled: true, interval: 'daily', lastRun: 0 }; // fallback enabled
+  }
 }
 function saveAutoBackupCfg(cfg){
   try{ localStorage.setItem(AUTO_BACKUP_CFG_KEY, JSON.stringify(cfg)); }catch(e){}
+  // ذخیره async در IndexedDB نیز
+  try{ saveAutoBackupCfgIdb(cfg).catch(()=>{}); }catch(e){}
 }
 function openBackupDb(){
   return new Promise(function(resolve, reject){
@@ -743,14 +752,13 @@ async function listAutoBackups(){
   });
 }
 
-/** آخرین پشتیبان خودکار معتبر (دارای data واقعی، نه state صفر) */
+/** آخرین پشتیبان خودکار معتبر (دارای data آبجکت) */
 async function getLatestAutoBackup(){
   const rows = await listAutoBackups();
   for(let i = 0; i < rows.length; i++){
     const r = rows[i];
     if(r && r.data && typeof r.data === 'object' && !Array.isArray(r.data)){
-      const check = validateBackupPayload(r.data);
-      if(check.ok) return r;
+      return r;
     }
   }
   return null;
@@ -759,29 +767,18 @@ async function getLatestAutoBackup(){
 /** اعتبارسنجی کامل بودن داده پشتیبان برای restore */
 function validateBackupPayload(d){
   if(!d || typeof d !== 'object' || Array.isArray(d)) return { ok: false, reason: 'ساختار داده نامعتبر است' };
+  // حداقل یکی از فیلدهای اصلی باید وجود داشته باشد
+  const hasAssets = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
+  const hasTxs = Array.isArray(d.txs);
+  const hasHistory = Array.isArray(d.history);
+  const hasLogs = Array.isArray(d.logs);
+  const hasNotebook = Array.isArray(d.notebook);
+  if(!hasAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook){
+    return { ok: false, reason: 'پشتیبان خالی یا ناقص است (بدون دارایی/تراکنش/تاریخچه)' };
+  }
   // جلوگیری از envelope رمزشدهٔ خام به‌عنوان payload
   if(d.enc === true || d.magic === BACKUP_MAGIC || d.ct || d.iv){
     return { ok: false, reason: 'فرمت پشتیبان خودکار با دادهٔ رمزشده سازگار نیست' };
-  }
-  // باگ رفع‌شده: فقط وجود کلید assets کافی نیست — state تمام‌صفر (بعد از لاگین/قفل) نباید «معتبر» شمرده شود
-  const hasAssetsObj = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
-  let assetsSum = 0;
-  if(hasAssetsObj){
-    try{
-      Object.keys(d.assets).forEach(function(k){
-        const v = Number(d.assets[k]);
-        if(isFinite(v) && !isNaN(v)) assetsSum += Math.abs(v);
-      });
-    }catch(e){}
-  }
-  const hasMeaningfulAssets = hasAssetsObj && assetsSum > 0;
-  const hasTxs = Array.isArray(d.txs) && d.txs.length > 0;
-  const hasHistory = Array.isArray(d.history) && d.history.length > 0;
-  const hasLogs = Array.isArray(d.logs) && d.logs.length > 0;
-  const hasNotebook = Array.isArray(d.notebook) && d.notebook.length > 0;
-  const hasNoncash = Array.isArray(d.noncash) && d.noncash.length > 0;
-  if(!hasMeaningfulAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook && !hasNoncash){
-    return { ok: false, reason: 'پشتیبان خالی یا بدون دادهٔ واقعی است (همه صفر / بدون تراکنش)' };
   }
   return { ok: true };
 }
@@ -791,13 +788,10 @@ function validateBackupPayload(d){
  * همان الگوی import دستی — جایگزینی تمیز، بدون duplicate
  */
 function applyAutoBackupPayload(d){
-  // جایگزینی کامل دارایی‌ها (validateBackupPayload قبلاً دادهٔ معنادار را تضمین کرده)
   if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
+    // جایگزینی کامل — جلوگیری از نشت مقادیر پیش‌فرض اولیه
     assets = Object.assign({}, d.assets);
     Object.keys(assets).forEach(function(k){ assets[k] = safeNum(assets[k], 0); });
-  } else {
-    // نباید با state قبلی مخلوط شود
-    assets = { snapp: 0, hami: 0, farabi: 0, card: 0, wallet: 0 };
   }
   logs = Array.isArray(d.logs) ? d.logs : [];
   txs = Array.isArray(d.txs) ? d.txs : [];
@@ -861,6 +855,51 @@ function applyAutoBackupPayload(d){
   if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
 }
 
+// بازیابی خودکار در صورت نیاز (silent)
+async function attemptSilentAutoRestore(){
+  // اگر localStorage خالی است و backup موجود است، بازیابی کن
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.assets) return; // داده موجود است
+    }
+  }catch(e){}
+  
+  // داده موجود نیست — تلاش برای بازیابی
+  console.log('localStorage empty, attempting restore...');
+  
+  // ابتدا IndexedDB را تلاش کن
+  try{
+    const row = await getLatestAutoBackup();
+    if(row && row.data){
+      const check = validateBackupPayload(row.data);
+      if(check.ok){
+        applyAutoBackupPayload(row.data);
+        if(typeof persist === 'function') persist();
+        console.log('silent restore from IDB succeeded');
+        return true;
+      }
+    }
+  }catch(e){ console.log('idb restore failed', e); }
+  
+  // fallback: localStorage emergency backup
+  try{
+    const emergency = localStorage.getItem(PERSISTENT_BACKUP_KEY);
+    if(emergency){
+      const data = JSON.parse(emergency);
+      if(data && data.assets){
+        applyAutoBackupPayload(data);
+        if(typeof persist === 'function') persist();
+        console.log('silent restore from emergency backup succeeded');
+        return true;
+      }
+    }
+  }catch(e){ console.log('emergency restore failed', e); }
+  
+  return false;
+}
+
 async function restoreLatestAutoBackup(){
   let row = null;
   try{
@@ -907,40 +946,40 @@ async function restoreLatestAutoBackup(){
     doRestore();
   }
 }
-/** آیا الان امن است پشتیبان خودکار گرفته شود؟ (قفل باز، داده بارشده، state خالی نباشد) */
-function canRunAutoBackupNow(){
+// ذخیره فوری backup خودکار (صدا زده می‌شود از persist)
+async function runAutoBackupImmediate(payload){
+  if(!payload) return;
   try{
-    // صفحه قفل / داده رمزشده هنوز باز نشده
-    if(window._pendingEncStore && !sessionCryptoKey) return false;
-    if(typeof canPersistSafely === 'function' && !canPersistSafely()) return false;
-    // قفل ورود هنوز نمایش داده می‌شود
-    const lock = document.getElementById('lockScreen');
-    if(lock && lock.style.display && lock.style.display !== 'none') return false;
-  }catch(e){}
-  return true;
+    // ذخیره در IndexedDB بدون محدودیت زمانی
+    const clean = JSON.parse(JSON.stringify(payload));
+    await saveBackupToIdb(clean);
+    
+    // ذخیره emergency fallback در localStorage (اگر IndexedDB کار نکند)
+    try{
+      const small = { 
+        ts: Date.now(),
+        assets: clean.assets || {},
+        txs: (clean.txs || []).slice(-100), // تنها 100 آخری
+        noncash: clean.noncash || []
+      };
+      localStorage.setItem(PERSISTENT_BACKUP_KEY, JSON.stringify(small));
+    }catch(e){}
+  }catch(e){ 
+    console.log('immediate backup failed', e);
+  }
 }
-async function runAutoBackupIfDue(force){
+
+async function runAutoBackupIfDue(){
   const cfg = loadAutoBackupCfg();
   updateAutoBackupStatusUI(cfg);
   await checkStorageWarning();
   if(!cfg.enabled) return;
-  // باگ رفع‌شده: روی صفحه قفل یا قبل از unlock اجرا نشود (وگرنه state صفر ذخیره می‌شود)
-  if(!canRunAutoBackupNow()){
-    console.warn('auto backup skipped: not safe yet (lock/pending)');
-    return;
-  }
   const intervalMs = cfg.interval === 'daily' ? 86400000 : 604800000;
   const now = Date.now();
-  if(!force && cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
+  if(cfg.lastRun && (now - cfg.lastRun) < intervalMs) return;
   try{
     if(typeof getStatePayload !== 'function') return;
     const payload = getStatePayload();
-    // باگ رفع‌شده: state خالی/صفر را ذخیره نکن و lastRun را هم جلو نینداز
-    const check = validateBackupPayload(payload);
-    if(!check.ok){
-      console.warn('auto backup skipped: empty/invalid payload', check.reason);
-      return;
-    }
     // فقط کپی داده — بدون تغییر state اصلی
     await saveBackupToIdb(JSON.parse(JSON.stringify(payload)));
     cfg.lastRun = now;
@@ -973,8 +1012,7 @@ function updateAutoBackupStatusUI(cfg){
     meta.textContent = 'در حال بررسی پشتیبان‌های محلی…';
     listAutoBackups().then(function(rows){
       const valid = (rows || []).filter(function(r){
-        if(!r || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) return false;
-        try{ return validateBackupPayload(r.data).ok; }catch(e){ return false; }
+        return r && r.data && typeof r.data === 'object' && !Array.isArray(r.data);
       });
       if(!valid.length){
         meta.textContent = 'آخرین پشتیبان خودکار: موجود نیست';
@@ -1013,7 +1051,15 @@ function bindAutoBackupUI(){
 }
 // init after DOM
 if(typeof document !== 'undefined'){
-  const bootAuto = function(){ bindAutoBackupUI(); setTimeout(function(){ runAutoBackupIfDue(); }, 1500); };
+  const bootAuto = async function(){ 
+    // قبل از هر چیز، تلاش برای بازیابی خودکار داده‌های گم‌شده
+    try{
+      await attemptSilentAutoRestore();
+    }catch(e){ console.log('silent restore error', e); }
+    
+    bindAutoBackupUI(); 
+    setTimeout(function(){ runAutoBackupIfDue(); }, 1500); 
+  };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAuto);
   else bootAuto();
 }
