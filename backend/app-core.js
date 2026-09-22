@@ -1143,51 +1143,56 @@ const DATA_KDF_ITERS = 210000;
 const BACKUP_MAGIC = 'DMENC1';
 
 function canPersistSafely(){
-  // تا وقتی دادهٔ رمزشده هنوز در حافظه بار نشده، نباید state پیش‌فرض روی localStorage نوشته شود
+  // تا وقتی دادهٔ رمزشده هنوز در حافظه بار/رمزگشایی نشده، هرگز state پیش‌فرض (صفر) را روی localStorage ننویس
   if(window._pendingEncStore && !sessionCryptoKey) return false;
   try{
     if(typeof loadPinRecord === 'function'){
       const rec = loadPinRecord();
-      if(rec && !sessionCryptoKey) return false; // قفل است و کلید نشست نیست
+      // قفل فعال و کلید نشست نیست → ذخیره ممنوع (جلوگیری از صفر شدن داده)
+      if(rec && !sessionCryptoKey) return false;
     }
   }catch(e){}
   return true;
 }
 function persist(){
-  // اصلاح: حتی اگر canPersistSafely false باشد، باید داده ذخیره شود
+  // محافظت حیاتی: اگر داده رمزشده pending است یا قفل بدون کلید نشست، ذخیره نکن
+  // در غیر این صورت state پیش‌فرض (موجودی صفر) روی داده واقعی نوشته می‌شود
+  if(!canPersistSafely()){
+    console.warn('persist blocked: pending encrypted store or locked without session key');
+    return false;
+  }
   const payload = getStatePayload();
-  // ذخیره همیشه به‌صورت JSON خام و همزمان — تا بعد از Refresh داده برنگردد
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
     console.error(e);
-    showToast('خطا در ذخیره محلی', true);
+    if(typeof showToast === 'function') showToast('خطا در ذخیره محلی', true);
     return false;
   }
-  
-  // اضافه: فوری backup
+  // پشتیبان فوری پس از ذخیره موفق
   if(typeof runAutoBackupImmediate === 'function'){
     try{
       runAutoBackupImmediate(payload).catch(err => console.log('async backup', err));
     }catch(e){ console.log('backup trigger', e); }
   }
-  
   return true;
 }
 async function writeStore(payload){
-  // سازگاری با مسیرهای async قبلی — همان ذخیره خام همزمان
-  // اصلاح: اگر payload معتبر باشد، باید نوشته شود حتی اگر canPersistSafely false باشد
+  // فقط پس از رمزگشایی موفق یا وقتی داده plain معتبر است فراخوانی شود
+  // در مسیر unlockDataLayer بعد از applyStatePayload صدا زده می‌شود — امن است
   try{
     if(!payload || typeof payload !== 'object') return;
+    // اگر هنوز pending encrypted داریم و کلید نشست نیست، ننویس
+    if(window._pendingEncStore && !sessionCryptoKey){
+      console.warn('writeStore blocked: pending encrypted store');
+      return;
+    }
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
     console.error('خطا در ذخیره:', e);
-    // اصلاح: error نثردود نکنیم تا unlock fail نشود
     if(typeof showToast === 'function'){
       showToast('خطا در ذخیره محلی: ' + (e && e.message ? e.message : String(e)), true);
     }
-    // اگر error ریچ کنیم در اینجا، بازتری در unlockDataLayer fail می شود
-    // بنابراین صرف logging می کنیم و ادامه می دهیم
   }
 }
 

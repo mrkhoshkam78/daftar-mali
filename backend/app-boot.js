@@ -400,13 +400,20 @@ async function unlockDataLayer(pin){
         });
       }
       if(typeof ensureNotebookMonth === 'function') ensureNotebookMonth();
+      if(typeof ensureCoreAssets === 'function') ensureCoreAssets();
+      // مهاجرت به ذخیره plain — داده رمزگشایی‌شده را با کلید نشست بنویس
       await writeStore(getStatePayload());
+      // پشتیبان فوری از دادهٔ واقعی (نه صفر)
+      if(typeof runAutoBackupImmediate === 'function'){
+        try{ await runAutoBackupImmediate(getStatePayload()); }catch(_b){}
+      }
     }catch(err){
-      // اصلاح: sessionCryptoKey را null نکنیم تا persist توانای کار کند
+      // کلید نشست را نگه دار تا کاربر بتواند دوباره تلاش کند؛ pending را پاک نکن
       console.error('خطا در رمز گشایی داده:', err);
       throw err;
     }
   } else {
+    // داده plain از قبل load شده — فقط اطمینان از ذخیره
     await writeStore(getStatePayload());
   }
 }
@@ -491,9 +498,11 @@ function showLockScreen(){
 }
 async function checkLock(){
   const rec = loadPinRecord();
-  // داده رمزشدهٔ pending → Session نامعتبر + قفل
+  // حیاتی: داده رمزشدهٔ pending → حتماً Session را باطل و قفل نشان بده
+  // (حتی اگر Session از Refresh باقی مانده باشد — وگرنه UI با موجودی صفر نمایش داده می‌شود)
   if(window._pendingEncStore){
     clearSession();
+    try{ sessionCryptoKey = null; }catch(e){}
     showLockScreen();
     return;
   }
@@ -592,13 +601,17 @@ $('pinRemoveBtn').addEventListener('click', async ()=>{
   );
 });
 
-/* --- Startup sequence (order fixed) --- */
+/* --- Startup sequence (order fixed — CRITICAL) --- */
 // پاکسازی یک‌باره تنظیمات قدیمی گیت‌هاب (این قابلیت حذف شده)
 ['daftar-gh-owner','daftar-gh-repo','daftar-gh-token'].forEach(k=>{
   try{ localStorage.removeItem(k); }catch(e){}
 });
 
-/* init: PIN UI → lock gate → load state → assets → date clock */
+/* init order (MUST NOT CHANGE without understanding data safety):
+   1) loadAll() FIRST — so _pendingEncStore / assets are set from localStorage
+   2) checkLock() AFTER  — so encrypted pending is detected and lock is forced
+   3) never persist defaults before decrypt
+*/
 refreshPinStatus();
 // Logout از منو
 if($('menuLogoutBtn')){
@@ -616,8 +629,9 @@ if($('menuLogoutBtn')){
 // همگام UI آخرین بازدید پس از آماده شدن DOM
 try{ updateLastVisitUI(); }catch(e){}
 
-checkLock();
+// ترتیب حیاتی: ابتدا بارگذاری state، سپس بررسی قفل
 loadAll();
+checkLock();
 ensureCoreAssets();
 scheduleDateRollover();
 updateTopbarDate();
@@ -857,17 +871,24 @@ function applyAutoBackupPayload(d){
 
 // بازیابی خودکار در صورت نیاز (silent)
 async function attemptSilentAutoRestore(){
-  // اگر localStorage خالی است و backup موجود است، بازیابی کن
+  // اگر داده رمزشده pending است، فقط پس از unlock و decrypt بازیابی کن — اینجا دخالت نکن
+  if(window._pendingEncStore){
+    console.log('silent restore skipped: pending encrypted store (wait for unlock)');
+    return false;
+  }
+  // اگر localStorage داده معتبر (دارای assets) دارد، دست نزن
   try{
     const raw = localStorage.getItem(STORE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && parsed.assets) return; // داده موجود است
+      // envelope رمزشده → نباید اینجا restore شود (unlock مسئول است)
+      if(parsed && (parsed.enc === true || parsed.ct)) return false;
+      if(parsed && parsed.assets && typeof parsed.assets === 'object') return false; // داده موجود است
     }
   }catch(e){}
   
-  // داده موجود نیست — تلاش برای بازیابی
-  console.log('localStorage empty, attempting restore...');
+  // داده موجود نیست یا خراب — تلاش برای بازیابی از پشتیبان
+  console.log('localStorage empty/invalid, attempting silent restore...');
   
   // ابتدا IndexedDB را تلاش کن
   try{
@@ -877,20 +898,22 @@ async function attemptSilentAutoRestore(){
       if(check.ok){
         applyAutoBackupPayload(row.data);
         if(typeof persist === 'function') persist();
+        if(typeof render === 'function') try{ render(); }catch(_r){}
         console.log('silent restore from IDB succeeded');
         return true;
       }
     }
   }catch(e){ console.log('idb restore failed', e); }
   
-  // fallback: localStorage emergency backup
+  // fallback: localStorage emergency backup (جزئی — فقط در نبود IDB)
   try{
     const emergency = localStorage.getItem(PERSISTENT_BACKUP_KEY);
     if(emergency){
       const data = JSON.parse(emergency);
-      if(data && data.assets){
+      if(data && data.assets && typeof data.assets === 'object'){
         applyAutoBackupPayload(data);
         if(typeof persist === 'function') persist();
+        if(typeof render === 'function') try{ render(); }catch(_r){}
         console.log('silent restore from emergency backup succeeded');
         return true;
       }
@@ -949,20 +972,30 @@ async function restoreLatestAutoBackup(){
 // ذخیره فوری backup خودکار (صدا زده می‌شود از persist)
 async function runAutoBackupImmediate(payload){
   if(!payload) return;
+  // هرگز از state صفر/پیش‌فرض وقتی pending encrypted است بکاپ نگیر
+  if(window._pendingEncStore && !sessionCryptoKey) return;
   try{
-    // ذخیره در IndexedDB بدون محدودیت زمانی
+    // ذخیره کامل در IndexedDB
     const clean = JSON.parse(JSON.stringify(payload));
     await saveBackupToIdb(clean);
     
-    // ذخیره emergency fallback در localStorage (اگر IndexedDB کار نکند)
+    // emergency fallback در localStorage — کامل‌تر از قبل (حداکثر فیلدهای ضروری)
     try{
-      const small = { 
+      const emergency = {
         ts: Date.now(),
         assets: clean.assets || {},
-        txs: (clean.txs || []).slice(-100), // تنها 100 آخری
-        noncash: clean.noncash || []
+        txs: Array.isArray(clean.txs) ? clean.txs.slice(-200) : [],
+        history: Array.isArray(clean.history) ? clean.history.slice(-100) : [],
+        logs: Array.isArray(clean.logs) ? clean.logs.slice(-100) : [],
+        noncash: clean.noncash || [],
+        notebook: Array.isArray(clean.notebook) ? clean.notebook.slice(-50) : [],
+        bankCards: clean.bankCards || [],
+        ownerProfile: clean.ownerProfile || null,
+        financialGoals: clean.financialGoals || [],
+        budgets: clean.budgets || [],
+        assetDefs: clean.assetDefs || null
       };
-      localStorage.setItem(PERSISTENT_BACKUP_KEY, JSON.stringify(small));
+      localStorage.setItem(PERSISTENT_BACKUP_KEY, JSON.stringify(emergency));
     }catch(e){}
   }catch(e){ 
     console.log('immediate backup failed', e);
