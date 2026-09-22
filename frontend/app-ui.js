@@ -3391,6 +3391,8 @@ if($('importFile')) $('importFile').addEventListener('change', (e)=>{
       } else {
         d = parsed.data;
       }
+      // تأیید صریح قبل از جایگزینی داده‌های فعلی
+      const doImport = function(){
       // بازگردانی کامل و تمیز — بدون مخلوط شدن با state قبلی
       if(d.assets && typeof d.assets === 'object'){
         assets = Object.assign({}, d.assets);
@@ -3451,7 +3453,20 @@ if($('importFile')) $('importFile').addEventListener('change', (e)=>{
       if(typeof renderForecast === 'function') renderForecast();
       showToast('بازگردانی شد');
       e.target.value = '';
-    }catch(err){ showToast('فایل نامعتبر است', true); }
+      }; // end doImport
+      if(typeof showConfirmModal === 'function'){
+        showConfirmModal(
+          'بازگردانی از فایل پشتیبان؟',
+          'داده‌های فعلی با محتویات این فایل جایگزین می‌شوند. این کار قابل بازگشت نیست مگر با پشتیبان دیگر.',
+          doImport,
+          'بازگردانی'
+        );
+      } else if(window.confirm('داده‌های فعلی با فایل پشتیبان جایگزین می‌شوند. ادامه می‌دهید؟')){
+        doImport();
+      } else {
+        e.target.value = '';
+      }
+    }catch(err){ showToast('فایل نامعتبر است', true); e.target.value=''; }
   };
   reader.readAsText(file);
 });
