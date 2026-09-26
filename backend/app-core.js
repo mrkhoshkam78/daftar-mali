@@ -281,7 +281,7 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive','aether'];
+const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive','aether','meridian'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
@@ -291,11 +291,12 @@ function normalizeDesignId(d){
   if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
   if(d === 'immersive' || d === 'cinema' || d === 'premium-dash' || d === 'monkey') return 'immersive';
   if(d === 'aether' || d === 'ledger' || d === 'obsidian' || d === 'premium-ledger') return 'aether';
+  if(d === 'meridian' || d === 'ink' || d === 'ember' || d === 'atelier') return 'meridian';
   return d;
 }
 function applyDesign(d){
   d = normalizeDesignId(d);
-  if(!VALID_DESIGNS.includes(d)) d = 'aether';
+  if(!VALID_DESIGNS.includes(d)) d = 'meridian';
   const root = document.documentElement;
   root.setAttribute('data-design', d);
   try{ localStorage.setItem(DESIGN_KEY, d); }catch(e){}
@@ -318,7 +319,7 @@ function applyDesign(d){
     } else if(d === 'immersive'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
-    } else if(d === 'aether'){
+    } else if(d === 'aether' || d === 'meridian'){
       if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
       if(ham){ ham.style.display = ''; }
     } else {
@@ -365,8 +366,8 @@ function onDesignCardActivate(e){
 }
 document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
-  let saved = 'aether';
-  try{ saved = localStorage.getItem(DESIGN_KEY) || 'aether'; }catch(e){}
+  let saved = 'meridian';
+  try{ saved = localStorage.getItem(DESIGN_KEY) || 'meridian'; }catch(e){}
   // مهاجرت: Adaptive Canvas حذف شده
   try{
     const n = String(saved||'').toLowerCase();
