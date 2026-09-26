@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html data-design="meridian" lang="fa" dir="rtl" data-theme="light" data-anim="on">
+<html data-design="vesper" lang="fa" dir="rtl" data-theme="dark" data-anim="on">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
-<meta name="theme-color" content="#080809">
+<meta name="theme-color" content="#0B0C10">
 <meta name="color-scheme" content="light dark">
 <meta name="app-build" content="20260920v501">
 <title>مبحث درآمد</title>
@@ -13,7 +13,13 @@
 <!-- FOUC: design + theme قبل از CSS -->
 <script>
 (function(){try{
-  var d=localStorage.getItem("daftar-design")||"meridian";
+  /* Force Meridian once for this build so old localStorage does not hide the redesign */
+  var BUILD="meridian-20260926";
+  if(localStorage.getItem("daftar-design-build")!==BUILD){
+    localStorage.setItem("daftar-design","meridian");
+    localStorage.setItem("daftar-design-build",BUILD);
+  }
+  var d=localStorage.getItem("daftar-design")||"vesper";
   d=String(d).toLowerCase();
   if(d==="neo"||d==="neo-bank"||d==="neo_bank")d="neobank";
   if(d==="original"||d==="glass"||d==="premium")d="classic";
@@ -22,21 +28,22 @@
   if(d==="immersive"||d==="cinema"||d==="premium-dash"||d==="monkey")d="immersive";
   if(d==="aether"||d==="ledger"||d==="obsidian"||d==="premium-ledger")d="aether";
   if(d==="meridian"||d==="ink"||d==="ember"||d==="atelier")d="meridian";
-  if(["aurora","neobank","classic","editorial-finance","immersive","aether","meridian"].indexOf(d)<0)d="meridian";
+  if(d==="vesper"||d==="lumen"||d==="noir")d="vesper";
+  if(["aurora","neobank","classic","editorial-finance","immersive","aether","meridian","vesper"].indexOf(d)<0)d="vesper";
   document.documentElement.setAttribute("data-design",d);
-  var t=localStorage.getItem("daftar-theme")||"light";
+  var t=localStorage.getItem("daftar-theme")||"dark";
   t=String(t).toLowerCase().replace(/_/g,"-");
   var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson","sage-mist"];
-  if(ok.indexOf(t)<0)t="light";
+  if(ok.indexOf(t)<0)t="dark";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
 }catch(e){}})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260926meridian" as="style">
+<link rel="preload" href="styles.css?v=20260926vesper2" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260926meridian">
+<link rel="stylesheet" href="styles.css?v=20260926vesper2">
 </head>
 <body>
 
@@ -836,11 +843,14 @@
 
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> پوسته</div>
-        <div class="section-sub">پوستهٔ Meridian — طراحی هنری و Experimental جدید</div>
+        <div class="section-sub">پوستهٔ Vesper — طراحی Premium و معاصر</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب پوسته">
-          <button type="button" class="design-card active" data-design-val="meridian" role="option" aria-selected="true">
+          <button type="button" class="design-card active" data-design-val="vesper" role="option" aria-selected="true">
             <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
-            <span class="theme-preview" style="background:linear-gradient(160deg,#080809 0%,#161618 50%,#FF6B4A 100%)"></span>
+            <span class="theme-preview" style="background:linear-gradient(145deg,#0B0C10 0%,#1A1C24 55%,#C4A882 100%)"></span>
+            <span class="design-name">Vesper</span>
+          </button>
+          <button type="button" class="design-card" data-design-val="meridian" role="option" aria-selected="false">
             <span class="design-name">Meridian</span>
           </button>
           <button type="button" class="design-card" data-design-val="aether" role="option" aria-selected="false">
