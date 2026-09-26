@@ -9587,3 +9587,802 @@ html[data-design="aether"] .page.active{ display: block; }
 }
 
 /* --- End Aether Design System --- */
+
+/* ==========================================================================
+   MERIDIAN — Experimental Artistic Financial Workspace
+   Concept: Ink & Ember | Typography-driven | Anti-dashboard composition
+   Breaks: Sidebar→Cards→Chart pattern | Generic SaaS | Previous themes
+   ========================================================================== */
+
+html[data-design="meridian"]{
+  --md-bg: #080809;
+  --md-bg-elev: #0E0E10;
+  --md-surface: #121214;
+  --md-surface-2: #18181B;
+  --md-line: rgba(237,234,228,0.07);
+  --md-line-strong: rgba(255,107,74,0.35);
+  --md-ink: #EDEAE4;
+  --md-ink-dim: #7A7872;
+  --md-ink-faint: #4A4844;
+  --md-ember: #FF6B4A;
+  --md-ember-soft: rgba(255,107,74,0.12);
+  --md-ember-glow: rgba(255,107,74,0.22);
+  --md-positive: #2DD4A8;
+  --md-positive-soft: rgba(45,212,168,0.12);
+  --md-negative: #FF6B4A;
+  --md-negative-soft: rgba(255,107,74,0.12);
+  --md-warn: #E8B84A;
+  --md-font: 'Vazirmatn', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --md-mono: 'Martian Mono', 'Vazirmatn', ui-monospace, monospace;
+  --md-r: 4px;
+  --md-r-md: 8px;
+  --md-r-lg: 12px;
+
+  --bg: var(--md-bg);
+  --bg-2: var(--md-bg-elev);
+  --card: var(--md-surface);
+  --card-2: var(--md-surface-2);
+  --border: var(--md-line);
+  --border-strong: var(--md-line-strong);
+  --ink: var(--md-ink);
+  --ink-dim: var(--md-ink-dim);
+  --blue: var(--md-ember);
+  --blue-light: #FF8A70;
+  --blue-deep: #E05538;
+  --blue-soft: var(--md-ember-soft);
+  --blue-glow: var(--md-ember-glow);
+  --green: var(--md-positive);
+  --green-soft: var(--md-positive-soft);
+  --red: var(--md-negative);
+  --red-soft: var(--md-negative-soft);
+  --orange: var(--md-warn);
+  --orange-soft: rgba(232,184,74,0.12);
+  --shadow: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --radius: var(--md-r-md);
+  --radius-sm: var(--md-r);
+  --radius-lg: var(--md-r-lg);
+}
+
+/* Light mode — inverted ink paper */
+html[data-design="meridian"][data-theme="light"],
+html[data-design="meridian"].theme-light{
+  --md-bg: #F5F3EE;
+  --md-bg-elev: #EFEDE7;
+  --md-surface: #FFFFFF;
+  --md-surface-2: #F8F6F1;
+  --md-line: rgba(20,18,14,0.08);
+  --md-line-strong: rgba(220,80,50,0.35);
+  --md-ink: #121110;
+  --md-ink-dim: #5C5A54;
+  --md-ink-faint: #9A968C;
+  --md-ember: #E04A32;
+  --md-ember-soft: rgba(224,74,50,0.1);
+  --md-positive: #1A9B78;
+  --md-positive-soft: rgba(26,155,120,0.1);
+  --md-negative: #E04A32;
+  --bg: var(--md-bg);
+  --bg-2: var(--md-bg-elev);
+  --card: var(--md-surface);
+  --card-2: var(--md-surface-2);
+  --border: var(--md-line);
+  --border-strong: var(--md-line-strong);
+  --ink: var(--md-ink);
+  --ink-dim: var(--md-ink-dim);
+  --blue: var(--md-ember);
+  --blue-light: #F06A52;
+  --blue-deep: #C03A25;
+  --blue-soft: var(--md-ember-soft);
+  --green: var(--md-positive);
+  --green-soft: var(--md-positive-soft);
+  --red: var(--md-negative);
+  --red-soft: rgba(224,74,50,0.1);
+  --orange: #C99A2A;
+}
+
+/* Force dark mapping for other theme names when meridian is active */
+html[data-design="meridian"][data-theme="dark"],
+html[data-design="meridian"][data-theme="black"],
+html[data-design="meridian"][data-theme="gold"],
+html[data-design="meridian"][data-theme="matte-green"],
+html[data-design="meridian"][data-theme="teal-navy"],
+html[data-design="meridian"][data-theme="finverse-violet"],
+html[data-design="meridian"][data-theme="navy-crimson"],
+html[data-design="meridian"][data-theme="warm-sand"],
+html[data-design="meridian"][data-theme="sage-mist"]{
+  --bg: var(--md-bg);
+  --bg-2: var(--md-bg-elev);
+  --card: var(--md-surface);
+  --card-2: var(--md-surface-2);
+  --border: var(--md-line);
+  --border-strong: var(--md-line-strong);
+  --ink: var(--md-ink);
+  --ink-dim: var(--md-ink-dim);
+  --blue: var(--md-ember);
+  --blue-light: #FF8A70;
+  --blue-deep: #E05538;
+  --blue-soft: var(--md-ember-soft);
+  --green: var(--md-positive);
+  --green-soft: var(--md-positive-soft);
+  --red: var(--md-negative);
+  --red-soft: var(--md-negative-soft);
+  --orange: var(--md-warn);
+  --shadow: none;
+}
+
+/* ---- Canvas base ---- */
+html[data-design="meridian"] body{
+  background: var(--md-bg) !important;
+  color: var(--md-ink) !important;
+  font-family: var(--md-font) !important;
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  /* subtle geometric grid texture */
+  background-image:
+    linear-gradient(var(--md-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--md-line) 1px, transparent 1px) !important;
+  background-size: 48px 48px !important;
+  background-position: -1px -1px !important;
+}
+
+html[data-design="meridian"] .im-bg,
+html[data-design="meridian"] .im-overlay,
+html[data-design="meridian"] .im-sidebar,
+html[data-design="meridian"] #efDecor,
+html[data-design="meridian"] .ef-decor{
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Brand mark instead of logo image */
+html[data-design="meridian"] .app-brand-mark{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--md-ember);
+  color: #080809;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+html[data-design="meridian"] .im-logo-mark{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--md-ember);
+  color: #080809;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* ---- Top rail: minimal, almost invisible ---- */
+html[data-design="meridian"] .topbar{
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid var(--md-line) !important;
+  box-shadow: none !important;
+  padding: 14px 24px !important;
+  min-height: 56px !important;
+  height: auto !important;
+}
+html[data-design="meridian"] .topbar.is-scrolled{
+  background: color-mix(in srgb, var(--md-bg) 94%, transparent) !important;
+  backdrop-filter: blur(12px) !important;
+}
+html[data-design="meridian"] .app-logo{ display: none !important; }
+html[data-design="meridian"] .topbar-date{
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: var(--md-ink-dim) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em !important;
+}
+html[data-design="meridian"] .topbar-date-greg{
+  font-family: var(--md-mono) !important;
+  font-size: 10px !important;
+  color: var(--md-ink-faint) !important;
+  letter-spacing: 0.04em;
+}
+html[data-design="meridian"] .live-dot{
+  width: 6px !important; height: 6px !important;
+  background: var(--md-positive) !important;
+  box-shadow: 0 0 0 3px var(--md-positive-soft) !important;
+}
+html[data-design="meridian"] .theme-dn-btn,
+html[data-design="meridian"] .hamburger-btn{
+  width: 40px !important; height: 40px !important;
+  border: 1px solid var(--md-line) !important;
+  background: transparent !important;
+  border-radius: 50% !important;
+  color: var(--md-ink-dim) !important;
+}
+html[data-design="meridian"] .theme-dn-btn:hover,
+html[data-design="meridian"] .hamburger-btn:hover{
+  border-color: var(--md-ember) !important;
+  color: var(--md-ember) !important;
+  background: var(--md-ember-soft) !important;
+}
+html[data-design="meridian"] .im-header-avatar{
+  width: 36px !important; height: 36px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: 1px solid var(--md-line) !important;
+  color: var(--md-ink-dim) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+html[data-design="meridian"] .im-header-avatar:hover{
+  border-color: var(--md-ember) !important;
+  color: var(--md-ember) !important;
+}
+
+/* ---- Layout: canvas, generous ---- */
+html[data-design="meridian"] .layout{
+  max-width: 860px !important;
+  margin: 0 auto !important;
+  padding: 0 28px !important;
+}
+html[data-design="meridian"] .main{
+  padding: 8px 0 80px !important;
+}
+html[data-design="meridian"] .bottom-nav{ display: none !important; }
+
+@media (min-width: 1100px){
+  html[data-design="meridian"] .layout{ max-width: 980px !important; padding: 0 40px !important; }
+}
+
+/* ---- Drawer: stark ---- */
+html[data-design="meridian"] .side-drawer,
+html[data-design="meridian"] #dropdownMenu{
+  background: var(--md-bg) !important;
+  border-left: 1px solid var(--md-line) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+}
+html[data-design="meridian"] .side-drawer-head{
+  border-bottom: 1px solid var(--md-line) !important;
+  padding: 20px !important;
+}
+html[data-design="meridian"] .sd-identity-avatar{
+  background: var(--md-ember) !important;
+  color: #080809 !important;
+  border: none !important;
+  font-weight: 800 !important;
+}
+html[data-design="meridian"] .menu-item{
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 14px 20px !important;
+  color: var(--md-ink-dim) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  border-bottom: 1px solid var(--md-line) !important;
+  letter-spacing: -0.01em;
+}
+html[data-design="meridian"] .menu-item:hover{
+  background: var(--md-surface) !important;
+  color: var(--md-ink) !important;
+}
+html[data-design="meridian"] .menu-item.active{
+  background: transparent !important;
+  color: var(--md-ember) !important;
+  font-weight: 700 !important;
+  border-right: 2px solid var(--md-ember) !important;
+}
+html[data-design="meridian"] .menu-item .ic{ opacity: 0.6; }
+html[data-design="meridian"] .menu-item.active .ic{ opacity: 1; color: var(--md-ember) !important; }
+
+/* ================================================================
+   HERO — Large-number driven composition (the artwork)
+   ================================================================ */
+html[data-design="meridian"] .hero,
+html[data-design="meridian"] #page-dashboard.active .hero{
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 48px 0 32px !important;
+  min-height: auto !important;
+  position: relative;
+  overflow: visible;
+}
+html[data-design="meridian"] .hero::before{
+  content: none !important;
+  display: none !important;
+}
+html[data-design="meridian"] .hero-label{
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink-dim) !important;
+  margin-bottom: 12px !important;
+  display: block !important;
+}
+html[data-design="meridian"] .hero-num,
+html[data-design="meridian"] #page-dashboard.active .hero-num{
+  font-family: var(--md-mono) !important;
+  font-size: clamp(40px, 9vw, 72px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+  color: var(--md-ink) !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.05 !important;
+  margin: 0 !important;
+}
+html[data-design="meridian"] .hero-num small{
+  font-size: 0.28em !important;
+  color: var(--md-ink-dim) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  margin-right: 6px;
+}
+html[data-design="meridian"] .hero-sub{ display: none !important; }
+
+/* Geometric accent under hero */
+html[data-design="meridian"] .hero::after{
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  background: var(--md-ember);
+  margin-top: 24px;
+  border-radius: 1px;
+}
+
+/* ================================================================
+   METRICS — horizontal strip with hairline dividers (NOT cards)
+   ================================================================ */
+html[data-design="meridian"] .dash-metrics{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0 !important;
+  margin: 0 0 40px !important;
+  padding: 0 !important;
+  border-top: 1px solid var(--md-line) !important;
+  border-bottom: 1px solid var(--md-line) !important;
+  background: transparent !important;
+}
+html[data-design="meridian"] .dash-metric{
+  flex: 1 1 140px !important;
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid var(--md-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 20px 24px !important;
+  position: relative;
+}
+html[data-design="meridian"] .dash-metric:first-child{
+  border-left: none !important;
+  padding-right: 0 !important;
+}
+html[data-design="meridian"] .dash-metric::before{ display: none !important; content: none !important; }
+html[data-design="meridian"] .dash-metric .dm-l{
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink-dim) !important;
+  display: block !important;
+  margin-bottom: 8px !important;
+}
+html[data-design="meridian"] .dash-metric b{
+  font-family: var(--md-mono) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.03em !important;
+  color: var(--md-ink) !important;
+}
+
+/* ================================================================
+   SECTIONS — no cards, just editorial blocks with fine rules
+   ================================================================ */
+html[data-design="meridian"] .section{
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid var(--md-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 28px 0 !important;
+  margin-bottom: 0 !important;
+}
+html[data-design="meridian"] .section-title{
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink) !important;
+  margin-bottom: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+html[data-design="meridian"] .section-title .dot{
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 0 !important; /* square mark */
+  background: var(--md-ember) !important;
+  box-shadow: none !important;
+  transform: rotate(45deg);
+}
+html[data-design="meridian"] .section-sub{
+  font-size: 13px !important;
+  color: var(--md-ink-dim) !important;
+  margin-bottom: 20px !important;
+  line-height: 1.6 !important;
+  max-width: 520px;
+}
+
+/* Personal greet strip */
+html[data-design="meridian"] .ef-dash-personal{
+  background: transparent !important;
+  border: none !important;
+  padding: 24px 0 0 !important;
+  margin: 0 !important;
+}
+html[data-design="meridian"] .ef-dash-greet{
+  font-size: 12px !important;
+  color: var(--md-ink-dim) !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+html[data-design="meridian"] .ef-dash-name{
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--md-ink) !important;
+  letter-spacing: -0.02em !important;
+}
+html[data-design="meridian"] .ef-dash-tagline{
+  font-size: 13px !important;
+  color: var(--md-ink-dim) !important;
+}
+
+/* Cards flattened */
+html[data-design="meridian"] .asset-card,
+html[data-design="meridian"] .goal-card,
+html[data-design="meridian"] .note-card,
+html[data-design="meridian"] .nb-card,
+html[data-design="meridian"] .analysis-card,
+html[data-design="meridian"] .forecast-card,
+html[data-design="meridian"] .loan-item,
+html[data-design="meridian"] .log-item,
+html[data-design="meridian"] .nb-stat,
+html[data-design="meridian"] .nc-hero,
+html[data-design="meridian"] .notes-shell,
+html[data-design="meridian"] .goals-cap-card,
+html[data-design="meridian"] .transfer-box{
+  background: var(--md-surface) !important;
+  border: 1px solid var(--md-line) !important;
+  border-radius: var(--md-r) !important;
+  box-shadow: none !important;
+}
+html[data-design="meridian"] .asset-card:hover,
+html[data-design="meridian"] .goal-card:hover,
+html[data-design="meridian"] .note-card:hover{
+  border-color: var(--md-line-strong) !important;
+  background: var(--md-surface-2) !important;
+}
+
+/* Donut / charts */
+html[data-design="meridian"] .donut-wrap{
+  gap: 24px !important;
+}
+html[data-design="meridian"] .donut-center .v{
+  font-family: var(--md-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+html[data-design="meridian"] .trend-tabs{
+  gap: 4px !important;
+  margin-bottom: 16px !important;
+}
+html[data-design="meridian"] .trend-tab{
+  border: 1px solid var(--md-line) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 6px 14px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink-dim) !important;
+}
+html[data-design="meridian"] .trend-tab.active{
+  background: var(--md-ember) !important;
+  border-color: var(--md-ember) !important;
+  color: #080809 !important;
+}
+
+/* Filters */
+html[data-design="meridian"] .nb-filters{ gap: 6px !important; }
+html[data-design="meridian"] .nb-filter{
+  border: 1px solid var(--md-line) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink-dim) !important;
+}
+html[data-design="meridian"] .nb-filter.active{
+  background: var(--md-ember-soft) !important;
+  border-color: var(--md-ember) !important;
+  color: var(--md-ember) !important;
+}
+html[data-design="meridian"] .nb-day-head{
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--md-ink-dim) !important;
+  padding: 12px 0 8px !important;
+  border-bottom: 1px solid var(--md-line) !important;
+  margin-bottom: 4px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Buttons — sharp, ember accent */
+html[data-design="meridian"] .btn:not(.ghost):not(.danger){
+  background: var(--md-ember) !important;
+  color: #080809 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 12px 20px !important;
+  box-shadow: none !important;
+}
+html[data-design="meridian"] .btn:not(.ghost):not(.danger):hover{
+  background: #FF8A70 !important;
+  transform: none !important;
+}
+html[data-design="meridian"] .btn.ghost{
+  background: transparent !important;
+  border: 1px solid var(--md-line) !important;
+  color: var(--md-ink-dim) !important;
+  border-radius: 0 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+html[data-design="meridian"] .btn.ghost:hover{
+  border-color: var(--md-ember) !important;
+  color: var(--md-ember) !important;
+  background: var(--md-ember-soft) !important;
+}
+html[data-design="meridian"] .btn.danger{
+  background: transparent !important;
+  border: 1px solid var(--md-negative) !important;
+  color: var(--md-negative) !important;
+  border-radius: 0 !important;
+}
+
+/* Inputs — minimal underline-ish feel via border */
+html[data-design="meridian"] input[type=text],
+html[data-design="meridian"] input[type=password],
+html[data-design="meridian"] input[type=date],
+html[data-design="meridian"] input[type=time],
+html[data-design="meridian"] input[type=number],
+html[data-design="meridian"] input[type=search],
+html[data-design="meridian"] select,
+html[data-design="meridian"] textarea{
+  background: var(--md-surface) !important;
+  border: 1px solid var(--md-line) !important;
+  border-radius: 0 !important;
+  color: var(--md-ink) !important;
+  padding: 12px 14px !important;
+  font-family: inherit !important;
+}
+html[data-design="meridian"] input:focus,
+html[data-design="meridian"] select:focus,
+html[data-design="meridian"] textarea:focus{
+  border-color: var(--md-ember) !important;
+  box-shadow: 0 0 0 1px var(--md-ember) !important;
+  outline: none !important;
+}
+
+/* Numbers everywhere */
+html[data-design="meridian"] .hero-num,
+html[data-design="meridian"] .dash-metric b,
+html[data-design="meridian"] .asset-value,
+html[data-design="meridian"] .tx-amount,
+html[data-design="meridian"] .nb-amount,
+html[data-design="meridian"] .goal-amount,
+html[data-design="meridian"] [data-amount],
+html[data-design="meridian"] .money,
+html[data-design="meridian"] .num,
+html[data-design="meridian"] .donut-center .v{
+  font-family: var(--md-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.03em !important;
+}
+
+html[data-design="meridian"] .pos,
+html[data-design="meridian"] .profit,
+html[data-design="meridian"] .gain,
+html[data-design="meridian"] .up{ color: var(--md-positive) !important; }
+html[data-design="meridian"] .neg,
+html[data-design="meridian"] .loss,
+html[data-design="meridian"] .down{ color: var(--md-negative) !important; }
+
+/* Progress */
+html[data-design="meridian"] .goal-progress .gp-fill,
+html[data-design="meridian"] .progress-fill{
+  background: var(--md-ember) !important;
+  border-radius: 0 !important;
+}
+html[data-design="meridian"] .goal-progress,
+html[data-design="meridian"] .progress-track{
+  background: var(--md-surface-2) !important;
+  border-radius: 0 !important;
+  height: 3px !important;
+}
+
+/* Modals */
+html[data-design="meridian"] .confirm-box,
+html[data-design="meridian"] .note-modal-panel,
+html[data-design="meridian"] .lock-box{
+  background: var(--md-bg) !important;
+  border: 1px solid var(--md-line) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5) !important;
+}
+html[data-design="meridian"] .confirm-title,
+html[data-design="meridian"] .lock-title{
+  color: var(--md-ink) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Design / theme cards */
+html[data-design="meridian"] .design-card,
+html[data-design="meridian"] .theme-card{
+  border: 1px solid var(--md-line) !important;
+  background: var(--md-surface) !important;
+  border-radius: 0 !important;
+}
+html[data-design="meridian"] .design-card.active,
+html[data-design="meridian"] .theme-card.active{
+  border-color: var(--md-ember) !important;
+  box-shadow: inset 0 0 0 1px var(--md-ember) !important;
+}
+
+/* Motion language */
+html[data-design="meridian"] .btn,
+html[data-design="meridian"] .menu-item,
+html[data-design="meridian"] .nb-filter,
+html[data-design="meridian"] .trend-tab,
+html[data-design="meridian"] .design-card,
+html[data-design="meridian"] .theme-card,
+html[data-design="meridian"] .asset-card,
+html[data-design="meridian"] .goal-card{
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease !important;
+}
+html[data-design="meridian"] .reveal{
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1) !important;
+}
+html[data-design="meridian"] .reveal:not(.in-view){
+  opacity: 0;
+  transform: translateY(12px);
+}
+html[data-design="meridian"] .reveal.in-view{
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Loading shimmer */
+html[data-design="meridian"] .loading,
+html[data-design="meridian"] .skeleton{
+  background: linear-gradient(90deg, var(--md-surface) 25%, var(--md-surface-2) 50%, var(--md-surface) 75%) !important;
+  background-size: 200% 100% !important;
+  animation: md-shimmer 1.5s ease infinite !important;
+  border-radius: 0 !important;
+}
+@keyframes md-shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+
+/* Empty */
+html[data-design="meridian"] .empty-state,
+html[data-design="meridian"] .empty{
+  color: var(--md-ink-dim) !important;
+  text-align: center !important;
+  padding: 40px 16px !important;
+  font-size: 13px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Page visibility */
+html[data-design="meridian"] .page{ display: none; }
+html[data-design="meridian"] .page.active{ display: block; }
+
+/* Focus */
+html[data-design="meridian"] :focus-visible{
+  outline: 2px solid var(--md-ember) !important;
+  outline-offset: 3px !important;
+}
+
+/* ---- Responsive: three distinct compositions ---- */
+@media (max-width: 720px){
+  html[data-design="meridian"] body{
+    background-size: 32px 32px !important;
+  }
+  html[data-design="meridian"] .layout{
+    max-width: 100% !important;
+    padding: 0 16px !important;
+  }
+  html[data-design="meridian"] .main{ padding: 4px 0 64px !important; }
+  html[data-design="meridian"] .topbar{ padding: 12px 16px !important; }
+  html[data-design="meridian"] .hero,
+  html[data-design="meridian"] #page-dashboard.active .hero{
+    padding: 32px 0 24px !important;
+  }
+  html[data-design="meridian"] .hero-num,
+  html[data-design="meridian"] #page-dashboard.active .hero-num{
+    font-size: clamp(32px, 11vw, 48px) !important;
+  }
+  html[data-design="meridian"] .dash-metrics{
+    flex-direction: column !important;
+  }
+  html[data-design="meridian"] .dash-metric{
+    border-left: none !important;
+    border-top: 1px solid var(--md-line) !important;
+    padding: 16px 0 !important;
+  }
+  html[data-design="meridian"] .dash-metric:first-child{
+    border-top: none !important;
+  }
+  html[data-design="meridian"] .section{
+    padding: 22px 0 !important;
+  }
+  html[data-design="meridian"] .dash-metric b{ font-size: 18px !important; }
+}
+
+@media (min-width: 721px) and (max-width: 1023px){
+  html[data-design="meridian"] .layout{ max-width: 680px !important; }
+  html[data-design="meridian"] .hero-num,
+  html[data-design="meridian"] #page-dashboard.active .hero-num{
+    font-size: 56px !important;
+  }
+}
+
+@media (min-width: 1024px){
+  html[data-design="meridian"] .hero,
+  html[data-design="meridian"] #page-dashboard.active .hero{
+    padding: 56px 0 40px !important;
+  }
+  html[data-design="meridian"] .hero-num,
+  html[data-design="meridian"] #page-dashboard.active .hero-num{
+    font-size: 72px !important;
+  }
+  html[data-design="meridian"] .dash-metric b{ font-size: 22px !important; }
+  html[data-design="meridian"] .section{ padding: 36px 0 !important; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  html[data-design="meridian"] *{
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* --- End Meridian --- */
