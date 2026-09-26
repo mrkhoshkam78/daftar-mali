@@ -10386,3 +10386,725 @@ html[data-design="meridian"] :focus-visible{
 }
 
 /* --- End Meridian --- */
+
+/* ==========================================================================
+   VESPER — Premium Contemporary Financial Workspace
+   Soft dark · Champagne accent · Refined hierarchy · Actually beautiful
+   ========================================================================== */
+
+html[data-design="vesper"]{
+  --vp-bg: #0B0C10;
+  --vp-bg-2: #101218;
+  --vp-surface: #15171E;
+  --vp-surface-2: #1C1F28;
+  --vp-surface-3: #242833;
+  --vp-line: rgba(255,255,255,0.06);
+  --vp-line-strong: rgba(196,168,130,0.32);
+  --vp-ink: #F2F1EF;
+  --vp-ink-dim: #8B8F9A;
+  --vp-ink-faint: #5A5E6A;
+  --vp-champagne: #C4A882;
+  --vp-champagne-soft: rgba(196,168,130,0.14);
+  --vp-champagne-glow: rgba(196,168,130,0.22);
+  --vp-positive: #4DB68A;
+  --vp-positive-soft: rgba(77,182,138,0.14);
+  --vp-negative: #E07070;
+  --vp-negative-soft: rgba(224,112,112,0.14);
+  --vp-warn: #D4A84B;
+  --vp-radius: 16px;
+  --vp-radius-sm: 12px;
+  --vp-radius-lg: 20px;
+  --vp-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  --vp-shadow-sm: 0 2px 12px rgba(0,0,0,0.18);
+  --vp-font: 'Vazirmatn', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --vp-mono: 'Martian Mono', 'Vazirmatn', ui-monospace, monospace;
+
+  --bg: var(--vp-bg);
+  --bg-2: var(--vp-bg-2);
+  --card: var(--vp-surface);
+  --card-2: var(--vp-surface-2);
+  --border: var(--vp-line);
+  --border-strong: var(--vp-line-strong);
+  --ink: var(--vp-ink);
+  --ink-dim: var(--vp-ink-dim);
+  --blue: var(--vp-champagne);
+  --blue-light: #D4BC9A;
+  --blue-deep: #A88B5E;
+  --blue-soft: var(--vp-champagne-soft);
+  --blue-glow: var(--vp-champagne-glow);
+  --green: var(--vp-positive);
+  --green-soft: var(--vp-positive-soft);
+  --red: var(--vp-negative);
+  --red-soft: var(--vp-negative-soft);
+  --orange: var(--vp-warn);
+  --orange-soft: rgba(212,168,75,0.14);
+  --shadow: var(--vp-shadow);
+  --shadow-sm: var(--vp-shadow-sm);
+  --shadow-md: 0 12px 40px rgba(0,0,0,0.32);
+  --radius: var(--vp-radius);
+  --radius-sm: var(--vp-radius-sm);
+  --radius-lg: var(--vp-radius-lg);
+}
+
+html[data-design="vesper"][data-theme="light"],
+html[data-design="vesper"].theme-light{
+  --vp-bg: #F3F1EC;
+  --vp-bg-2: #EBE8E1;
+  --vp-surface: #FFFFFF;
+  --vp-surface-2: #F8F6F1;
+  --vp-surface-3: #F0EDE7;
+  --vp-line: rgba(20,18,14,0.08);
+  --vp-line-strong: rgba(168,139,94,0.35);
+  --vp-ink: #14130F;
+  --vp-ink-dim: #5C5A52;
+  --vp-ink-faint: #9A968C;
+  --vp-champagne: #A88B5E;
+  --vp-champagne-soft: rgba(168,139,94,0.12);
+  --vp-positive: #2F9B6E;
+  --vp-positive-soft: rgba(47,155,110,0.12);
+  --vp-negative: #C45C5C;
+  --vp-negative-soft: rgba(196,92,92,0.12);
+  --vp-shadow: 0 8px 28px rgba(20,18,14,0.06);
+  --vp-shadow-sm: 0 2px 10px rgba(20,18,14,0.04);
+  --bg: var(--vp-bg);
+  --bg-2: var(--vp-bg-2);
+  --card: var(--vp-surface);
+  --card-2: var(--vp-surface-2);
+  --border: var(--vp-line);
+  --border-strong: var(--vp-line-strong);
+  --ink: var(--vp-ink);
+  --ink-dim: var(--vp-ink-dim);
+  --blue: var(--vp-champagne);
+  --blue-light: #C4A882;
+  --blue-deep: #8A6F42;
+  --blue-soft: var(--vp-champagne-soft);
+  --green: var(--vp-positive);
+  --green-soft: var(--vp-positive-soft);
+  --red: var(--vp-negative);
+  --red-soft: var(--vp-negative-soft);
+  --orange: #B8922E;
+  --shadow: var(--vp-shadow);
+  --shadow-sm: var(--vp-shadow-sm);
+}
+
+html[data-design="vesper"][data-theme="dark"],
+html[data-design="vesper"][data-theme="black"],
+html[data-design="vesper"][data-theme="gold"],
+html[data-design="vesper"][data-theme="matte-green"],
+html[data-design="vesper"][data-theme="teal-navy"],
+html[data-design="vesper"][data-theme="finverse-violet"],
+html[data-design="vesper"][data-theme="navy-crimson"],
+html[data-design="vesper"][data-theme="warm-sand"],
+html[data-design="vesper"][data-theme="sage-mist"]{
+  --bg: var(--vp-bg);
+  --bg-2: var(--vp-bg-2);
+  --card: var(--vp-surface);
+  --card-2: var(--vp-surface-2);
+  --border: var(--vp-line);
+  --border-strong: var(--vp-line-strong);
+  --ink: var(--vp-ink);
+  --ink-dim: var(--vp-ink-dim);
+  --blue: var(--vp-champagne);
+  --blue-light: #D4BC9A;
+  --blue-deep: #A88B5E;
+  --blue-soft: var(--vp-champagne-soft);
+  --green: var(--vp-positive);
+  --green-soft: var(--vp-positive-soft);
+  --red: var(--vp-negative);
+  --red-soft: var(--vp-negative-soft);
+  --orange: var(--vp-warn);
+  --shadow: var(--vp-shadow);
+}
+
+/* Base */
+html[data-design="vesper"] body{
+  background: var(--vp-bg) !important;
+  color: var(--vp-ink) !important;
+  font-family: var(--vp-font) !important;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  background-image: none !important;
+}
+
+html[data-design="vesper"] .im-bg,
+html[data-design="vesper"] .im-overlay,
+html[data-design="vesper"] .im-sidebar,
+html[data-design="vesper"] #efDecor,
+html[data-design="vesper"] .ef-decor{
+  display: none !important;
+}
+
+/* Topbar */
+html[data-design="vesper"] .topbar{
+  background: color-mix(in srgb, var(--vp-bg) 88%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+  border-bottom: 1px solid var(--vp-line) !important;
+  box-shadow: none !important;
+  padding: 12px 20px !important;
+  min-height: 60px !important;
+}
+html[data-design="vesper"] .topbar.is-scrolled{
+  background: color-mix(in srgb, var(--vp-bg) 94%, transparent) !important;
+  border-bottom-color: var(--vp-line-strong) !important;
+}
+html[data-design="vesper"] .app-logo{
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 10px !important;
+  object-fit: cover;
+}
+html[data-design="vesper"] .topbar-date{
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--vp-ink-dim) !important;
+}
+html[data-design="vesper"] .topbar-date-greg{
+  font-family: var(--vp-mono) !important;
+  font-size: 10px !important;
+  color: var(--vp-ink-faint) !important;
+}
+html[data-design="vesper"] .live-dot{
+  background: var(--vp-positive) !important;
+  box-shadow: 0 0 0 3px var(--vp-positive-soft) !important;
+}
+html[data-design="vesper"] .theme-dn-btn,
+html[data-design="vesper"] .hamburger-btn{
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid var(--vp-line) !important;
+  background: var(--vp-surface) !important;
+  border-radius: 12px !important;
+  color: var(--vp-ink-dim) !important;
+  transition: border-color .18s ease, color .18s ease, background .18s ease !important;
+}
+html[data-design="vesper"] .theme-dn-btn:hover,
+html[data-design="vesper"] .hamburger-btn:hover{
+  border-color: var(--vp-line-strong) !important;
+  color: var(--vp-champagne) !important;
+  background: var(--vp-surface-2) !important;
+}
+html[data-design="vesper"] .im-header-avatar{
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: var(--vp-champagne-soft) !important;
+  color: var(--vp-champagne) !important;
+  border: 1px solid var(--vp-line-strong) !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+
+/* Layout */
+html[data-design="vesper"] .layout{
+  max-width: 880px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+html[data-design="vesper"] .main{
+  padding: 12px 0 56px !important;
+}
+html[data-design="vesper"] .bottom-nav{ display: none !important; }
+
+@media (min-width: 1100px){
+  html[data-design="vesper"] .layout{ max-width: 960px !important; padding: 0 28px !important; }
+}
+
+/* Drawer */
+html[data-design="vesper"] .side-drawer,
+html[data-design="vesper"] #dropdownMenu{
+  background: var(--vp-surface) !important;
+  border-left: 1px solid var(--vp-line) !important;
+  box-shadow: -12px 0 40px rgba(0,0,0,0.35) !important;
+  border-radius: 20px 0 0 20px !important;
+  backdrop-filter: none !important;
+}
+html[data-design="vesper"] .side-drawer-head{
+  border-bottom: 1px solid var(--vp-line) !important;
+  padding: 18px 20px !important;
+}
+html[data-design="vesper"] .sd-identity-avatar{
+  background: var(--vp-champagne-soft) !important;
+  color: var(--vp-champagne) !important;
+  border: 1px solid var(--vp-line-strong) !important;
+}
+html[data-design="vesper"] .menu-item{
+  border-radius: 12px !important;
+  margin: 3px 12px !important;
+  padding: 11px 14px !important;
+  color: var(--vp-ink-dim) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: background .15s ease, color .15s ease !important;
+}
+html[data-design="vesper"] .menu-item:hover{
+  background: var(--vp-surface-2) !important;
+  color: var(--vp-ink) !important;
+}
+html[data-design="vesper"] .menu-item.active{
+  background: var(--vp-champagne-soft) !important;
+  color: var(--vp-champagne) !important;
+  font-weight: 650 !important;
+}
+html[data-design="vesper"] .menu-item .ic{ opacity: .75; }
+html[data-design="vesper"] .menu-item.active .ic{ opacity: 1; color: var(--vp-champagne) !important; }
+
+/* Hero — elegant large number */
+html[data-design="vesper"] .hero,
+html[data-design="vesper"] #page-dashboard.active .hero{
+  background: linear-gradient(160deg, var(--vp-surface) 0%, var(--vp-surface-2) 100%) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: var(--vp-radius-lg) !important;
+  box-shadow: var(--vp-shadow-sm) !important;
+  padding: 28px 26px !important;
+  min-height: auto !important;
+  position: relative;
+  overflow: hidden;
+}
+html[data-design="vesper"] .hero::before{
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 60%;
+  height: 120%;
+  background: radial-gradient(ellipse, var(--vp-champagne-soft) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: .7;
+}
+html[data-design="vesper"] .hero::after{ display: none !important; content: none !important; }
+html[data-design="vesper"] .hero-label{
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em !important;
+  color: var(--vp-ink-dim) !important;
+  margin-bottom: 8px !important;
+  text-transform: none !important;
+  position: relative;
+  z-index: 1;
+}
+html[data-design="vesper"] .hero-num,
+html[data-design="vesper"] #page-dashboard.active .hero-num{
+  font-family: var(--vp-mono) !important;
+  font-size: clamp(32px, 7vw, 48px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.03em !important;
+  color: var(--vp-ink) !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.15 !important;
+  position: relative;
+  z-index: 1;
+}
+html[data-design="vesper"] .hero-num small{
+  font-size: 14px !important;
+  color: var(--vp-ink-dim) !important;
+  font-weight: 500 !important;
+}
+html[data-design="vesper"] .hero-sub{ display: none !important; }
+
+/* Metrics — soft cards */
+html[data-design="vesper"] .dash-metrics{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 14px 0 20px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+html[data-design="vesper"] .dash-metric{
+  background: var(--vp-surface) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: var(--vp-radius) !important;
+  box-shadow: var(--vp-shadow-sm) !important;
+  padding: 16px 18px !important;
+  position: relative;
+  overflow: hidden;
+}
+html[data-design="vesper"] .dash-metric::before{
+  content: '' !important;
+  display: block !important;
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--vp-champagne), transparent);
+  border-radius: var(--vp-radius) var(--vp-radius) 0 0;
+  opacity: .85;
+}
+html[data-design="vesper"] .dash-metric:nth-child(2)::before{
+  background: linear-gradient(90deg, var(--vp-positive), transparent);
+}
+html[data-design="vesper"] .dash-metric:nth-child(3)::before{
+  background: linear-gradient(90deg, #7B9BC7, transparent);
+}
+html[data-design="vesper"] .dash-metric .dm-l{
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  color: var(--vp-ink-dim) !important;
+  text-transform: none !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+html[data-design="vesper"] .dash-metric b{
+  font-family: var(--vp-mono) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -.02em !important;
+  color: var(--vp-ink) !important;
+}
+
+/* Sections */
+html[data-design="vesper"] .section{
+  background: var(--vp-surface) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: var(--vp-radius-lg) !important;
+  box-shadow: var(--vp-shadow-sm) !important;
+  padding: 20px 18px !important;
+  margin-bottom: 14px !important;
+}
+html[data-design="vesper"] .section-title{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+  color: var(--vp-ink) !important;
+  margin-bottom: 4px !important;
+  text-transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+html[data-design="vesper"] .section-title .dot{
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: var(--vp-champagne) !important;
+  box-shadow: 0 0 0 3px var(--vp-champagne-soft) !important;
+  transform: none !important;
+}
+html[data-design="vesper"] .section-sub{
+  font-size: 12.5px !important;
+  color: var(--vp-ink-dim) !important;
+  margin-bottom: 14px !important;
+  line-height: 1.55 !important;
+}
+
+/* Personal greet */
+html[data-design="vesper"] .ef-dash-personal{
+  background: transparent !important;
+  border: none !important;
+  padding: 8px 0 4px !important;
+  margin: 0 !important;
+}
+html[data-design="vesper"] .ef-dash-greet{
+  font-size: 12px !important;
+  color: var(--vp-ink-dim) !important;
+}
+html[data-design="vesper"] .ef-dash-name{
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--vp-ink) !important;
+  letter-spacing: -.02em !important;
+}
+html[data-design="vesper"] .ef-dash-tagline{
+  font-size: 13px !important;
+  color: var(--vp-ink-dim) !important;
+}
+
+/* Nested cards */
+html[data-design="vesper"] .asset-card,
+html[data-design="vesper"] .goal-card,
+html[data-design="vesper"] .note-card,
+html[data-design="vesper"] .nb-card,
+html[data-design="vesper"] .analysis-card,
+html[data-design="vesper"] .forecast-card,
+html[data-design="vesper"] .loan-item,
+html[data-design="vesper"] .log-item,
+html[data-design="vesper"] .nb-stat,
+html[data-design="vesper"] .nc-hero,
+html[data-design="vesper"] .notes-shell,
+html[data-design="vesper"] .goals-cap-card,
+html[data-design="vesper"] .transfer-box{
+  background: var(--vp-surface-2) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: var(--vp-radius-sm) !important;
+  box-shadow: none !important;
+}
+html[data-design="vesper"] .asset-card:hover,
+html[data-design="vesper"] .goal-card:hover,
+html[data-design="vesper"] .note-card:hover{
+  border-color: var(--vp-line-strong) !important;
+  background: var(--vp-surface-3) !important;
+}
+
+/* Charts / tabs */
+html[data-design="vesper"] .trend-tabs{ gap: 6px !important; margin-bottom: 14px !important; }
+html[data-design="vesper"] .trend-tab{
+  border: 1px solid var(--vp-line) !important;
+  background: var(--vp-surface-2) !important;
+  border-radius: 999px !important;
+  padding: 7px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--vp-ink-dim) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  transition: all .15s ease !important;
+}
+html[data-design="vesper"] .trend-tab.active{
+  background: var(--vp-champagne-soft) !important;
+  border-color: var(--vp-line-strong) !important;
+  color: var(--vp-champagne) !important;
+}
+html[data-design="vesper"] .nb-filters{ gap: 6px !important; }
+html[data-design="vesper"] .nb-filter{
+  border: 1px solid var(--vp-line) !important;
+  background: var(--vp-surface-2) !important;
+  border-radius: 999px !important;
+  padding: 6px 13px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--vp-ink-dim) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+html[data-design="vesper"] .nb-filter.active{
+  background: var(--vp-champagne-soft) !important;
+  border-color: var(--vp-line-strong) !important;
+  color: var(--vp-champagne) !important;
+}
+html[data-design="vesper"] .nb-day-head{
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--vp-ink-dim) !important;
+  padding: 10px 0 6px !important;
+  border-bottom: 1px solid var(--vp-line) !important;
+  margin-bottom: 6px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* Buttons */
+html[data-design="vesper"] .btn:not(.ghost):not(.danger){
+  background: var(--vp-champagne) !important;
+  color: #0B0C10 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  padding: 11px 18px !important;
+  box-shadow: 0 4px 14px var(--vp-champagne-glow) !important;
+  transition: background .15s ease, transform .12s ease, box-shadow .15s ease !important;
+}
+html[data-design="vesper"] .btn:not(.ghost):not(.danger):hover{
+  background: #D4BC9A !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px var(--vp-champagne-glow) !important;
+}
+html[data-design="vesper"] .btn.ghost{
+  background: transparent !important;
+  border: 1px solid var(--vp-line) !important;
+  color: var(--vp-ink-dim) !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+html[data-design="vesper"] .btn.ghost:hover{
+  border-color: var(--vp-line-strong) !important;
+  color: var(--vp-champagne) !important;
+  background: var(--vp-champagne-soft) !important;
+}
+html[data-design="vesper"] .btn.danger{
+  background: var(--vp-negative) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+/* Inputs */
+html[data-design="vesper"] input[type=text],
+html[data-design="vesper"] input[type=password],
+html[data-design="vesper"] input[type=date],
+html[data-design="vesper"] input[type=time],
+html[data-design="vesper"] input[type=number],
+html[data-design="vesper"] input[type=search],
+html[data-design="vesper"] select,
+html[data-design="vesper"] textarea{
+  background: var(--vp-surface-2) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: 12px !important;
+  color: var(--vp-ink) !important;
+  padding: 11px 14px !important;
+  font-family: inherit !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+html[data-design="vesper"] input:focus,
+html[data-design="vesper"] select:focus,
+html[data-design="vesper"] textarea:focus{
+  border-color: var(--vp-line-strong) !important;
+  box-shadow: 0 0 0 3px var(--vp-champagne-soft) !important;
+  outline: none !important;
+}
+
+/* Numbers */
+html[data-design="vesper"] .hero-num,
+html[data-design="vesper"] .dash-metric b,
+html[data-design="vesper"] .asset-value,
+html[data-design="vesper"] .tx-amount,
+html[data-design="vesper"] .nb-amount,
+html[data-design="vesper"] .goal-amount,
+html[data-design="vesper"] [data-amount],
+html[data-design="vesper"] .money,
+html[data-design="vesper"] .num,
+html[data-design="vesper"] .donut-center .v{
+  font-family: var(--vp-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -.02em !important;
+}
+
+html[data-design="vesper"] .pos,
+html[data-design="vesper"] .profit,
+html[data-design="vesper"] .gain,
+html[data-design="vesper"] .up{ color: var(--vp-positive) !important; }
+html[data-design="vesper"] .neg,
+html[data-design="vesper"] .loss,
+html[data-design="vesper"] .down{ color: var(--vp-negative) !important; }
+
+/* Progress */
+html[data-design="vesper"] .goal-progress .gp-fill,
+html[data-design="vesper"] .progress-fill{
+  background: linear-gradient(90deg, var(--vp-champagne), #D4BC9A) !important;
+  border-radius: 999px !important;
+}
+html[data-design="vesper"] .goal-progress,
+html[data-design="vesper"] .progress-track{
+  background: var(--vp-surface-3) !important;
+  border-radius: 999px !important;
+  height: 6px !important;
+}
+
+/* Modals */
+html[data-design="vesper"] .confirm-box,
+html[data-design="vesper"] .note-modal-panel,
+html[data-design="vesper"] .lock-box{
+  background: var(--vp-surface) !important;
+  border: 1px solid var(--vp-line) !important;
+  border-radius: var(--vp-radius-lg) !important;
+  box-shadow: var(--vp-shadow) !important;
+}
+html[data-design="vesper"] .confirm-title,
+html[data-design="vesper"] .lock-title{
+  color: var(--vp-ink) !important;
+  font-weight: 700 !important;
+}
+
+/* Design switcher */
+html[data-design="vesper"] .design-card,
+html[data-design="vesper"] .theme-card{
+  border: 1px solid var(--vp-line) !important;
+  background: var(--vp-surface-2) !important;
+  border-radius: 14px !important;
+}
+html[data-design="vesper"] .design-card.active,
+html[data-design="vesper"] .theme-card.active{
+  border-color: var(--vp-line-strong) !important;
+  box-shadow: 0 0 0 1px var(--vp-champagne) !important;
+  background: var(--vp-champagne-soft) !important;
+}
+
+/* Motion */
+html[data-design="vesper"] .btn,
+html[data-design="vesper"] .menu-item,
+html[data-design="vesper"] .nb-filter,
+html[data-design="vesper"] .trend-tab,
+html[data-design="vesper"] .design-card,
+html[data-design="vesper"] .theme-card,
+html[data-design="vesper"] .asset-card,
+html[data-design="vesper"] .goal-card{
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease, box-shadow .15s ease !important;
+}
+html[data-design="vesper"] .btn:active{ transform: scale(.97) !important; }
+html[data-design="vesper"] .reveal{
+  transition: opacity .4s ease, transform .4s cubic-bezier(.22,1,.36,1) !important;
+}
+html[data-design="vesper"] .reveal:not(.in-view){
+  opacity: 0;
+  transform: translateY(10px);
+}
+html[data-design="vesper"] .reveal.in-view{
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+html[data-design="vesper"] .loading,
+html[data-design="vesper"] .skeleton{
+  background: linear-gradient(90deg, var(--vp-surface-2) 25%, var(--vp-surface-3) 50%, var(--vp-surface-2) 75%) !important;
+  background-size: 200% 100% !important;
+  animation: vp-shimmer 1.4s ease infinite !important;
+  border-radius: 10px !important;
+}
+@keyframes vp-shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+
+html[data-design="vesper"] .empty-state,
+html[data-design="vesper"] .empty{
+  color: var(--vp-ink-dim) !important;
+  text-align: center !important;
+  padding: 36px 16px !important;
+}
+
+html[data-design="vesper"] .page{ display: none; }
+html[data-design="vesper"] .page.active{ display: block; }
+
+html[data-design="vesper"] :focus-visible{
+  outline: 2px solid var(--vp-champagne) !important;
+  outline-offset: 2px !important;
+}
+
+/* Responsive */
+@media (max-width: 720px){
+  html[data-design="vesper"] .layout{ max-width: 100% !important; padding: 0 14px !important; }
+  html[data-design="vesper"] .main{ padding: 8px 0 48px !important; }
+  html[data-design="vesper"] .topbar{ padding: 10px 14px !important; }
+  html[data-design="vesper"] .hero,
+  html[data-design="vesper"] #page-dashboard.active .hero{ padding: 22px 18px !important; }
+  html[data-design="vesper"] .hero-num,
+  html[data-design="vesper"] #page-dashboard.active .hero-num{ font-size: 30px !important; }
+  html[data-design="vesper"] .dash-metrics{ grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  html[data-design="vesper"] .dash-metric b{ font-size: 15px !important; }
+  html[data-design="vesper"] .section{ padding: 16px 14px !important; margin-bottom: 12px !important; }
+}
+
+@media (min-width: 721px) and (max-width: 1023px){
+  html[data-design="vesper"] .layout{ max-width: 700px !important; }
+  html[data-design="vesper"] .hero-num,
+  html[data-design="vesper"] #page-dashboard.active .hero-num{ font-size: 40px !important; }
+}
+
+@media (min-width: 1024px){
+  html[data-design="vesper"] .hero,
+  html[data-design="vesper"] #page-dashboard.active .hero{ padding: 32px 28px !important; }
+  html[data-design="vesper"] .hero-num,
+  html[data-design="vesper"] #page-dashboard.active .hero-num{ font-size: 48px !important; }
+  html[data-design="vesper"] .section{ padding: 24px 22px !important; }
+  html[data-design="vesper"] .dash-metric b{ font-size: 20px !important; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  html[data-design="vesper"] *{
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+/* --- End Vesper --- */
