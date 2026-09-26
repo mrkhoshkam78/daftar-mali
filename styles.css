@@ -8850,3 +8850,740 @@ html[data-design="immersive"] .page.active{ display:block; }
 }
 
 /* Header avatar click → settings (optional UX, no logic change to data) */
+
+/* ==========================================================================
+   AETHER DESIGN SYSTEM — Premium Financial Workspace 2026
+   Art Direction: Modern Fintech Editorial × Digital Wealth Management
+   Distinct from Aurora / Neo-Bank / Classic / Editorial / Immersive
+   ========================================================================== */
+
+/* --- Aether Color Tokens (scoped) --- */
+html[data-design="aether"]{
+  --ae-bg: #0C0E12;
+  --ae-bg-2: #11141A;
+  --ae-surface: #161A21;
+  --ae-surface-2: #1C222C;
+  --ae-surface-3: #242B36;
+  --ae-border: rgba(255,255,255,0.07);
+  --ae-border-strong: rgba(201,169,98,0.35);
+  --ae-ink: #E8EAED;
+  --ae-ink-dim: #8B929E;
+  --ae-ink-faint: #5C6370;
+  --ae-primary: #C9A962;
+  --ae-primary-soft: rgba(201,169,98,0.12);
+  --ae-primary-glow: rgba(201,169,98,0.18);
+  --ae-accent: #6B9AC4;
+  --ae-success: #5BA88A;
+  --ae-success-soft: rgba(91,168,138,0.14);
+  --ae-warning: #C9A017;
+  --ae-warning-soft: rgba(201,160,23,0.14);
+  --ae-danger: #C45C5C;
+  --ae-danger-soft: rgba(196,92,92,0.14);
+  --ae-radius: 12px;
+  --ae-radius-sm: 8px;
+  --ae-radius-lg: 16px;
+  --ae-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  --ae-shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+  --ae-font-num: 'Martian Mono', 'Vazirmatn', monospace;
+  --ae-tracking: -0.02em;
+
+  /* Map to existing tokens so components inherit */
+  --bg: var(--ae-bg);
+  --bg-2: var(--ae-bg-2);
+  --card: var(--ae-surface);
+  --card-2: var(--ae-surface-2);
+  --border: var(--ae-border);
+  --border-strong: var(--ae-border-strong);
+  --ink: var(--ae-ink);
+  --ink-dim: var(--ae-ink-dim);
+  --blue: var(--ae-primary);
+  --blue-light: #D4B87A;
+  --blue-deep: #A88B4A;
+  --blue-soft: var(--ae-primary-soft);
+  --blue-glow: var(--ae-primary-glow);
+  --green: var(--ae-success);
+  --green-soft: var(--ae-success-soft);
+  --red: var(--ae-danger);
+  --red-soft: var(--ae-danger-soft);
+  --orange: var(--ae-warning);
+  --orange-soft: var(--ae-warning-soft);
+  --shadow: var(--ae-shadow);
+  --shadow-sm: var(--ae-shadow-sm);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+  --radius: var(--ae-radius);
+  --radius-sm: var(--ae-radius-sm);
+  --radius-lg: var(--ae-radius-lg);
+}
+
+/* Light mode for Aether — warm off-white, deep ink, same bronze accent */
+html[data-design="aether"][data-theme="light"],
+html[data-design="aether"].theme-light{
+  --ae-bg: #F4F2EE;
+  --ae-bg-2: #EBE8E2;
+  --ae-surface: #FFFFFF;
+  --ae-surface-2: #F8F6F2;
+  --ae-surface-3: #F0EDE7;
+  --ae-border: rgba(20,18,14,0.08);
+  --ae-border-strong: rgba(160,130,60,0.35);
+  --ae-ink: #14120E;
+  --ae-ink-dim: #5C574E;
+  --ae-ink-faint: #9A948A;
+  --ae-primary: #A88B4A;
+  --ae-primary-soft: rgba(168,139,74,0.12);
+  --ae-primary-glow: rgba(168,139,74,0.16);
+  --ae-accent: #4A7A9C;
+  --ae-success: #3D8B6E;
+  --ae-success-soft: rgba(61,139,110,0.12);
+  --ae-warning: #B8860B;
+  --ae-danger: #B04A4A;
+  --ae-danger-soft: rgba(176,74,74,0.12);
+  --ae-shadow: 0 4px 20px rgba(20,18,14,0.06);
+  --ae-shadow-sm: 0 2px 8px rgba(20,18,14,0.04);
+
+  --bg: var(--ae-bg);
+  --bg-2: var(--ae-bg-2);
+  --card: var(--ae-surface);
+  --card-2: var(--ae-surface-2);
+  --border: var(--ae-border);
+  --border-strong: var(--ae-border-strong);
+  --ink: var(--ae-ink);
+  --ink-dim: var(--ae-ink-dim);
+  --blue: var(--ae-primary);
+  --blue-light: #C9A962;
+  --blue-deep: #8A6F35;
+  --blue-soft: var(--ae-primary-soft);
+  --blue-glow: var(--ae-primary-glow);
+  --green: var(--ae-success);
+  --green-soft: var(--ae-success-soft);
+  --red: var(--ae-danger);
+  --red-soft: var(--ae-danger-soft);
+  --orange: var(--ae-warning);
+  --shadow: var(--ae-shadow);
+  --shadow-sm: var(--ae-shadow-sm);
+}
+
+/* Dark themes map cleanly */
+html[data-design="aether"][data-theme="dark"],
+html[data-design="aether"][data-theme="black"],
+html[data-design="aether"][data-theme="gold"],
+html[data-design="aether"][data-theme="matte-green"],
+html[data-design="aether"][data-theme="teal-navy"],
+html[data-design="aether"][data-theme="finverse-violet"],
+html[data-design="aether"][data-theme="navy-crimson"],
+html[data-design="aether"][data-theme="warm-sand"],
+html[data-design="aether"][data-theme="sage-mist"]{
+  --bg: var(--ae-bg);
+  --bg-2: var(--ae-bg-2);
+  --card: var(--ae-surface);
+  --card-2: var(--ae-surface-2);
+  --border: var(--ae-border);
+  --border-strong: var(--ae-border-strong);
+  --ink: var(--ae-ink);
+  --ink-dim: var(--ae-ink-dim);
+  --blue: var(--ae-primary);
+  --blue-light: #D4B87A;
+  --blue-deep: #A88B4A;
+  --blue-soft: var(--ae-primary-soft);
+  --green: var(--ae-success);
+  --green-soft: var(--ae-success-soft);
+  --red: var(--ae-danger);
+  --red-soft: var(--ae-danger-soft);
+  --orange: var(--ae-warning);
+  --shadow: var(--ae-shadow);
+}
+
+/* --- Base shell --- */
+html[data-design="aether"] body{
+  background: var(--ae-bg) !important;
+  color: var(--ae-ink) !important;
+  font-family: 'Vazirmatn', 'IBM Plex Sans Arabic', sans-serif !important;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[data-design="aether"] .im-bg,
+html[data-design="aether"] .im-overlay,
+html[data-design="aether"] .im-sidebar,
+html[data-design="aether"] #efDecor{
+  display: none !important;
+}
+
+/* Topbar — refined, minimal, editorial */
+html[data-design="aether"] .topbar{
+  background: color-mix(in srgb, var(--ae-bg) 92%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
+  border-bottom: 1px solid var(--ae-border) !important;
+  box-shadow: none !important;
+  padding: 10px 20px !important;
+  height: auto !important;
+  min-height: 56px !important;
+}
+html[data-design="aether"] .topbar.is-scrolled{
+  background: color-mix(in srgb, var(--ae-bg) 96%, transparent) !important;
+  border-bottom-color: var(--ae-border-strong) !important;
+}
+html[data-design="aether"] .app-logo{
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  object-fit: cover;
+}
+html[data-design="aether"] .topbar-date{
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--ae-ink-dim) !important;
+  letter-spacing: 0.01em;
+}
+html[data-design="aether"] .topbar-date-greg{
+  font-size: 10px !important;
+  color: var(--ae-ink-faint) !important;
+  font-family: var(--ae-font-num) !important;
+}
+html[data-design="aether"] .live-dot{
+  background: var(--ae-success) !important;
+  box-shadow: 0 0 0 3px var(--ae-success-soft) !important;
+}
+html[data-design="aether"] .theme-dn-btn,
+html[data-design="aether"] .hamburger-btn{
+  border: 1px solid var(--ae-border) !important;
+  background: var(--ae-surface) !important;
+  border-radius: var(--ae-radius-sm) !important;
+  color: var(--ae-ink-dim) !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+html[data-design="aether"] .theme-dn-btn:hover,
+html[data-design="aether"] .hamburger-btn:hover{
+  border-color: var(--ae-border-strong) !important;
+  color: var(--ae-primary) !important;
+  background: var(--ae-surface-2) !important;
+}
+html[data-design="aether"] .im-header-avatar{
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: var(--ae-primary-soft) !important;
+  color: var(--ae-primary) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  border: 1px solid var(--ae-border-strong) !important;
+}
+
+/* Layout — wider financial workspace */
+html[data-design="aether"] .layout{
+  max-width: 920px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+html[data-design="aether"] .main{
+  padding: 16px 0 48px !important;
+}
+@media (min-width: 1100px){
+  html[data-design="aether"] .layout{ max-width: 1080px !important; }
+}
+
+/* Hide bottom nav for aether (desktop-first workspace) */
+html[data-design="aether"] .bottom-nav{
+  display: none !important;
+}
+
+/* Side drawer — clean, precise */
+html[data-design="aether"] .side-drawer,
+html[data-design="aether"] #dropdownMenu{
+  background: var(--ae-surface) !important;
+  border-left: 1px solid var(--ae-border) !important;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.25) !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+}
+html[data-design="aether"] .side-drawer-head{
+  border-bottom: 1px solid var(--ae-border) !important;
+  padding: 16px 18px !important;
+}
+html[data-design="aether"] .sd-identity-avatar{
+  background: var(--ae-primary-soft) !important;
+  color: var(--ae-primary) !important;
+  border: 1px solid var(--ae-border-strong) !important;
+}
+html[data-design="aether"] .menu-item{
+  border-radius: var(--ae-radius-sm) !important;
+  margin: 2px 10px !important;
+  padding: 10px 14px !important;
+  color: var(--ae-ink-dim) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+html[data-design="aether"] .menu-item:hover{
+  background: var(--ae-surface-2) !important;
+  color: var(--ae-ink) !important;
+}
+html[data-design="aether"] .menu-item.active{
+  background: var(--ae-primary-soft) !important;
+  color: var(--ae-primary) !important;
+  font-weight: 600 !important;
+}
+html[data-design="aether"] .menu-item .ic{
+  color: inherit !important;
+  opacity: 0.85;
+}
+html[data-design="aether"] .menu-item.active .ic{
+  color: var(--ae-primary) !important;
+  opacity: 1;
+}
+
+/* --- Hero / Financial Summary --- */
+html[data-design="aether"] .hero{
+  background: var(--ae-surface) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius-lg) !important;
+  box-shadow: none !important;
+  padding: 28px 24px !important;
+  position: relative;
+  overflow: hidden;
+}
+html[data-design="aether"] .hero::before{
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(135deg, transparent 30%, var(--ae-primary-soft) 100%);
+  pointer-events: none;
+  opacity: 0.6;
+}
+html[data-design="aether"] .hero-label{
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--ae-ink-dim) !important;
+  margin-bottom: 6px !important;
+}
+html[data-design="aether"] .hero-num{
+  font-family: var(--ae-font-num) !important;
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  letter-spacing: var(--ae-tracking) !important;
+  color: var(--ae-ink) !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.15 !important;
+}
+html[data-design="aether"] .hero-num small{
+  font-size: 14px !important;
+  color: var(--ae-ink-dim) !important;
+  font-weight: 500 !important;
+}
+html[data-design="aether"] #page-dashboard.active .hero{
+  background: var(--ae-surface) !important;
+  border: 1px solid var(--ae-border) !important;
+  box-shadow: none !important;
+  min-height: auto !important;
+}
+html[data-design="aether"] #page-dashboard.active .hero-num{
+  color: var(--ae-ink) !important;
+  font-size: 40px !important;
+}
+html[data-design="aether"] #page-dashboard.active .hero-label{
+  color: var(--ae-ink-dim) !important;
+}
+
+/* Metrics row — editorial composition */
+html[data-design="aether"] .dash-metrics{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+html[data-design="aether"] .dash-metric{
+  background: var(--ae-surface-2) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius) !important;
+  padding: 14px 16px !important;
+  box-shadow: none !important;
+  position: relative;
+}
+html[data-design="aether"] .dash-metric::before{
+  content: '';
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 2px;
+  background: var(--ae-primary);
+  border-radius: var(--ae-radius) var(--ae-radius) 0 0;
+  opacity: 0.7;
+}
+html[data-design="aether"] .dash-metric:nth-child(2)::before{ background: var(--ae-success); }
+html[data-design="aether"] .dash-metric:nth-child(3)::before{ background: var(--ae-accent); }
+html[data-design="aether"] .dash-metric .dm-l{
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  color: var(--ae-ink-dim) !important;
+  text-transform: uppercase !important;
+}
+html[data-design="aether"] .dash-metric b{
+  font-family: var(--ae-font-num) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--ae-ink) !important;
+  letter-spacing: var(--ae-tracking) !important;
+}
+
+/* Sections — less card-like, more workspace */
+html[data-design="aether"] .section{
+  background: var(--ae-surface) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius-lg) !important;
+  box-shadow: none !important;
+  padding: 20px 18px !important;
+  margin-bottom: 16px !important;
+}
+html[data-design="aether"] .section-title{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--ae-ink) !important;
+  margin-bottom: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+html[data-design="aether"] .section-title .dot{
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: var(--ae-primary) !important;
+  box-shadow: 0 0 0 3px var(--ae-primary-soft) !important;
+}
+html[data-design="aether"] .section-sub{
+  font-size: 12px !important;
+  color: var(--ae-ink-dim) !important;
+  margin-bottom: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Asset cards / Investment sections */
+html[data-design="aether"] .asset-card,
+html[data-design="aether"] .goal-card,
+html[data-design="aether"] .note-card,
+html[data-design="aether"] .nb-card,
+html[data-design="aether"] .analysis-card,
+html[data-design="aether"] .forecast-card,
+html[data-design="aether"] .loan-item,
+html[data-design="aether"] .log-item,
+html[data-design="aether"] .nb-stat,
+html[data-design="aether"] .nc-hero,
+html[data-design="aether"] .notes-shell,
+html[data-design="aether"] .goals-cap-card{
+  background: var(--ae-surface) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius) !important;
+  box-shadow: none !important;
+}
+html[data-design="aether"] .asset-card:hover,
+html[data-design="aether"] .goal-card:hover,
+html[data-design="aether"] .note-card:hover{
+  border-color: var(--ae-border-strong) !important;
+  background: var(--ae-surface-2) !important;
+}
+
+/* Transaction list */
+html[data-design="aether"] .nb-filters{
+  gap: 6px !important;
+  margin-bottom: 12px !important;
+}
+html[data-design="aether"] .nb-filter{
+  border: 1px solid var(--ae-border) !important;
+  background: var(--ae-surface-2) !important;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ae-ink-dim) !important;
+  transition: all 0.15s ease;
+}
+html[data-design="aether"] .nb-filter.active{
+  background: var(--ae-primary-soft) !important;
+  border-color: var(--ae-border-strong) !important;
+  color: var(--ae-primary) !important;
+}
+html[data-design="aether"] .nb-day-head{
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ae-ink-dim) !important;
+  letter-spacing: 0.02em !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px solid var(--ae-border) !important;
+  margin-bottom: 6px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Buttons */
+html[data-design="aether"] .btn:not(.ghost):not(.danger){
+  background: var(--ae-primary) !important;
+  color: #0C0E12 !important;
+  border: none !important;
+  border-radius: var(--ae-radius-sm) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.01em !important;
+  padding: 10px 18px !important;
+  box-shadow: none !important;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+html[data-design="aether"] .btn:not(.ghost):not(.danger):hover{
+  background: #D4B87A !important;
+  transform: translateY(-1px);
+}
+html[data-design="aether"] .btn.ghost{
+  background: transparent !important;
+  border: 1px solid var(--ae-border) !important;
+  color: var(--ae-ink-dim) !important;
+  border-radius: var(--ae-radius-sm) !important;
+}
+html[data-design="aether"] .btn.ghost:hover{
+  border-color: var(--ae-border-strong) !important;
+  color: var(--ae-primary) !important;
+  background: var(--ae-primary-soft) !important;
+}
+html[data-design="aether"] .btn.danger{
+  background: var(--ae-danger) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--ae-radius-sm) !important;
+}
+
+/* Inputs */
+html[data-design="aether"] input[type=text],
+html[data-design="aether"] input[type=password],
+html[data-design="aether"] input[type=date],
+html[data-design="aether"] input[type=time],
+html[data-design="aether"] input[type=number],
+html[data-design="aether"] input[type=search],
+html[data-design="aether"] select,
+html[data-design="aether"] textarea{
+  background: var(--ae-surface-2) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius-sm) !important;
+  color: var(--ae-ink) !important;
+  font-family: inherit !important;
+  padding: 10px 12px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+html[data-design="aether"] input:focus,
+html[data-design="aether"] select:focus,
+html[data-design="aether"] textarea:focus{
+  border-color: var(--ae-border-strong) !important;
+  box-shadow: 0 0 0 3px var(--ae-primary-soft) !important;
+  outline: none !important;
+}
+
+/* Numbers — tabular, professional */
+html[data-design="aether"] .hero-num,
+html[data-design="aether"] .dash-metric b,
+html[data-design="aether"] .asset-value,
+html[data-design="aether"] .tx-amount,
+html[data-design="aether"] .nb-amount,
+html[data-design="aether"] .goal-amount,
+html[data-design="aether"] [data-amount],
+html[data-design="aether"] .money,
+html[data-design="aether"] .num{
+  font-family: var(--ae-font-num) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: var(--ae-tracking) !important;
+}
+
+/* Profit / Loss indicators */
+html[data-design="aether"] .pos,
+html[data-design="aether"] .profit,
+html[data-design="aether"] .gain,
+html[data-design="aether"] .up{
+  color: var(--ae-success) !important;
+}
+html[data-design="aether"] .neg,
+html[data-design="aether"] .loss,
+html[data-design="aether"] .down{
+  color: var(--ae-danger) !important;
+}
+
+/* Progress bars */
+html[data-design="aether"] .goal-progress .gp-fill,
+html[data-design="aether"] .progress-fill{
+  background: var(--ae-primary) !important;
+  border-radius: 999px !important;
+}
+html[data-design="aether"] .goal-progress,
+html[data-design="aether"] .progress-track{
+  background: var(--ae-surface-3) !important;
+  border-radius: 999px !important;
+  height: 6px !important;
+}
+
+/* Modals */
+html[data-design="aether"] .confirm-box,
+html[data-design="aether"] .note-modal-panel,
+html[data-design="aether"] .lock-box{
+  background: var(--ae-surface) !important;
+  border: 1px solid var(--ae-border) !important;
+  border-radius: var(--ae-radius-lg) !important;
+  box-shadow: var(--ae-shadow) !important;
+}
+html[data-design="aether"] .confirm-title,
+html[data-design="aether"] .lock-title{
+  color: var(--ae-ink) !important;
+  font-weight: 700 !important;
+}
+html[data-design="aether"] .confirm-sub,
+html[data-design="aether"] .lock-sub{
+  color: var(--ae-ink-dim) !important;
+}
+
+/* Design switcher cards */
+html[data-design="aether"] .design-card{
+  border: 1px solid var(--ae-border) !important;
+  background: var(--ae-surface-2) !important;
+  border-radius: var(--ae-radius) !important;
+}
+html[data-design="aether"] .design-card.active{
+  border-color: var(--ae-border-strong) !important;
+  background: var(--ae-primary-soft) !important;
+  box-shadow: 0 0 0 1px var(--ae-primary) !important;
+}
+html[data-design="aether"] .theme-card{
+  border: 1px solid var(--ae-border) !important;
+  background: var(--ae-surface-2) !important;
+  border-radius: var(--ae-radius) !important;
+}
+html[data-design="aether"] .theme-card.active{
+  border-color: var(--ae-border-strong) !important;
+  box-shadow: 0 0 0 1px var(--ae-primary) !important;
+}
+
+/* Micro-interactions */
+html[data-design="aether"] .btn,
+html[data-design="aether"] .menu-item,
+html[data-design="aether"] .nb-filter,
+html[data-design="aether"] .design-card,
+html[data-design="aether"] .theme-card,
+html[data-design="aether"] .asset-card,
+html[data-design="aether"] .goal-card{
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+html[data-design="aether"] .btn:active,
+html[data-design="aether"] .menu-item:active{
+  transform: scale(0.97) !important;
+}
+
+/* Reveal / entrance */
+html[data-design="aether"] .reveal{
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+html[data-design="aether"] .reveal.in-view{
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Loading states */
+html[data-design="aether"] .loading,
+html[data-design="aether"] .skeleton{
+  background: linear-gradient(90deg, var(--ae-surface-2) 25%, var(--ae-surface-3) 50%, var(--ae-surface-2) 75%) !important;
+  background-size: 200% 100% !important;
+  animation: ae-shimmer 1.4s ease infinite !important;
+  border-radius: var(--ae-radius-sm) !important;
+}
+@keyframes ae-shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+
+/* Empty states */
+html[data-design="aether"] .empty-state,
+html[data-design="aether"] .empty{
+  color: var(--ae-ink-dim) !important;
+  text-align: center !important;
+  padding: 32px 16px !important;
+}
+
+/* Responsive — Mobile recompose */
+@media (max-width: 720px){
+  html[data-design="aether"] .layout{
+    max-width: 100% !important;
+    padding: 0 12px !important;
+  }
+  html[data-design="aether"] .main{
+    padding: 12px 0 40px !important;
+  }
+  html[data-design="aether"] .hero{
+    padding: 20px 16px !important;
+  }
+  html[data-design="aether"] .hero-num,
+  html[data-design="aether"] #page-dashboard.active .hero-num{
+    font-size: 28px !important;
+  }
+  html[data-design="aether"] .dash-metrics{
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  html[data-design="aether"] .dash-metric b{
+    font-size: 15px !important;
+  }
+  html[data-design="aether"] .section{
+    padding: 16px 14px !important;
+    margin-bottom: 12px !important;
+  }
+  html[data-design="aether"] .topbar{
+    padding: 8px 12px !important;
+  }
+}
+
+/* Tablet */
+@media (min-width: 721px) and (max-width: 1023px){
+  html[data-design="aether"] .layout{
+    max-width: 720px !important;
+  }
+  html[data-design="aether"] .dash-metrics{
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Desktop enhancement */
+@media (min-width: 1024px){
+  html[data-design="aether"] .hero{
+    padding: 32px 28px !important;
+  }
+  html[data-design="aether"] #page-dashboard.active .hero-num{
+    font-size: 44px !important;
+  }
+  html[data-design="aether"] .section{
+    padding: 24px 22px !important;
+  }
+}
+
+/* Accessibility — focus states */
+html[data-design="aether"] :focus-visible{
+  outline: 2px solid var(--ae-primary) !important;
+  outline-offset: 2px !important;
+}
+html[data-design="aether"] .btn:focus-visible,
+html[data-design="aether"] .menu-item:focus-visible,
+html[data-design="aether"] .nb-filter:focus-visible{
+  outline: 2px solid var(--ae-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Ensure page visibility */
+html[data-design="aether"] .page{ display: none; }
+html[data-design="aether"] .page.active{ display: block; }
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce){
+  html[data-design="aether"] *{
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* --- End Aether Design System --- */

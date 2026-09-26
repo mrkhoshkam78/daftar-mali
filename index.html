@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-design="aurora" lang="fa" dir="rtl" data-theme="light" data-anim="on">
+<html data-design="aether" lang="fa" dir="rtl" data-theme="light" data-anim="on">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -13,14 +13,15 @@
 <!-- FOUC: design + theme قبل از CSS -->
 <script>
 (function(){try{
-  var d=localStorage.getItem("daftar-design")||"aurora";
+  var d=localStorage.getItem("daftar-design")||"aether";
   d=String(d).toLowerCase();
   if(d==="neo"||d==="neo-bank"||d==="neo_bank")d="neobank";
   if(d==="original"||d==="glass"||d==="premium")d="classic";
   if(d==="adaptive"||d==="canvas"||d==="afc"||d==="adaptivecanvas"||d==="adaptive-canvas")d="aurora";
   if(d==="editorial"||d==="editorialfinance"||d==="ef")d="editorial-finance";
   if(d==="immersive"||d==="cinema"||d==="premium-dash"||d==="monkey")d="immersive";
-  if(["aurora","neobank","classic","editorial-finance","immersive"].indexOf(d)<0)d="aurora";
+  if(d==="aether"||d==="ledger"||d==="obsidian"||d==="premium-ledger")d="aether";
+  if(["aurora","neobank","classic","editorial-finance","immersive","aether"].indexOf(d)<0)d="aether";
   document.documentElement.setAttribute("data-design",d);
   var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
@@ -32,9 +33,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260920v501" as="style">
+<link rel="preload" href="styles.css?v=20260926aether" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260920v501">
+<link rel="stylesheet" href="styles.css?v=20260926aether">
 </head>
 <body>
 
@@ -834,9 +835,14 @@
 
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> پوسته</div>
-        <div class="section-sub">انتخاب پوسته و استایل کلی رابط (Aurora، Neo-Bank، Classic، Editorial Finance)</div>
+        <div class="section-sub">انتخاب پوسته و استایل کلی رابط — Aether پوسته اختصاصی جدید</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب پوسته">
-          <button type="button" class="design-card active" data-design-val="aurora" role="option" aria-selected="true">
+          <button type="button" class="design-card active" data-design-val="aether" role="option" aria-selected="true">
+            <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+            <span class="theme-preview" style="background:linear-gradient(135deg,#0c0e12 0%,#1a1f28 45%,#c9a962 100%)"></span>
+            <span class="design-name">Aether</span>
+          </button>
+          <button type="button" class="design-card" data-design-val="aurora" role="option" aria-selected="false">
             <span class="design-name">Aurora</span>
           </button>
           <button type="button" class="design-card" data-design-val="neobank" role="option" aria-selected="false">
@@ -849,9 +855,7 @@
             <span class="design-name">Editorial Finance</span>
           </button>
           <button type="button" class="design-card" data-design-val="immersive" role="option" aria-selected="false">
-            <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
-            <span class="theme-preview" style="background:linear-gradient(135deg,#0a1628 0%,#1e3a5f 40%,#f59e0b 100%)"></span>
-            <span class="theme-name">ایمرسیو</span>
+            <span class="design-name">ایمرسیو</span>
           </button>
         </div>
       </div>
