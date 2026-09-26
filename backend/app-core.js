@@ -1174,6 +1174,47 @@ function persist(){
     return false;
   }
   const payload = getStatePayload();
+  // جلوگیری از overwrite دادهٔ واقعی با state خالی/صفر
+  try{
+    var payloadEmpty = true;
+    if(payload && payload.assets && typeof payload.assets === 'object'){
+      Object.keys(payload.assets).forEach(function(k){
+        var v = Number(payload.assets[k]);
+        if(isFinite(v) && Math.abs(v) > 0) payloadEmpty = false;
+      });
+    }
+    if(payloadEmpty && Array.isArray(payload.txs) && payload.txs.length) payloadEmpty = false;
+    if(payloadEmpty && Array.isArray(payload.history) && payload.history.length) payloadEmpty = false;
+    if(payloadEmpty && Array.isArray(payload.logs) && payload.logs.length) payloadEmpty = false;
+    if(payloadEmpty && Array.isArray(payload.noncash) && payload.noncash.length) payloadEmpty = false;
+    if(payloadEmpty && Array.isArray(payload.notebook) && payload.notebook.length) payloadEmpty = false;
+    if(payloadEmpty && Array.isArray(payload.bankCards) && payload.bankCards.some(function(c){ return c && Math.abs(Number(c.balance)||0) > 0; })) payloadEmpty = false;
+    if(payloadEmpty){
+      var rawExist = localStorage.getItem(STORE_KEY);
+      if(rawExist){
+        try{
+          var existing = JSON.parse(rawExist);
+          var existSum = 0;
+          if(existing && existing.assets && typeof existing.assets === 'object'){
+            Object.keys(existing.assets).forEach(function(k){
+              var v = Number(existing.assets[k]);
+              if(isFinite(v)) existSum += Math.abs(v);
+            });
+          }
+          var existHasTx = existing && (
+            (Array.isArray(existing.txs) && existing.txs.length) ||
+            (Array.isArray(existing.history) && existing.history.length) ||
+            (Array.isArray(existing.logs) && existing.logs.length) ||
+            (Array.isArray(existing.noncash) && existing.noncash.length)
+          );
+          if(existSum > 0 || existHasTx){
+            console.warn('persist blocked: refusing to overwrite meaningful localStorage with empty/zero state');
+            return false;
+          }
+        }catch(_pe){}
+      }
+    }
+  }catch(_pg){}
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(payload));
   }catch(e){
@@ -1181,7 +1222,7 @@ function persist(){
     if(typeof showToast === 'function') showToast('خطا در ذخیره محلی', true);
     return false;
   }
-  // پشتیبان فوری پس از ذخیره موفق
+  // پشتیبان فوری پس از ذخیره موفق (runAutoBackupImmediate خودش خالی را رد می‌کند)
   if(typeof runAutoBackupImmediate === 'function'){
     try{
       runAutoBackupImmediate(payload).catch(err => console.log('async backup', err));

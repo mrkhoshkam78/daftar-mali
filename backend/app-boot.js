@@ -771,28 +771,89 @@ async function getLatestAutoBackup(){
   const rows = await listAutoBackups();
   for(let i = 0; i < rows.length; i++){
     const r = rows[i];
-    if(r && r.data && typeof r.data === 'object' && !Array.isArray(r.data)){
-      return r;
-    }
+    if(!r || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) continue;
+    // رد کردن رکورد config که در همان store ذخیره می‌شود
+    if(r.id === AUTO_BACKUP_CFG_IDB_KEY) continue;
+    if(r.data.enabled !== undefined && r.data.interval !== undefined && !r.data.assets) continue;
+    // فقط پشتیبان با دادهٔ واقعی
+    if(typeof isMeaningfulPayload === 'function' && !isMeaningfulPayload(r.data)) continue;
+    const check = validateBackupPayload(r.data);
+    if(check.ok) return r;
   }
   return null;
+}
+
+
+/** آیا payload واقعاً دادهٔ مالی دارد؟ (نه state صفر/پیش‌فرض) */
+function isMeaningfulPayload(d){
+  if(!d || typeof d !== 'object' || Array.isArray(d)) return false;
+  // envelope رمزشده یا cfg بکاپ
+  if(d.enc === true || d.ct || d.iv || d.salt) return false;
+  if(d.enabled !== undefined && d.interval !== undefined && !d.assets) return false;
+  try{
+    var sum = 0;
+    if(d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets)){
+      Object.keys(d.assets).forEach(function(k){
+        var v = Number(d.assets[k]);
+        if(isFinite(v) && !isNaN(v)) sum += Math.abs(v);
+      });
+    }
+    if(sum > 0.0001) return true;
+    if(Array.isArray(d.txs) && d.txs.length > 0) return true;
+    if(Array.isArray(d.history) && d.history.length > 0) return true;
+    if(Array.isArray(d.logs) && d.logs.length > 0) return true;
+    if(Array.isArray(d.notebook) && d.notebook.length > 0) return true;
+    if(Array.isArray(d.noncash) && d.noncash.length > 0) return true;
+    if(Array.isArray(d.notes) && d.notes.length > 0) return true;
+    if(Array.isArray(d.financialGoals) && d.financialGoals.length > 0) return true;
+    if(Array.isArray(d.bankCards) && d.bankCards.some(function(c){
+      return c && (Math.abs(Number(c.balance) || 0) > 0 || String(c.last4 || '').length > 0);
+    })) return true;
+    if(Array.isArray(d.fcEvents) && d.fcEvents.length > 0) return true;
+    if(Array.isArray(d.budgets) && d.budgets.length > 0) return true;
+  }catch(e){}
+  return false;
+}
+
+/** آیا state فعلی در حافظه دادهٔ واقعی دارد؟ */
+function stateHasMeaningfulData(){
+  try{
+    return isMeaningfulPayload({
+      assets: (typeof assets !== 'undefined') ? assets : null,
+      txs: (typeof txs !== 'undefined') ? txs : null,
+      history: (typeof history !== 'undefined') ? history : null,
+      logs: (typeof logs !== 'undefined') ? logs : null,
+      notebook: (typeof notebook !== 'undefined') ? notebook : null,
+      noncash: (typeof noncash !== 'undefined') ? noncash : null,
+      notes: (typeof notes !== 'undefined') ? notes : null,
+      financialGoals: (typeof financialGoals !== 'undefined') ? financialGoals : null,
+      bankCards: (typeof bankCards !== 'undefined') ? bankCards : null,
+      fcEvents: (typeof fcEvents !== 'undefined') ? fcEvents : null,
+      budgets: (typeof budgets !== 'undefined') ? budgets : null
+    });
+  }catch(e){ return false; }
 }
 
 /** اعتبارسنجی کامل بودن داده پشتیبان برای restore */
 function validateBackupPayload(d){
   if(!d || typeof d !== 'object' || Array.isArray(d)) return { ok: false, reason: 'ساختار داده نامعتبر است' };
-  // حداقل یکی از فیلدهای اصلی باید وجود داشته باشد
-  const hasAssets = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
-  const hasTxs = Array.isArray(d.txs);
-  const hasHistory = Array.isArray(d.history);
-  const hasLogs = Array.isArray(d.logs);
-  const hasNotebook = Array.isArray(d.notebook);
-  if(!hasAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook){
-    return { ok: false, reason: 'پشتیبان خالی یا ناقص است (بدون دارایی/تراکنش/تاریخچه)' };
-  }
   // جلوگیری از envelope رمزشدهٔ خام به‌عنوان payload
   if(d.enc === true || d.magic === BACKUP_MAGIC || d.ct || d.iv){
     return { ok: false, reason: 'فرمت پشتیبان خودکار با دادهٔ رمزشده سازگار نیست' };
+  }
+  // حداقل ساختار
+  const hasAssets = d.assets && typeof d.assets === 'object' && !Array.isArray(d.assets);
+  const hasTxs = Array.isArray(d.txs) && d.txs.length > 0;
+  const hasHistory = Array.isArray(d.history) && d.history.length > 0;
+  const hasLogs = Array.isArray(d.logs) && d.logs.length > 0;
+  const hasNotebook = Array.isArray(d.notebook) && d.notebook.length > 0;
+  const hasNoncash = Array.isArray(d.noncash) && d.noncash.length > 0;
+  if(!hasAssets && !hasTxs && !hasHistory && !hasLogs && !hasNotebook && !hasNoncash){
+    return { ok: false, reason: 'پشتیبان خالی یا ناقص است (بدون دارایی/تراکنش/تاریخچه)' };
+  }
+  // حیاتی: پشتیبان تمام‌صفر نباید قابل restore باشد (همین باعث صفر شدن داده‌ها می‌شد)
+  if(typeof isMeaningfulPayload === 'function' && !isMeaningfulPayload(d)){
+    return { ok: false, reason: 'پشتیبان بدون دادهٔ واقعی است (موجودی/تراکنش صفر) — بازگردانی انجام نشد' };
   }
   return { ok: true };
 }
@@ -876,26 +937,33 @@ async function attemptSilentAutoRestore(){
     console.log('silent restore skipped: pending encrypted store (wait for unlock)');
     return false;
   }
-  // اگر localStorage داده معتبر (دارای assets) دارد، دست نزن
+  // اگر state فعلی یا localStorage دادهٔ واقعی دارد، هرگز overwrite نکن
+  if(typeof stateHasMeaningfulData === 'function' && stateHasMeaningfulData()){
+    console.log('silent restore skipped: in-memory state already has data');
+    return false;
+  }
   try{
     const raw = localStorage.getItem(STORE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      // envelope رمزشده → نباید اینجا restore شود (unlock مسئول است)
       if(parsed && (parsed.enc === true || parsed.ct)) return false;
-      if(parsed && parsed.assets && typeof parsed.assets === 'object') return false; // داده موجود است
+      // فقط وقتی localStorage دادهٔ meaningful دارد رد شو — نه هر object خالی/صفر
+      if(typeof isMeaningfulPayload === 'function' && isMeaningfulPayload(parsed)){
+        return false;
+      }
+      if(parsed && parsed.assets && typeof parsed.assets === 'object' && isMeaningfulPayload(parsed)){
+        return false;
+      }
     }
   }catch(e){}
   
-  // داده موجود نیست یا خراب — تلاش برای بازیابی از پشتیبان
   console.log('localStorage empty/invalid, attempting silent restore...');
   
-  // ابتدا IndexedDB را تلاش کن
   try{
     const row = await getLatestAutoBackup();
     if(row && row.data){
       const check = validateBackupPayload(row.data);
-      if(check.ok){
+      if(check.ok && isMeaningfulPayload(row.data)){
         applyAutoBackupPayload(row.data);
         if(typeof persist === 'function') persist();
         if(typeof render === 'function') try{ render(); }catch(_r){}
@@ -905,12 +973,11 @@ async function attemptSilentAutoRestore(){
     }
   }catch(e){ console.log('idb restore failed', e); }
   
-  // fallback: localStorage emergency backup (جزئی — فقط در نبود IDB)
   try{
     const emergency = localStorage.getItem(PERSISTENT_BACKUP_KEY);
     if(emergency){
       const data = JSON.parse(emergency);
-      if(data && data.assets && typeof data.assets === 'object'){
+      if(data && isMeaningfulPayload(data) && validateBackupPayload(data).ok){
         applyAutoBackupPayload(data);
         if(typeof persist === 'function') persist();
         if(typeof render === 'function') try{ render(); }catch(_r){}
@@ -974,6 +1041,11 @@ async function runAutoBackupImmediate(payload){
   if(!payload) return;
   // هرگز از state صفر/پیش‌فرض وقتی pending encrypted است بکاپ نگیر
   if(window._pendingEncStore && !sessionCryptoKey) return;
+  // حیاتی: پشتیبان state خالی/صفر را ذخیره نکن — باعث صفر شدن داده هنگام restore می‌شود
+  if(typeof isMeaningfulPayload === 'function' && !isMeaningfulPayload(payload)){
+    console.log('immediate backup skipped: payload has no meaningful financial data');
+    return;
+  }
   try{
     // ذخیره کامل در IndexedDB
     const clean = JSON.parse(JSON.stringify(payload));
@@ -1013,6 +1085,10 @@ async function runAutoBackupIfDue(){
   try{
     if(typeof getStatePayload !== 'function') return;
     const payload = getStatePayload();
+    if(typeof isMeaningfulPayload === 'function' && !isMeaningfulPayload(payload)){
+      console.log('scheduled backup skipped: no meaningful data');
+      return;
+    }
     // فقط کپی داده — بدون تغییر state اصلی
     await saveBackupToIdb(JSON.parse(JSON.stringify(payload)));
     cfg.lastRun = now;
