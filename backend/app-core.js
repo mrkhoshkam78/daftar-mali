@@ -281,7 +281,7 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive'];
+const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive','aether'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
@@ -290,11 +290,12 @@ function normalizeDesignId(d){
   if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc' || d === 'adaptive-canvas') return 'aurora';
   if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
   if(d === 'immersive' || d === 'cinema' || d === 'premium-dash' || d === 'monkey') return 'immersive';
+  if(d === 'aether' || d === 'ledger' || d === 'obsidian' || d === 'premium-ledger') return 'aether';
   return d;
 }
 function applyDesign(d){
   d = normalizeDesignId(d);
-  if(!VALID_DESIGNS.includes(d)) d = 'aurora';
+  if(!VALID_DESIGNS.includes(d)) d = 'aether';
   const root = document.documentElement;
   root.setAttribute('data-design', d);
   try{ localStorage.setItem(DESIGN_KEY, d); }catch(e){}
@@ -317,6 +318,9 @@ function applyDesign(d){
     } else if(d === 'immersive'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
+    } else if(d === 'aether'){
+      if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
+      if(ham){ ham.style.display = ''; }
     } else {
       if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
       if(ham){ ham.style.display = ''; }
@@ -361,8 +365,8 @@ function onDesignCardActivate(e){
 }
 document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
-  let saved = 'aurora';
-  try{ saved = localStorage.getItem(DESIGN_KEY) || 'aurora'; }catch(e){}
+  let saved = 'aether';
+  try{ saved = localStorage.getItem(DESIGN_KEY) || 'aether'; }catch(e){}
   // مهاجرت: Adaptive Canvas حذف شده
   try{
     const n = String(saved||'').toLowerCase();
