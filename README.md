@@ -1,4 +1,4 @@
-# مبحث درآمد — V5.0.1
+# مبحث درآمد — V6.0.1
 
 داشبورد مالی آفلاین (localStorage + IndexedDB) — مناسب GitHub Pages.
 
@@ -28,6 +28,13 @@ daftar-mali/
 4. frontend/app-notes.js
 5. backend/app-boot.js
 6. frontend/financial-ai.js
+
+## تغییرات V6.0.1 (پوسته نئو + بهینه‌سازی)
+
+- پوسته **نئو** (Pure Neumorphism Soft UI)
+- منوی پایین شبیه Aurora با حالت فعال: کادر مشکی + SVG سفید
+- نام نمایشی Meridian → نئو
+- نسخه در تمام بخش‌ها: V6.0.1
 
 ## تغییرات V5.0.1 (اصلاح مشکل بازیابی داده)
 

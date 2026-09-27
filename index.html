@@ -6,15 +6,15 @@
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#FFFFFF">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260920v501">
+<meta name="app-build" content="20260927v601">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
 <!-- FOUC: design + theme قبل از CSS -->
 <script>
 (function(){try{
-  /* Force Meridian (Pure Neumorphism Soft UI) once for this build */
-  var BUILD="meridian-neuro-20260927";
+  /* Force نئو (Pure Neumorphism Soft UI) v6.0.1 once for this build */
+  var BUILD="neo-v601-20260927";
   if(localStorage.getItem("daftar-design-build")!==BUILD){
     localStorage.setItem("daftar-design","meridian");
     localStorage.setItem("daftar-theme","light");
@@ -28,7 +28,7 @@
   if(d==="editorial"||d==="editorialfinance"||d==="ef")d="editorial-finance";
   if(d==="immersive"||d==="cinema"||d==="premium-dash"||d==="monkey")d="immersive";
   if(d==="aether"||d==="ledger"||d==="obsidian"||d==="premium-ledger")d="aether";
-  if(d==="meridian"||d==="ink"||d==="ember"||d==="atelier")d="meridian";
+  if(d==="meridian"||d==="ink"||d==="ember"||d==="atelier"||d==="neo"||d==="neuro"||d==="نئو")d="meridian";
   if(d==="vesper"||d==="lumen"||d==="noir")d="vesper";
   if(["aurora","neobank","classic","editorial-finance","immersive","aether","meridian","vesper"].indexOf(d)<0)d="vesper";
   document.documentElement.setAttribute("data-design",d);
@@ -42,9 +42,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260927meridian-neuro" as="style">
+<link rel="preload" href="styles.css?v=20260927v601-neo" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260927meridian-neuro">
+<link rel="stylesheet" href="styles.css?v=20260927v601-neo">
 </head>
 <body>
 
@@ -844,12 +844,12 @@
 
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> پوسته</div>
-        <div class="section-sub">پوستهٔ Meridian — Pure Neumorphism Soft UI</div>
+        <div class="section-sub">پوستهٔ نئو — Pure Neumorphism Soft UI · V6.0.1</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب پوسته">
           <button type="button" class="design-card active" data-design-val="meridian" role="option" aria-selected="true">
             <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
             <span class="theme-preview" style="background:#FFFFFF;box-shadow:4px 4px 8px #d1d9e6,-4px -4px 8px #ffffff;border-radius:8px;"></span>
-            <span class="design-name">Meridian</span>
+            <span class="design-name">نئو</span>
           </button>
           <button type="button" class="design-card" data-design-val="vesper" role="option" aria-selected="false">
             <span class="theme-preview" style="background:linear-gradient(145deg,#0B0C10 0%,#1A1C24 55%,#C4A882 100%)"></span>
@@ -1031,7 +1031,7 @@
     </div>
 
     </div>
-    <div class="app-version" id="appVersion">مبحث درآمد · <b>V5.0.1</b></div>
+    <div class="app-version" id="appVersion">مبحث درآمد · <b>V6.0.1</b></div>
     </div>
 
   </div>
@@ -1119,12 +1119,12 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="backend/prices-api.js?v=20260920v501"></script>
-<script src="backend/app-core.js?v=20260920v501"></script>
-<script src="frontend/app-ui.js?v=20260920v501"></script>
-<script src="frontend/app-notes.js?v=20260920v501"></script>
-<script src="backend/app-boot.js?v=20260920v501"></script>
-<script src="frontend/financial-ai.js?v=20260920v501"></script>
+<script src="backend/prices-api.js?v=20260927v601"></script>
+<script src="backend/app-core.js?v=20260927v601"></script>
+<script src="frontend/app-ui.js?v=20260927v601"></script>
+<script src="frontend/app-notes.js?v=20260927v601"></script>
+<script src="backend/app-boot.js?v=20260927v601"></script>
+<script src="frontend/financial-ai.js?v=20260927v601"></script>
 <script>
 (function(){
   try{

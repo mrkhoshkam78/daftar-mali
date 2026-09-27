@@ -9589,23 +9589,22 @@ html[data-design="aether"] .page.active{ display: block; }
 /* --- End Aether Design System --- */
 
 /* ==========================================================================
-   MERIDIAN — Pure Neumorphism / Soft UI Financial Dashboard
-   Concept: Soft extruded panels · Absolute monochrome · Luxury fintech 2026
-   Background pure #FFFFFF · Jet black type · Depth only via soft shadows
-   No gradients · No borders · No glass · No color accents
+   نئو (NEO) — Pure Neumorphism / Soft UI · V6.0.1
+   Soft extruded panels · Absolute monochrome · Luxury fintech
+   Bottom-nav (Aurora-style) · Active: black frame + white SVG
+   No gradients · No color accents · Depth only via soft shadows
    ========================================================================== */
 
 html[data-design="meridian"]{
-  /* Neumorphic tokens — pure monochrome Soft UI */
   --md-bg: #FFFFFF;
   --md-bg-elev: #FFFFFF;
   --md-surface: #FFFFFF;
-  --md-surface-2: #FFFFFF;
+  --md-surface-2: #F7F8FA;
   --md-line: transparent;
   --md-line-strong: transparent;
   --md-ink: #000000;
   --md-ink-dim: #1A1A1A;
-  --md-ink-faint: #4A4A4A;
+  --md-ink-faint: #5A5A5A;
   --md-ember: #000000;
   --md-ember-soft: rgba(0,0,0,0.06);
   --md-ember-glow: rgba(0,0,0,0.08);
@@ -9627,9 +9626,8 @@ html[data-design="meridian"]{
   --md-inset: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
   --md-inset-sm: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff;
 
-  /* Map to global tokens */
   --bg: #FFFFFF;
-  --bg-2: #FFFFFF;
+  --bg-2: #F7F8FA;
   --card: #FFFFFF;
   --card-2: #FFFFFF;
   --border: transparent;
@@ -9656,7 +9654,7 @@ html[data-design="meridian"]{
   --app-font: var(--md-font);
 }
 
-/* Force pure white neumorph regardless of selected theme name */
+/* Force pure white neumorph for any theme name */
 html[data-design="meridian"][data-theme="light"],
 html[data-design="meridian"].theme-light,
 html[data-design="meridian"][data-theme="dark"],
@@ -9671,15 +9669,15 @@ html[data-design="meridian"][data-theme="sage-mist"]{
   --md-bg: #FFFFFF;
   --md-bg-elev: #FFFFFF;
   --md-surface: #FFFFFF;
-  --md-surface-2: #FFFFFF;
+  --md-surface-2: #F7F8FA;
   --md-ink: #000000;
   --md-ink-dim: #1A1A1A;
-  --md-ink-faint: #4A4A4A;
+  --md-ink-faint: #5A5A5A;
   --md-ember: #000000;
   --md-positive: #000000;
   --md-negative: #000000;
   --bg: #FFFFFF;
-  --bg-2: #FFFFFF;
+  --bg-2: #F7F8FA;
   --card: #FFFFFF;
   --card-2: #FFFFFF;
   --ink: #000000;
@@ -9703,6 +9701,7 @@ html[data-design="meridian"] body{
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   background-image: none !important;
+  padding-bottom: 88px !important; /* room for bottom-nav */
 }
 
 html[data-design="meridian"] .im-bg,
@@ -9713,29 +9712,32 @@ html[data-design="meridian"] .ef-decor{
   display: none !important;
 }
 
-/* ---- TOPBAR — full-width extruded panel ---- */
+/* ---- TOPBAR ---- */
 html[data-design="meridian"] .topbar{
   background: #FFFFFF !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border: none !important;
   border-bottom: none !important;
-  box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff !important;
-  padding: 16px 24px !important;
-  min-height: 80px !important;
+  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  padding: 12px 18px !important;
+  min-height: 64px !important;
   border-radius: 0 0 20px 20px !important;
-  margin: 0 12px 8px !important;
-  width: calc(100% - 24px) !important;
+  margin: 0 10px 10px !important;
+  width: calc(100% - 20px) !important;
   max-width: 100% !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 40 !important;
 }
 html[data-design="meridian"] .topbar.is-scrolled{
-  box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff !important;
+  box-shadow: 8px 8px 18px #d1d9e6, -8px -8px 18px #ffffff !important;
 }
 html[data-design="meridian"] .app-logo{
-  width: 40px !important;
-  height: 40px !important;
+  width: 36px !important;
+  height: 36px !important;
   border-radius: 50% !important;
-  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
+  box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff !important;
   object-fit: cover;
 }
 html[data-design="meridian"] .app-brand-mark,
@@ -9755,11 +9757,15 @@ html[data-design="meridian"] .live-dot{
   background: #000000 !important;
   box-shadow: none !important;
 }
+
+/* Hide hamburger — nav is bottom-nav like Aurora */
+html[data-design="meridian"] .hamburger-btn{
+  display: none !important;
+}
 html[data-design="meridian"] .theme-dn-btn,
-html[data-design="meridian"] .hamburger-btn,
 html[data-design="meridian"] .im-header-avatar{
-  width: 50px !important;
-  height: 50px !important;
+  width: 44px !important;
+  height: 44px !important;
   border: none !important;
   background: #FFFFFF !important;
   border-radius: 50% !important;
@@ -9771,12 +9777,10 @@ html[data-design="meridian"] .im-header-avatar{
   transition: box-shadow .2s ease, transform .15s ease !important;
 }
 html[data-design="meridian"] .theme-dn-btn:hover,
-html[data-design="meridian"] .hamburger-btn:hover,
 html[data-design="meridian"] .im-header-avatar:hover{
-  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff !important;
 }
 html[data-design="meridian"] .theme-dn-btn:active,
-html[data-design="meridian"] .hamburger-btn:active,
 html[data-design="meridian"] .im-header-avatar:active{
   box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff !important;
   transform: translateY(1px);
@@ -9784,71 +9788,206 @@ html[data-design="meridian"] .im-header-avatar:active{
 
 /* Layout */
 html[data-design="meridian"] .layout{
-  max-width: 1200px !important;
+  max-width: 520px !important;
   margin: 0 auto !important;
-  padding: 0 24px !important;
+  padding: 0 14px !important;
   background: #FFFFFF !important;
 }
 html[data-design="meridian"] .main{
-  padding: 16px 0 48px !important;
+  padding: 8px 0 24px !important;
   background: #FFFFFF !important;
 }
-html[data-design="meridian"] .bottom-nav{ display: none !important; }
-
-@media (min-width: 900px){
-  html[data-design="meridian"] .layout{ max-width: 1280px !important; padding: 0 40px !important; }
+@media (min-width: 768px){
+  html[data-design="meridian"] .layout{ max-width: 560px !important; padding: 0 20px !important; }
+}
+@media (min-width: 1024px){
+  html[data-design="meridian"] .layout{ max-width: 720px !important; padding: 0 28px !important; }
 }
 
-/* Side drawer / menu — neumorphic */
-html[data-design="meridian"] .side-drawer,
-html[data-design="meridian"] #dropdownMenu{
+/* ================================================================
+   BOTTOM NAV — Aurora-style fixed bar (نئو neumorph)
+   Active: black rounded frame + white SVG
+   ================================================================ */
+html[data-design="meridian"] .bottom-nav{
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: 12px !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: space-between !important;
+  gap: 4px !important;
+  padding: 8px 6px !important;
   background: #FFFFFF !important;
   border: none !important;
-  box-shadow: 8px 8px 24px #d1d9e6, -4px -4px 16px #ffffff !important;
-  border-radius: 20px 0 0 20px !important;
+  border-radius: 28px !important;
+  box-shadow: 8px 8px 20px #d1d9e6, -6px -6px 16px #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-design="meridian"] .bn-item{
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 8px 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #1A1A1A !important;
+  font-family: var(--md-font) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  border-radius: 18px !important;
+  transition: color .15s ease, background .15s ease, transform .12s ease !important;
+}
+html[data-design="meridian"] .bn-item svg{
+  width: 22px !important;
+  height: 22px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 1.7 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  pointer-events: none !important;
+}
+/* default inactive icon wrapper look */
+html[data-design="meridian"] .bn-item svg{
+  padding: 6px !important;
+  box-sizing: content-box !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: #1A1A1A !important;
+}
+/* ACTIVE: black frame with corners + white SVG */
+html[data-design="meridian"] .bn-item.active{
+  color: #000000 !important;
+  background: transparent !important;
+}
+html[data-design="meridian"] .bn-item.active svg{
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  box-shadow: none !important;
+  /* subtle corner emphasis via clip / box */
+  outline: 1.5px solid #000000 !important;
+  outline-offset: 0 !important;
+}
+html[data-design="meridian"] .bn-item.active span{
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+html[data-design="meridian"] .bn-item:active{
+  transform: scale(.96) !important;
+}
+html[data-design="meridian"] body.menu-open .bottom-nav{
+  opacity: .45 !important;
+  pointer-events: none !important;
+}
+
+/* ================================================================
+   SIDE DRAWER — bottom sheet like Aurora (for «بیشتر»)
+   ================================================================ */
+html[data-design="meridian"] .side-drawer,
+html[data-design="meridian"] #dropdownMenu{
+  top: auto !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 78vh !important;
+  border-radius: 28px 28px 0 0 !important;
+  border: none !important;
+  box-shadow: 0 -12px 40px rgba(0,0,0,.12) !important;
+  background: #FFFFFF !important;
+  padding-bottom: 28px !important;
+  transform: translate3d(0, 110%, 0) !important;
+}
+html[data-design="meridian"] body.menu-open .side-drawer,
+html[data-design="meridian"] body.menu-open #dropdownMenu{
+  transform: translate3d(0, 0, 0) !important;
+}
+html[data-design="meridian"] body.menu-open .topbar,
+html[data-design="meridian"] body.menu-open .layout{
+  transform: none !important;
 }
 html[data-design="meridian"] .side-drawer-head{
   border-bottom: none !important;
-  padding: 24px !important;
+  padding: 18px 18px 8px !important;
 }
 html[data-design="meridian"] .sd-identity-avatar{
   box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
   border-radius: 50% !important;
   border: none !important;
 }
+html[data-design="meridian"] .side-drawer-nav{
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  padding: 12px 14px 20px !important;
+}
 html[data-design="meridian"] .menu-item{
-  height: 56px !important;
-  border-radius: 16px !important;
-  margin: 4px 12px !important;
-  padding: 0 16px !important;
+  border-radius: 18px !important;
+  padding: 14px 12px !important;
+  margin: 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
   background: #FFFFFF !important;
   border: none !important;
   color: #000000 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  min-height: 88px !important;
+  height: auto !important;
   box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
   transition: box-shadow .2s ease, transform .15s ease !important;
   display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
 }
 html[data-design="meridian"] .menu-item:hover{
   box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
 }
+html[data-design="meridian"] .menu-item .ic{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff !important;
+}
+html[data-design="meridian"] .menu-item .ic svg{
+  width: 18px !important;
+  height: 18px !important;
+  stroke: currentColor !important;
+}
+/* Active more-menu item: black frame + white icon */
 html[data-design="meridian"] .menu-item.active{
-  box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff !important;
-  transform: translateY(2px);
+  box-shadow: inset 4px 4px 10px #d1d9e6, inset -4px -4px 10px #ffffff !important;
   color: #000000 !important;
   background: #FFFFFF !important;
-}
-html[data-design="meridian"] .menu-item .ic{
-  opacity: 1 !important;
-  color: #000000 !important;
-  width: 20px !important;
-  height: 20px !important;
+  transform: none !important;
 }
 html[data-design="meridian"] .menu-item.active .ic{
-  color: #000000 !important;
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+  outline: 1.5px solid #000000 !important;
+}
+html[data-design="meridian"] .menu-item.active .ic svg{
+  stroke: #FFFFFF !important;
+  color: #FFFFFF !important;
 }
 
 /* ---- HERO / Stat cards ---- */
@@ -9858,8 +9997,8 @@ html[data-design="meridian"] #page-dashboard.active .hero{
   border: none !important;
   border-radius: 24px !important;
   box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff !important;
-  padding: 28px 24px !important;
-  margin-bottom: 24px !important;
+  padding: 22px 20px !important;
+  margin: 4px 0 14px !important;
   position: relative;
   overflow: visible !important;
 }
@@ -9869,16 +10008,16 @@ html[data-design="meridian"] .hero::after{
   content: none !important;
 }
 html[data-design="meridian"] .hero-label{
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: 0.03em !important;
   text-transform: uppercase !important;
-  color: #000000 !important;
-  margin-bottom: 8px !important;
+  color: #1A1A1A !important;
+  margin-bottom: 6px !important;
 }
 html[data-design="meridian"] .hero-num,
 html[data-design="meridian"] #page-dashboard.active .hero-num{
-  font-size: 32px !important;
+  font-size: 30px !important;
   font-weight: 700 !important;
   letter-spacing: -0.03em !important;
   color: #000000 !important;
@@ -9893,53 +10032,47 @@ html[data-design="meridian"] .hero-num small{
 }
 html[data-design="meridian"] .hero-sub{
   display: block !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #1A1A1A !important;
-  margin-top: 8px !important;
+  margin-top: 6px !important;
 }
 
-/* Metrics row — 4 extruded cards */
+/* Metrics */
 html[data-design="meridian"] .dash-metrics{
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
-  gap: 16px !important;
-  margin: 0 0 28px !important;
+  gap: 12px !important;
+  margin: 0 0 18px !important;
   padding: 0 !important;
   border: none !important;
   background: transparent !important;
 }
-@media (min-width: 900px){
-  html[data-design="meridian"] .dash-metrics{
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 20px !important;
-  }
-}
 html[data-design="meridian"] .dash-metric{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 24px !important;
-  box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff !important;
-  padding: 24px !important;
+  border-radius: 20px !important;
+  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  padding: 18px 16px !important;
   height: auto !important;
-  min-height: 140px !important;
+  min-height: 110px !important;
   position: relative;
   transition: box-shadow .2s ease !important;
 }
 html[data-design="meridian"] .dash-metric:hover{
-  box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff !important;
+  box-shadow: 8px 8px 18px #d1d9e6, -8px -8px 18px #ffffff !important;
 }
 html[data-design="meridian"] .dash-metric::before{ display: none !important; content: none !important; }
 html[data-design="meridian"] .dash-metric .dm-l{
-  font-size: 14px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
   text-transform: none !important;
-  color: #000000 !important;
+  color: #1A1A1A !important;
   display: block !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 8px !important;
 }
 html[data-design="meridian"] .dash-metric b{
-  font-size: 28px !important;
+  font-size: 20px !important;
   font-weight: 700 !important;
   font-variant-numeric: tabular-nums !important;
   letter-spacing: -0.02em !important;
@@ -9960,34 +10093,34 @@ html[data-design="meridian"] .bank-card,
 html[data-design="meridian"] .nc-hero{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 24px !important;
-  box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff !important;
-  padding: 24px !important;
-  margin-bottom: 20px !important;
+  border-radius: 20px !important;
+  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  padding: 18px 16px !important;
+  margin-bottom: 14px !important;
   overflow: visible !important;
 }
 html[data-design="meridian"] .section-title{
-  font-size: 20px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: #000000 !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 6px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
 }
 html[data-design="meridian"] .section-title .dot,
 html[data-design="meridian"] .section-title .sec-ic{
-  width: 10px !important;
-  height: 10px !important;
+  width: 8px !important;
+  height: 8px !important;
   border-radius: 50% !important;
   background: #000000 !important;
   box-shadow: none !important;
   color: #000000 !important;
 }
 html[data-design="meridian"] .section-sub{
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #1A1A1A !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 12px !important;
 }
 
 /* Buttons */
@@ -9996,24 +10129,24 @@ html[data-design="meridian"] button.btn,
 html[data-design="meridian"] .btn:not(.ghost){
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   color: #000000 !important;
   font-weight: 600 !important;
-  font-size: 15px !important;
-  padding: 12px 20px !important;
+  font-size: 14px !important;
+  padding: 11px 18px !important;
   box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
   transition: box-shadow .2s ease, transform .15s ease !important;
 }
 html[data-design="meridian"] .btn:hover,
 html[data-design="meridian"] .btn:not(.ghost):hover{
-  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff !important;
   background: #FFFFFF !important;
   color: #000000 !important;
 }
 html[data-design="meridian"] .btn:active,
 html[data-design="meridian"] .btn:not(.ghost):active{
   box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff !important;
-  transform: translateY(2px);
+  transform: translateY(1px);
 }
 html[data-design="meridian"] .btn.ghost{
   background: #FFFFFF !important;
@@ -10023,10 +10156,10 @@ html[data-design="meridian"] .btn.ghost{
 }
 html[data-design="meridian"] .btn.ghost:hover{
   color: #000000 !important;
-  box-shadow: 6px 6px 14px #d1d9e6, -6px -6px 14px #ffffff !important;
+  box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff !important;
 }
 
-/* Inputs — pressed / inset */
+/* Inputs — inset */
 html[data-design="meridian"] input[type=text],
 html[data-design="meridian"] input[type=password],
 html[data-design="meridian"] input[type=date],
@@ -10039,22 +10172,22 @@ html[data-design="meridian"] textarea,
 html[data-design="meridian"] .select-setting{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   color: #000000 !important;
-  box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff !important;
-  padding: 12px 16px !important;
-  font-size: 15px !important;
+  box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff !important;
+  padding: 11px 14px !important;
+  font-size: 14px !important;
   outline: none !important;
 }
 html[data-design="meridian"] input:focus,
 html[data-design="meridian"] select:focus,
 html[data-design="meridian"] textarea:focus{
-  box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff !important;
+  box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff !important;
   outline: none !important;
   border: none !important;
 }
 
-/* Transaction / list rows */
+/* List / transaction rows */
 html[data-design="meridian"] .tx-row,
 html[data-design="meridian"] .list-row,
 html[data-design="meridian"] .nb-day-head,
@@ -10064,15 +10197,15 @@ html[data-design="meridian"] .setting-row{
   background: #FFFFFF !important;
   border: none !important;
   border-radius: 12px !important;
-  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
+  box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff !important;
   margin-bottom: 8px !important;
-  padding: 14px 16px !important;
-  min-height: 56px !important;
+  padding: 12px 14px !important;
+  min-height: 52px !important;
   color: #000000 !important;
 }
 html[data-design="meridian"] .tx-row:hover,
 html[data-design="meridian"] .list-row:hover{
-  box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff !important;
+  box-shadow: 5px 5px 12px #d1d9e6, -5px -5px 12px #ffffff !important;
 }
 
 /* Status pills — inset */
@@ -10082,32 +10215,32 @@ html[data-design="meridian"] .tag,
 html[data-design="meridian"] .chip{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   box-shadow: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff !important;
   color: #000000 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
-  padding: 4px 12px !important;
-  height: 24px !important;
+  padding: 3px 10px !important;
+  height: 22px !important;
   display: inline-flex !important;
   align-items: center !important;
 }
 
-/* Design / theme cards in settings */
+/* Design / theme cards */
 html[data-design="meridian"] .design-card,
 html[data-design="meridian"] .theme-card{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff !important;
   color: #000000 !important;
 }
 html[data-design="meridian"] .design-card.active,
 html[data-design="meridian"] .theme-card.active{
-  box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff !important;
+  box-shadow: inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff !important;
 }
 
-/* Charts — force black monochrome */
+/* Charts */
 html[data-design="meridian"] canvas,
 html[data-design="meridian"] .chart-wrap{
   filter: none !important;
@@ -10123,23 +10256,37 @@ html[data-design="meridian"] .modal-box,
 html[data-design="meridian"] .sheet{
   background: #FFFFFF !important;
   border: none !important;
-  border-radius: 24px !important;
-  box-shadow: 12px 12px 28px #d1d9e6, -8px -8px 20px #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 10px 10px 28px #d1d9e6, -6px -6px 18px #ffffff !important;
   color: #000000 !important;
 }
 
-/* Typography polish */
+/* Typography */
 html[data-design="meridian"] h1,
 html[data-design="meridian"] .page-title{
-  font-size: 36px !important;
+  font-size: 28px !important;
   font-weight: 700 !important;
   color: #000000 !important;
   letter-spacing: -0.02em !important;
 }
 html[data-design="meridian"] h2{
-  font-size: 20px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   color: #000000 !important;
+}
+
+/* Amounts: keep black but distinguish weight */
+html[data-design="meridian"] .amount-pos,
+html[data-design="meridian"] .tx-amount.pos,
+html[data-design="meridian"] .positive{
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+html[data-design="meridian"] .amount-neg,
+html[data-design="meridian"] .tx-amount.neg,
+html[data-design="meridian"] .negative{
+  color: #1A1A1A !important;
+  font-weight: 600 !important;
 }
 
 /* Focus */
@@ -10148,58 +10295,69 @@ html[data-design="meridian"] :focus-visible{
   outline-offset: 3px !important;
 }
 
-/* Page visibility */
 html[data-design="meridian"] .page{ display: none; }
 html[data-design="meridian"] .page.active{ display: block; }
 
-/* Empty states */
 html[data-design="meridian"] .empty-state,
 html[data-design="meridian"] .empty{
   color: #1A1A1A !important;
   text-align: center !important;
-  padding: 36px 16px !important;
+  padding: 32px 16px !important;
 }
 
-/* Responsive */
+/* App version footer */
+html[data-design="meridian"] .app-version{
+  color: #1A1A1A !important;
+  font-size: 12px !important;
+}
+
+/* Hist filters etc. keep readable */
+html[data-design="meridian"] .hist-filter,
+html[data-design="meridian"] .filter-chip{
+  background: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff !important;
+  color: #000000 !important;
+  border-radius: 14px !important;
+}
+html[data-design="meridian"] .hist-filter.active,
+html[data-design="meridian"] .filter-chip.active{
+  box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff !important;
+}
+
 @media (max-width: 720px){
-  html[data-design="meridian"] .layout{ max-width: 100% !important; padding: 0 14px !important; }
-  html[data-design="meridian"] .main{ padding: 8px 0 48px !important; }
+  html[data-design="meridian"] .layout{ max-width: 100% !important; padding: 0 12px !important; }
+  html[data-design="meridian"] .main{ padding: 6px 0 20px !important; }
   html[data-design="meridian"] .topbar{
     margin: 0 8px 8px !important;
     width: calc(100% - 16px) !important;
-    padding: 12px 16px !important;
-    min-height: 64px !important;
+    padding: 10px 14px !important;
+    min-height: 56px !important;
     border-radius: 0 0 16px 16px !important;
   }
   html[data-design="meridian"] .hero,
-  html[data-design="meridian"] #page-dashboard.active .hero{ padding: 20px 18px !important; }
+  html[data-design="meridian"] #page-dashboard.active .hero{ padding: 18px 16px !important; }
   html[data-design="meridian"] .hero-num,
-  html[data-design="meridian"] #page-dashboard.active .hero-num{ font-size: 28px !important; }
-  html[data-design="meridian"] .dash-metrics{ grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
-  html[data-design="meridian"] .dash-metric{ min-height: 120px !important; padding: 18px !important; }
-  html[data-design="meridian"] .dash-metric b{ font-size: 22px !important; }
-  html[data-design="meridian"] .section{ padding: 18px 16px !important; margin-bottom: 14px !important; }
-  html[data-design="meridian"] .theme-dn-btn,
-  html[data-design="meridian"] .hamburger-btn,
-  html[data-design="meridian"] .im-header-avatar{
-    width: 44px !important;
-    height: 44px !important;
+  html[data-design="meridian"] #page-dashboard.active .hero-num{ font-size: 26px !important; }
+  html[data-design="meridian"] .dash-metrics{ gap: 10px !important; }
+  html[data-design="meridian"] .dash-metric{ min-height: 100px !important; padding: 14px !important; }
+  html[data-design="meridian"] .dash-metric b{ font-size: 17px !important; }
+  html[data-design="meridian"] .section{ padding: 14px 14px !important; margin-bottom: 12px !important; }
+  html[data-design="meridian"] .bottom-nav{
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    padding: 6px 4px !important;
   }
-}
-
-@media (min-width: 721px) and (max-width: 1023px){
-  html[data-design="meridian"] .layout{ max-width: 720px !important; }
-  html[data-design="meridian"] .hero-num,
-  html[data-design="meridian"] #page-dashboard.active .hero-num{ font-size: 30px !important; }
-}
-
-@media (min-width: 1024px){
-  html[data-design="meridian"] .hero,
-  html[data-design="meridian"] #page-dashboard.active .hero{ padding: 32px 28px !important; }
-  html[data-design="meridian"] .hero-num,
-  html[data-design="meridian"] #page-dashboard.active .hero-num{ font-size: 36px !important; }
-  html[data-design="meridian"] .section{ padding: 28px 24px !important; }
-  html[data-design="meridian"] .dash-metric b{ font-size: 28px !important; }
+  html[data-design="meridian"] .bn-item svg{
+    width: 20px !important;
+    height: 20px !important;
+  }
+  html[data-design="meridian"] .theme-dn-btn,
+  html[data-design="meridian"] .im-header-avatar{
+    width: 40px !important;
+    height: 40px !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -10210,6 +10368,7 @@ html[data-design="meridian"] .empty{
 }
 
 /* --- End Meridian --- */
+
 
 
 /* ==========================================================================
