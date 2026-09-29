@@ -281,7 +281,7 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['soft','aurora','neobank','classic','editorial-finance','immersive'];
+const VALID_DESIGNS = ['soft','stillness','aurora','neobank','classic','editorial-finance','immersive'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
@@ -295,6 +295,7 @@ function normalizeDesignId(d){
   if(d === 'meridian' || d === 'ink' || d === 'ember' || d === 'atelier' || d === 'neuro' || d === 'نئو') return 'soft';
   if(d === 'vesper' || d === 'lumen' || d === 'noir') return 'soft';
   if(d === 'soft' || d === 'soft-ui' || d === 'softui') return 'soft';
+  if(d === 'stillness' || d === 'serene' || d === 'harmony' || d === 'wellness' || d === 'calm' || d === 'still') return 'stillness';
   return d;
 }
 function applyDesign(d){
@@ -322,8 +323,8 @@ function applyDesign(d){
     } else if(d === 'immersive'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
-    } else if(d === 'soft'){
-      /* Soft UI: hamburger + optional bottom nav visible */
+    } else if(d === 'soft' || d === 'stillness'){
+      /* Soft / Stillness: hamburger + bottom nav visible */
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = ''; }
     } else {
@@ -372,7 +373,7 @@ document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
   let saved = 'soft';
   try{
-    const BUILD = 'soft-v652-20260929';
+    const BUILD = 'v660-20260929';
     if(localStorage.getItem('daftar-design-build') !== BUILD){
       localStorage.setItem(DESIGN_KEY, 'soft');
       localStorage.setItem('daftar-design-build', BUILD);
