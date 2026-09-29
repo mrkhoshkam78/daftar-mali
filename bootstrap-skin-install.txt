@@ -1,2 +1,0 @@
-<!-- Bootstrap Premium Skin: place this AFTER styles.css -->
-<link rel="stylesheet" href="bootstrap-skin.css?v=1.0.0">
