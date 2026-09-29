@@ -281,7 +281,7 @@ if($('themeDayNight')){
 
 /* ================= DESIGN SWITCHER ================= */
 const DESIGN_KEY = 'daftar-design';
-const VALID_DESIGNS = ['aurora','neobank','classic','editorial-finance','immersive','aether','meridian','vesper'];
+const VALID_DESIGNS = ['soft','aurora','neobank','classic','editorial-finance','immersive'];
 function normalizeDesignId(d){
   d = String(d || '').trim().toLowerCase().replace(/_/g,'-');
   if(d === 'neo' || d === 'neo-bank') return 'neobank';
@@ -290,14 +290,16 @@ function normalizeDesignId(d){
   if(d === 'adaptive' || d === 'canvas' || d === 'adaptivecanvas' || d === 'afc' || d === 'adaptive-canvas') return 'aurora';
   if(d === 'editorial' || d === 'editorialfinance' || d === 'ef') return 'editorial-finance';
   if(d === 'immersive' || d === 'cinema' || d === 'premium-dash' || d === 'monkey') return 'immersive';
-  if(d === 'aether' || d === 'ledger' || d === 'obsidian' || d === 'premium-ledger') return 'aether';
-  if(d === 'meridian' || d === 'ink' || d === 'ember' || d === 'atelier') return 'meridian';
-  if(d === 'vesper' || d === 'lumen' || d === 'noir') return 'vesper';
+  /* Vesper / Aether / Meridian(Neo) removed — map to Soft UI */
+  if(d === 'aether' || d === 'ledger' || d === 'obsidian' || d === 'premium-ledger') return 'soft';
+  if(d === 'meridian' || d === 'ink' || d === 'ember' || d === 'atelier' || d === 'neuro' || d === 'نئو') return 'soft';
+  if(d === 'vesper' || d === 'lumen' || d === 'noir') return 'soft';
+  if(d === 'soft' || d === 'soft-ui' || d === 'softui') return 'soft';
   return d;
 }
 function applyDesign(d){
   d = normalizeDesignId(d);
-  if(!VALID_DESIGNS.includes(d)) d = 'vesper';
+  if(!VALID_DESIGNS.includes(d)) d = 'soft';
   const root = document.documentElement;
   root.setAttribute('data-design', d);
   try{ localStorage.setItem(DESIGN_KEY, d); }catch(e){}
@@ -320,8 +322,9 @@ function applyDesign(d){
     } else if(d === 'immersive'){
       if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = 'none'; }
-    } else if(d === 'aether' || d === 'meridian' || d === 'vesper'){
-      if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
+    } else if(d === 'soft'){
+      /* Soft UI: hamburger + optional bottom nav visible */
+      if(bn){ bn.style.display = ''; bn.setAttribute('aria-hidden','false'); }
       if(ham){ ham.style.display = ''; }
     } else {
       if(bn){ bn.style.display = 'none'; bn.setAttribute('aria-hidden','true'); }
@@ -367,20 +370,25 @@ function onDesignCardActivate(e){
 }
 document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
-  let saved = 'vesper';
+  let saved = 'soft';
   try{
-    const BUILD = 'vesper-20260926';
+    const BUILD = 'soft-v620-20260929';
     if(localStorage.getItem('daftar-design-build') !== BUILD){
-      localStorage.setItem(DESIGN_KEY, 'vesper');
+      localStorage.setItem(DESIGN_KEY, 'soft');
       localStorage.setItem('daftar-design-build', BUILD);
     }
-    saved = localStorage.getItem(DESIGN_KEY) || 'vesper';
+    saved = localStorage.getItem(DESIGN_KEY) || 'soft';
   }catch(e){}
   try{
     const n = String(saved||'').toLowerCase();
+    // Vesper / Aether / Neo / Meridian fully removed → Soft UI
+    if(['vesper','lumen','noir','aether','ledger','obsidian','premium-ledger','meridian','ink','ember','atelier','neo','neuro','نئو','neo-bank','neo_bank'].indexOf(n) >= 0){
+      saved = 'soft';
+      localStorage.setItem(DESIGN_KEY, 'soft');
+    }
     if(n === 'adaptive-canvas' || n === 'adaptive' || n === 'canvas' || n === 'afc'){
-      saved = 'vesper';
-      localStorage.setItem(DESIGN_KEY, 'vesper');
+      saved = 'soft';
+      localStorage.setItem(DESIGN_KEY, 'soft');
     }
   }catch(e){}
   try{

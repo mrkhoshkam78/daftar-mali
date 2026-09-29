@@ -1158,17 +1158,27 @@ function bindAutoBackupUI(){
   }
   updateAutoBackupStatusUI();
 }
-// init after DOM
+// init after DOM — v6.2.0: restore ASAP (microtask + DOMContentLoaded)
 if(typeof document !== 'undefined'){
   const bootAuto = async function(){ 
     // قبل از هر چیز، تلاش برای بازیابی خودکار داده‌های گم‌شده
     try{
       await attemptSilentAutoRestore();
     }catch(e){ console.log('silent restore error', e); }
+    // second pass shortly after first paint in case race with other modules
+    try{
+      setTimeout(function(){
+        attemptSilentAutoRestore().then(function(ok){
+          if(ok && typeof render === 'function') try{ render(); }catch(_r){}
+        }).catch(function(){});
+      }, 80);
+    }catch(_e){}
     
     bindAutoBackupUI(); 
     setTimeout(function(){ runAutoBackupIfDue(); }, 1500); 
   };
+  // run immediately if DOM already ready OR as microtask; also on DOMContentLoaded
+  try{ Promise.resolve().then(function(){ attemptSilentAutoRestore().catch(function(){}); }); }catch(_m){}
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAuto);
   else bootAuto();
 }
