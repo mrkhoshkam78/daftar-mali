@@ -9806,90 +9806,149 @@ html[data-design="soft"] .main{
 }
 
 /* ================================================================
-   BOTTOM NAV — Aurora-style fixed bar (نئو neumorph)
-   Active: black rounded frame + white SVG
+   BOTTOM NAV — Reference Soft Floating Pill (v6.5.0)
+   Algorithm from template:
+   • Outer: soft white capsule, single soft elevation, gray canvas
+   • Inactive: icon-only, no label, muted ink
+   • Active: dark solid pill, icon + label in a row, white glyphs
    ================================================================ */
 html[data-design="soft"] .bottom-nav{
   position: fixed !important;
-  left: 12px !important;
-  right: 12px !important;
-  bottom: 12px !important;
+  left: 16px !important;
+  right: 16px !important;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px)) !important;
   z-index: 50 !important;
   display: flex !important;
-  align-items: stretch !important;
+  align-items: center !important;
   justify-content: space-between !important;
   gap: 4px !important;
-  padding: 8px 6px !important;
+  padding: 8px 10px !important;
+  height: auto !important;
+  min-height: 64px !important;
   background: #FFFFFF !important;
-  border: none !important;
-  border-radius: 28px !important;
-  box-shadow: 8px 8px 20px #d1d9e6, -6px -6px 16px #ffffff !important;
+  border: 1px solid rgba(28,28,40,.04) !important;
+  border-radius: 32px !important;
+  box-shadow: 0 10px 30px rgba(28,28,40,.08), 0 2px 8px rgba(28,28,40,.04) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 html[data-design="soft"] .bn-item{
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
+  flex: 1 1 0 !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
-  padding: 8px 4px !important;
+  gap: 0 !important;
+  padding: 10px 8px !important;
+  margin: 0 !important;
   border: none !important;
   background: transparent !important;
-  color: #1A1A1A !important;
+  color: #8B8D9B !important;
   font-family: var(--md-font) !important;
-  font-size: 10px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
-  border-radius: 18px !important;
-  transition: color .15s ease, background .15s ease, transform .12s ease !important;
+  border-radius: 999px !important;
+  min-width: 0 !important;
+  transition: background .2s ease, color .2s ease, padding .2s ease, gap .2s ease, transform .12s ease, box-shadow .2s ease !important;
+}
+/* Inactive: hide text label — icon only (reference algorithm) */
+html[data-design="soft"] .bn-item span{
+  display: none !important;
+  max-width: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  transition: opacity .18s ease, max-width .22s ease, margin .18s ease !important;
 }
 html[data-design="soft"] .bn-item svg{
   width: 22px !important;
   height: 22px !important;
+  flex-shrink: 0 !important;
   stroke: currentColor !important;
   fill: none !important;
-  stroke-width: 1.7 !important;
+  stroke-width: 1.8 !important;
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
   pointer-events: none !important;
-}
-/* default inactive icon wrapper look */
-html[data-design="soft"] .bn-item svg{
-  padding: 6px !important;
-  box-sizing: content-box !important;
-  border-radius: 12px !important;
+  padding: 0 !important;
   background: transparent !important;
-  color: #1A1A1A !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  color: #8B8D9B !important;
+  box-shadow: none !important;
 }
-/* ACTIVE: black frame with corners + white SVG */
+/* ACTIVE: dark pill with icon + label side-by-side */
 html[data-design="soft"] .bn-item.active{
-  color: #000000 !important;
-  background: transparent !important;
+  flex: 0 1 auto !important;
+  gap: 8px !important;
+  padding: 12px 18px !important;
+  background: #1C1C28 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 16px rgba(28,28,40,.22) !important;
+  border-radius: 999px !important;
 }
 html[data-design="soft"] .bn-item.active svg{
-  background: #000000 !important;
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
-  fill: none !important;
-  border-radius: 12px !important;
-  padding: 6px !important;
-  box-shadow: none !important;
-  /* subtle corner emphasis via clip / box */
-  outline: 1.5px solid #000000 !important;
-  outline-offset: 0 !important;
+  background: transparent !important;
+  outline: none !important;
+  padding: 0 !important;
 }
 html[data-design="soft"] .bn-item.active span{
-  color: #000000 !important;
-  font-weight: 700 !important;
+  display: inline !important;
+  max-width: 120px !important;
+  opacity: 1 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: -.01em !important;
 }
 html[data-design="soft"] .bn-item:active{
-  transform: scale(.96) !important;
+  transform: scale(.97) !important;
+}
+html[data-design="soft"] .bn-item:not(.active):hover{
+  color: #1C1C28 !important;
+}
+html[data-design="soft"] .bn-item:not(.active):hover svg{
+  color: #1C1C28 !important;
+  stroke: #1C1C28 !important;
 }
 html[data-design="soft"] body.menu-open .bottom-nav{
-  opacity: .45 !important;
+  opacity: .4 !important;
   pointer-events: none !important;
+}
+/* Dark theme variant of the same algorithm */
+html[data-design="soft"][data-theme="dark"] .bottom-nav,
+html[data-design="soft"][data-theme="black"] .bottom-nav{
+  background: #1C1F28 !important;
+  border-color: rgba(255,255,255,.06) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4) !important;
+}
+html[data-design="soft"][data-theme="dark"] .bn-item,
+html[data-design="soft"][data-theme="black"] .bn-item{
+  color: #9AA0B2 !important;
+}
+html[data-design="soft"][data-theme="dark"] .bn-item svg,
+html[data-design="soft"][data-theme="black"] .bn-item svg{
+  color: #9AA0B2 !important;
+  stroke: #9AA0B2 !important;
+}
+html[data-design="soft"][data-theme="dark"] .bn-item.active,
+html[data-design="soft"][data-theme="black"] .bn-item.active{
+  background: #F2F3F7 !important;
+  color: #12141A !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35) !important;
+}
+html[data-design="soft"][data-theme="dark"] .bn-item.active svg,
+html[data-design="soft"][data-theme="black"] .bn-item.active svg{
+  color: #12141A !important;
+  stroke: #12141A !important;
+}
+html[data-design="soft"][data-theme="dark"] .bn-item.active span,
+html[data-design="soft"][data-theme="black"] .bn-item.active span{
+  color: #12141A !important;
 }
 
 /* ================================================================
@@ -11202,4 +11261,78 @@ html[data-design="soft"] .live-dot{ background: #1C1C28 !important; }
 html[data-design="soft"] body{
   background: var(--md-bg, #F2F3F7) !important;
   color: var(--md-ink, #1C1C28) !important;
+}
+
+
+/* ================================================================
+   Soft UI · v6.5.0 reference polish (nav + CTA + chip algorithm)
+   From profile template: solid primary pill, soft tag chips, clean type
+   Scoped ONLY to data-design="soft" — no other design systems touched
+   ================================================================ */
+html[data-design="soft"] .btn:not(.ghost):not(.btn-secondary):not(.secondary),
+html[data-design="soft"] button.btn:not(.ghost),
+html[data-design="soft"] .btn-primary,
+html[data-design="soft"] button.primary{
+  background: #1C1C28 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 6px 18px rgba(28,28,40,.16) !important;
+  font-weight: 600 !important;
+  padding: 12px 22px !important;
+}
+html[data-design="soft"] .btn:not(.ghost):not(.btn-secondary):not(.secondary):active,
+html[data-design="soft"] button.primary:active{
+  transform: scale(.98) !important;
+  box-shadow: 0 3px 10px rgba(28,28,40,.14) !important;
+}
+html[data-design="soft"] .btn.ghost,
+html[data-design="soft"] .btn-secondary,
+html[data-design="soft"] button.secondary{
+  background: #FFFFFF !important;
+  color: #1C1C28 !important;
+  border: 1px solid rgba(28,28,40,.08) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 14px rgba(28,28,40,.05) !important;
+}
+html[data-design="soft"] .chip,
+html[data-design="soft"] .tag,
+html[data-design="soft"] .badge,
+html[data-design="soft"] .status-pill{
+  background: rgba(28,28,40,.06) !important;
+  color: #1C1C28 !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+html[data-design="soft"] .chip.active,
+html[data-design="soft"] .tag.active,
+html[data-design="soft"] .status-pill.active{
+  background: #1C1C28 !important;
+  color: #FFFFFF !important;
+}
+/* Soft single elevation on main cards (reference soft surface) */
+html[data-design="soft"] .hero,
+html[data-design="soft"] .section,
+html[data-design="soft"] .notes-shell,
+html[data-design="soft"] .analysis-card,
+html[data-design="soft"] .asset-card,
+html[data-design="soft"] .forecast-card,
+html[data-design="soft"] .nb-stat,
+html[data-design="soft"] .note-card,
+html[data-design="soft"] .goal-card,
+html[data-design="soft"] .bank-card,
+html[data-design="soft"] .dash-metric{
+  box-shadow: 0 8px 28px rgba(28,28,40,.06), 0 2px 8px rgba(28,28,40,.04) !important;
+  border: 1px solid rgba(28,28,40,.04) !important;
+}
+html[data-design="soft"][data-theme="dark"] .btn:not(.ghost):not(.btn-secondary):not(.secondary),
+html[data-design="soft"][data-theme="black"] .btn:not(.ghost):not(.btn-secondary):not(.secondary),
+html[data-design="soft"][data-theme="dark"] button.primary,
+html[data-design="soft"][data-theme="black"] button.primary{
+  background: #F2F3F7 !important;
+  color: #12141A !important;
 }
