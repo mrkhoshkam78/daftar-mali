@@ -685,7 +685,11 @@ function openBackupDb(){
       }
     };
     req.onsuccess = function(){ resolve(req.result); };
-    req.onerror = function(){ reject(req.error); };
+    req.onerror = function(){ reject(req.error || new Error('idb open failed')); };
+    // v6.4.3: surface blocked (private mode / storage pressure) instead of hanging
+    req.onblocked = function(){
+      console.warn('IndexedDB open blocked — another tab holds the DB');
+    };
   });
 }
 async function saveBackupToIdb(payload){
@@ -700,18 +704,24 @@ async function saveBackupToIdb(payload){
     };
     const tx = db.transaction(AUTO_BACKUP_STORE, 'readwrite');
     const store = tx.objectStore(AUTO_BACKUP_STORE);
-    const id = 'ab_' + Date.now();
+    // unique id: timestamp + random to avoid collision on concurrent persists
+    const id = 'ab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const ts = Date.now();
-    // اول همه را بخوان، بعد put + حذف قدیمی‌ها در همان transaction
+    // v6.4.3: prune only backup rows — never delete CFG key; CFG must not count toward MAX
     const getAll = store.getAll();
     getAll.onsuccess = function(){
       try{
         const rows = (getAll.result || []).slice();
         store.put({ id: id, ts: ts, data: payload });
-        rows.push({ id: id, ts: ts });
-        rows.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
-        rows.slice(AUTO_BACKUP_MAX).forEach(function(r){
-          if(r && r.id) store.delete(r.id);
+        const backupsOnly = rows.filter(function(r){
+          return r && r.id && r.id !== AUTO_BACKUP_CFG_IDB_KEY && String(r.id).indexOf('ab_') === 0;
+        });
+        backupsOnly.push({ id: id, ts: ts });
+        backupsOnly.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+        backupsOnly.slice(AUTO_BACKUP_MAX).forEach(function(r){
+          if(r && r.id && r.id !== AUTO_BACKUP_CFG_IDB_KEY){
+            try{ store.delete(r.id); }catch(_d){}
+          }
         });
       }catch(e){ done(e); }
     };
@@ -757,7 +767,13 @@ async function listAutoBackups(){
       const store = tx.objectStore(AUTO_BACKUP_STORE);
       const req = store.getAll();
       req.onsuccess = function(){
-        const rows = (req.result || []).slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+        // v6.4.3: exclude config row from backup list
+        const rows = (req.result || []).filter(function(r){
+          if(!r || !r.id) return false;
+          if(r.id === AUTO_BACKUP_CFG_IDB_KEY) return false;
+          if(r.data && r.data.enabled !== undefined && r.data.interval !== undefined && !r.data.assets) return false;
+          return true;
+        }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
         done(null, rows);
       };
       req.onerror = function(){ done(req.error || new Error('idb getAll')); };
@@ -1056,16 +1072,20 @@ async function runAutoBackupImmediate(payload){
       const emergency = {
         ts: Date.now(),
         assets: clean.assets || {},
-        txs: Array.isArray(clean.txs) ? clean.txs.slice(-200) : [],
-        history: Array.isArray(clean.history) ? clean.history.slice(-100) : [],
-        logs: Array.isArray(clean.logs) ? clean.logs.slice(-100) : [],
+        txs: Array.isArray(clean.txs) ? clean.txs.slice(-300) : [],
+        history: Array.isArray(clean.history) ? clean.history.slice(-150) : [],
+        logs: Array.isArray(clean.logs) ? clean.logs.slice(-150) : [],
         noncash: clean.noncash || [],
-        notebook: Array.isArray(clean.notebook) ? clean.notebook.slice(-50) : [],
+        notebook: Array.isArray(clean.notebook) ? clean.notebook.slice(-80) : [],
+        notes: Array.isArray(clean.notes) ? clean.notes.slice(-80) : [],
         bankCards: clean.bankCards || [],
         ownerProfile: clean.ownerProfile || null,
         financialGoals: clean.financialGoals || [],
         budgets: clean.budgets || [],
-        assetDefs: clean.assetDefs || null
+        assetDefs: clean.assetDefs || null,
+        milestonesClaimed: clean.milestonesClaimed || {},
+        fcEvents: Array.isArray(clean.fcEvents) ? clean.fcEvents.slice(-100) : [],
+        netSeries: Array.isArray(clean.netSeries) ? clean.netSeries.slice(-200) : []
       };
       localStorage.setItem(PERSISTENT_BACKUP_KEY, JSON.stringify(emergency));
     }catch(e){}

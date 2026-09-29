@@ -372,7 +372,7 @@ document.addEventListener('click', onDesignCardActivate);
 (function initDesign(){
   let saved = 'soft';
   try{
-    const BUILD = 'soft-v620-20260929';
+    const BUILD = 'soft-v643-20260929';
     if(localStorage.getItem('daftar-design-build') !== BUILD){
       localStorage.setItem(DESIGN_KEY, 'soft');
       localStorage.setItem('daftar-design-build', BUILD);
