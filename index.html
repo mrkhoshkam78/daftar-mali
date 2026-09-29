@@ -1,51 +1,48 @@
 <!DOCTYPE html>
-<html data-design="meridian" lang="fa" dir="rtl" data-theme="light" data-anim="on">
+<html data-design="soft" lang="fa" dir="rtl" data-theme="light" data-anim="on">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="دفتر مالی شخصی — مدیریت دارایی، تراکنش‌ها، اهداف و یادداشت‌ها">
 <meta name="theme-color" content="#FFFFFF">
 <meta name="color-scheme" content="light dark">
-<meta name="app-build" content="20260927v601">
+<meta name="app-build" content="20260929v620">
 <title>مبحث درآمد</title>
 <link rel="icon" type="image/png" href="favicon.png" sizes="128x128">
 <link rel="apple-touch-icon" href="favicon.png">
 <!-- FOUC: design + theme قبل از CSS -->
 <script>
 (function(){try{
-  /* Force نئو (Pure Neumorphism Soft UI) v6.0.1 once for this build */
-  var BUILD="neo-v601-20260927";
+  /* Force Soft UI (sample template) v6.2.0 — Vesper/Aether/Neo removed */
+  var BUILD="soft-v620-20260929";
   if(localStorage.getItem("daftar-design-build")!==BUILD){
-    localStorage.setItem("daftar-design","meridian");
+    localStorage.setItem("daftar-design","soft");
     localStorage.setItem("daftar-theme","light");
     localStorage.setItem("daftar-design-build",BUILD);
   }
-  var d=localStorage.getItem("daftar-design")||"vesper";
+  var d=localStorage.getItem("daftar-design")||"soft";
   d=String(d).toLowerCase();
-  if(d==="neo"||d==="neo-bank"||d==="neo_bank")d="neobank";
+  /* map legacy skins to soft */
+  if(d==="vesper"||d==="lumen"||d==="noir"||d==="aether"||d==="ledger"||d==="obsidian"||d==="premium-ledger"||d==="meridian"||d==="ink"||d==="ember"||d==="atelier"||d==="neo"||d==="neuro"||d==="نئو"||d==="neo-bank"||d==="neo_bank")d="soft";
   if(d==="original"||d==="glass"||d==="premium")d="classic";
   if(d==="adaptive"||d==="canvas"||d==="afc"||d==="adaptivecanvas"||d==="adaptive-canvas")d="aurora";
   if(d==="editorial"||d==="editorialfinance"||d==="ef")d="editorial-finance";
   if(d==="immersive"||d==="cinema"||d==="premium-dash"||d==="monkey")d="immersive";
-  if(d==="aether"||d==="ledger"||d==="obsidian"||d==="premium-ledger")d="aether";
-  if(d==="meridian"||d==="ink"||d==="ember"||d==="atelier"||d==="neo"||d==="neuro"||d==="نئو")d="meridian";
-  if(d==="vesper"||d==="lumen"||d==="noir")d="vesper";
-  if(["aurora","neobank","classic","editorial-finance","immersive","aether","meridian","vesper"].indexOf(d)<0)d="vesper";
+  if(["soft","aurora","neobank","classic","editorial-finance","immersive"].indexOf(d)<0)d="soft";
   document.documentElement.setAttribute("data-design",d);
-  var t=localStorage.getItem("daftar-theme")||"dark";
+  var t=localStorage.getItem("daftar-theme")||"light";
   t=String(t).toLowerCase().replace(/_/g,"-");
   var ok=["dark","matte-green","teal-navy","black","gold","light","warm-sand","finverse-violet","navy-crimson","sage-mist"];
-  if(ok.indexOf(t)<0)t="dark";
+  if(ok.indexOf(t)<0)t="light";
   document.documentElement.setAttribute("data-theme",t);
   document.documentElement.classList.add("theme-"+t);
 }catch(e){}})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="styles.css?v=20260927v601-neo" as="style">
+<link rel="preload" href="styles.css?v=20260929v620-soft" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800;900&family=Martian+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260927v601-neo">
-<link rel="stylesheet" href="bootstrap-skin.css?v=1.0.0">
+<link rel="stylesheet" href="styles.css?v=20260929v620-soft">
 </head>
 <body>
 
@@ -845,19 +842,12 @@
 
       <div class="section reveal in-view" id="sec-design-switcher">
         <div class="section-title"><span class="dot"></span> پوسته</div>
-        <div class="section-sub">پوستهٔ نئو — Pure Neumorphism Soft UI · V6.0.1</div>
+        <div class="section-sub">پوستهٔ Soft UI — قالب مینیمال نرم · V6.2.0</div>
         <div class="design-switcher" id="designSwitcher" role="listbox" aria-label="انتخاب پوسته">
-          <button type="button" class="design-card active" data-design-val="meridian" role="option" aria-selected="true">
+          <button type="button" class="design-card active" data-design-val="soft" role="option" aria-selected="true">
             <span class="design-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
             <span class="theme-preview" style="background:#FFFFFF;box-shadow:4px 4px 8px #d1d9e6,-4px -4px 8px #ffffff;border-radius:8px;"></span>
-            <span class="design-name">نئو</span>
-          </button>
-          <button type="button" class="design-card" data-design-val="vesper" role="option" aria-selected="false">
-            <span class="theme-preview" style="background:linear-gradient(145deg,#0B0C10 0%,#1A1C24 55%,#C4A882 100%)"></span>
-            <span class="design-name">Vesper</span>
-          </button>
-          <button type="button" class="design-card" data-design-val="aether" role="option" aria-selected="false">
-            <span class="design-name">Aether</span>
+            <span class="design-name">Soft UI</span>
           </button>
           <button type="button" class="design-card" data-design-val="aurora" role="option" aria-selected="false">
             <span class="design-name">Aurora</span>
@@ -1032,7 +1022,7 @@
     </div>
 
     </div>
-    <div class="app-version" id="appVersion">مبحث درآمد · <b>V6.0.1</b></div>
+    <div class="app-version" id="appVersion">مبحث درآمد · <b>V6.2.0</b></div>
     </div>
 
   </div>
@@ -1120,12 +1110,12 @@
 </nav>
 
 <!-- App modules (ترتیب وابستگی حفظ شود) -->
-<script src="backend/prices-api.js?v=20260927v601"></script>
-<script src="backend/app-core.js?v=20260927v601"></script>
-<script src="frontend/app-ui.js?v=20260927v601"></script>
-<script src="frontend/app-notes.js?v=20260927v601"></script>
-<script src="backend/app-boot.js?v=20260927v601"></script>
-<script src="frontend/financial-ai.js?v=20260927v601"></script>
+<script src="backend/prices-api.js?v=20260929v620"></script>
+<script src="backend/app-core.js?v=20260929v620"></script>
+<script src="frontend/app-ui.js?v=20260929v620"></script>
+<script src="frontend/app-notes.js?v=20260929v620"></script>
+<script src="backend/app-boot.js?v=20260929v620"></script>
+<script src="frontend/financial-ai.js?v=20260929v620"></script>
 <script>
 (function(){
   try{
